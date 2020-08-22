@@ -140,9 +140,6 @@ func (webRequest *webRequest) EnableRetry(connectivityRetryCount int, httpStatus
 }
 
 func customizeHTTPRequest(session *session, httpRequest *http.Request) *http.Request {
-	if isInterfaceValueNil(session.customization) {
-		return httpRequest
-	}
 	return session.customization.WrapRequest(
 		session,
 		httpRequest,
@@ -200,7 +197,7 @@ func logErrorResponse(session *session, responseError error, startTime time.Time
 		session,
 		"Message",
 		"",
-		"%v",
+		"%+v",
 		responseError,
 	)
 	networkFinish(
@@ -298,17 +295,28 @@ func (webRequest *webRequest) ProcessRaw() (responseObject *http.Response, respo
 	)
 }
 
-func parseResponse(body io.ReadCloser, dataTemplate interface{}) error {
+func parseResponse(session *session, body io.ReadCloser, dataTemplate interface{}) error {
 	var bodyBytes, bodyError = ioutil.ReadAll(
 		body,
 	)
 	if bodyError != nil {
 		return bodyError
 	}
-	return tryUnmarshal(
+	var unmarshalError = tryUnmarshal(
 		string(bodyBytes),
 		dataTemplate,
 	)
+	if unmarshalError != nil {
+		networkResponse(
+			session,
+			"Body",
+			"UnmarshalError",
+			"%+v",
+			unmarshalError,
+		)
+		return errResponseInvalid
+	}
+	return nil
 }
 
 // Process sends the network request over the wire, retrieves and serialize the response to dataTemplate, and provides status code, header and error if applicable
@@ -329,6 +337,7 @@ func (webRequest *webRequest) Process(dataTemplate interface{}) (statusCode int,
 			return 0, make(http.Header), nil
 		}
 		responseError = parseResponse(
+			webRequest.session,
 			responseObject.Body,
 			dataTemplate,
 		)

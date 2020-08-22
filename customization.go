@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -71,6 +72,12 @@ type HandlerCustomization interface {
 
 	// InterpretError is to customize how application interpret an error into HTTP status code and corresponding status message
 	InterpretError(err error) (int, string)
+
+	// NotFoundHandler is to customize the handler to be used when no route matches.
+	NotFoundHandler() http.Handler
+
+	// MethodNotAllowed is to customize the handler to be used when the request method does not match the route
+	MethodNotAllowedHandler() http.Handler
 }
 
 // WebRequestCustomization holds customization methods related to web requests
@@ -91,7 +98,37 @@ type WebRequestCustomization interface {
 	WrapRequest(session Session, httpRequest *http.Request) *http.Request
 }
 
+var (
+	customizationLock    = sync.RWMutex{}
+	customizationMap     = map[int]Customization{}
+	customizationDefault = &defaultCustomization{}
+)
+
 type defaultCustomization struct{}
+
+func registerCustomization(
+	port int,
+	customization Customization,
+) {
+	customizationLock.Lock()
+	defer customizationLock.Unlock()
+	if isInterfaceValueNil(customization) {
+		customization = customizationDefault
+	}
+	customizationMap[port] = customization
+}
+
+func getCustomization(
+	port int,
+) Customization {
+	customizationLock.RLock()
+	defer customizationLock.RUnlock()
+	var customization, found = customizationMap[port]
+	if !found {
+		return customizationDefault
+	}
+	return customization
+}
 
 // PreBootstrap is to customize the pre-processing logic before bootstrapping
 func (customization *defaultCustomization) PreBootstrap() error {
@@ -186,6 +223,16 @@ func (customization *defaultCustomization) InterpretError(err error) (int, strin
 		err,
 	)
 	return statusCode, statusMessage
+}
+
+// NotFoundHandler is to customize the handler to be used when no route matches.
+func (customization *defaultCustomization) NotFoundHandler() http.Handler {
+	return nil
+}
+
+// MethodNotAllowed is to customize the handler to be used when the request method does not match the route
+func (customization *defaultCustomization) MethodNotAllowedHandler() http.Handler {
+	return nil
 }
 
 // ClientCert is to customize the client certificate for external requests; if not set or nil, no client certificate is sent to external web services

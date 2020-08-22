@@ -139,8 +139,7 @@ func (session *session) GetRequest() *http.Request {
 
 // GetResponseWriter returns the HTTP response writer object from session object for given session ID
 func (session *session) GetResponseWriter() http.ResponseWriter {
-	if session == nil ||
-		isInterfaceValueNil(session.responseWriter) {
+	if session == nil {
 		return defaultResponseWriter
 	}
 	return session.responseWriter
@@ -156,7 +155,7 @@ func (session *session) GetRequestBody(dataTemplate interface{}) error {
 		httpRequest,
 	)
 	if requestBody == "" {
-		return errRequestEmpty
+		return errRequestBodyEmpty
 	}
 	apiRequest(
 		session,
@@ -173,10 +172,10 @@ func (session *session) GetRequestBody(dataTemplate interface{}) error {
 			session,
 			"Body",
 			"UnmarshalError",
-			"%v",
+			"%+v",
 			unmarshalError,
 		)
-		return errRequestInvalid
+		return errRequestBodyInvalid
 	}
 	return nil
 }
@@ -209,7 +208,7 @@ func (session *session) GetRequestParameter(name string, dataTemplate interface{
 			session,
 			"Parameter",
 			"UnmarshalError",
-			"%v",
+			"%+v",
 			unmarshalError,
 		)
 		return errParameterInvalid
@@ -254,7 +253,7 @@ func (session *session) GetRequestQuery(name string, index int, dataTemplate int
 			session,
 			"Query",
 			"UnmarshalError",
-			"%v",
+			"%+v",
 			unmarshalError,
 		)
 		return errQueryInvalid
@@ -300,7 +299,7 @@ func (session *session) GetRequestHeader(name string, index int, dataTemplate in
 			session,
 			"Header",
 			"UnmarshalError",
-			"%v",
+			"%+v",
 			unmarshalError,
 		)
 		return errHeaderInvalid

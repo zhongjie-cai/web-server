@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/zhongjie-cai/WebServiceTemplate/server/handler"
 )
 
 func doParameterReplacement(
@@ -91,15 +90,6 @@ func registerRoutes(
 	customization Customization,
 	router *mux.Router,
 ) {
-	if isInterfaceValueNil(customization) {
-		appRoot(
-			session,
-			"register",
-			"registerRoutes",
-			"customization.Routes function not set: no routes registered!",
-		)
-		return
-	}
 	var configuredRoutes = customization.Routes()
 	if configuredRoutes == nil ||
 		len(configuredRoutes) == 0 {
@@ -137,15 +127,6 @@ func registerStatics(
 	customization Customization,
 	router *mux.Router,
 ) {
-	if isInterfaceValueNil(customization) {
-		appRoot(
-			session,
-			"register",
-			"registerStatics",
-			"customization.Statics function not set: no static content registered!",
-		)
-		return
-	}
 	var statics = customization.Statics()
 	if statics == nil ||
 		len(statics) == 0 {
@@ -172,15 +153,6 @@ func registerMiddlewares(
 	customization Customization,
 	router *mux.Router,
 ) {
-	if isInterfaceValueNil(customization) {
-		appRoot(
-			session,
-			"register",
-			"registerMiddlewares",
-			"customization.Middlewares function not set: no middleware registered!",
-		)
-		return
-	}
 	var middlewares = customization.Middlewares()
 	if middlewares == nil ||
 		len(middlewares) == 0 {
@@ -200,23 +172,23 @@ func registerMiddlewares(
 	}
 }
 
-func registerErrorHandlers(router *mux.Router) {
-	router.MethodNotAllowedHandler = &handler.MethodNotAllowedHandler{}
-	router.NotFoundHandler = &handler.NotFoundHandler{}
+func registerErrorHandlers(
+	customization Customization,
+	router *mux.Router,
+) {
+	router.MethodNotAllowedHandler = customization.MethodNotAllowedHandler()
+	router.NotFoundHandler = customization.NotFoundHandler()
 }
 
 func instrumentRouter(
 	customization Customization,
 	router *mux.Router,
 ) *mux.Router {
-	if isInterfaceValueNil(customization) {
-		return router
-	}
 	return customization.InstrumentRouter(router)
 }
 
-// register instantiates and registers the given routes according to custom specification
-func register(
+// instantiateRouter instantiates and registers the given routes according to custom specification
+func instantiateRouter(
 	session *session,
 	customization Customization,
 ) (*mux.Router, error) {
@@ -244,6 +216,7 @@ func register(
 		return nil, errRouteRegistion
 	}
 	registerErrorHandlers(
+		customization,
 		router,
 	)
 	return instrumentRouter(

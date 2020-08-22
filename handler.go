@@ -2,6 +2,7 @@ package webserver
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -19,6 +20,21 @@ func executeCustomizedFunction(
 	)
 }
 
+func getRequestedPort(
+	httpRequest *http.Request,
+) int {
+	if httpRequest == nil ||
+		httpRequest.URL == nil {
+		return 0
+	}
+	var portString = httpRequest.URL.Port()
+	var portNumber, parseError = strconv.Atoi(portString)
+	if parseError != nil {
+		return 0
+	}
+	return portNumber
+}
+
 // handleSession wraps the HTTP handler with session related operations
 func handleSession(
 	writeResponser http.ResponseWriter,
@@ -27,7 +43,11 @@ func handleSession(
 	var endpoint, action, routeError = getRouteInfo(
 		httpRequest,
 	)
-	var customization = &defaultCustomization{} // TODO: where to get this from app??
+	var customization = getCustomization(
+		getRequestedPort(
+			httpRequest,
+		),
+	)
 	var session = &session{
 		uuid.New(),
 		endpoint,
@@ -46,7 +66,6 @@ func handleSession(
 	defer func() {
 		handlePanic(
 			session,
-			customization,
 			recover(),
 		)
 		apiExit(
@@ -60,7 +79,6 @@ func handleSession(
 	if routeError != nil {
 		writeResponse(
 			session,
-			customization,
 			nil,
 			routeError,
 		)
@@ -71,7 +89,6 @@ func handleSession(
 		if preActionError != nil {
 			writeResponse(
 				session,
-				customization,
 				nil,
 				preActionError,
 			)
@@ -88,7 +105,7 @@ func handleSession(
 						session,
 						endpoint,
 						httpRequest.Method,
-						"Post-action error: %v",
+						"Post-action error: %+v",
 						postActionError,
 					)
 					writeResponse(
@@ -99,7 +116,6 @@ func handleSession(
 				} else {
 					writeResponse(
 						session,
-						customization,
 						nil,
 						postActionError,
 					)
@@ -107,7 +123,6 @@ func handleSession(
 			} else {
 				writeResponse(
 					session,
-					customization,
 					responseObject,
 					responseError,
 				)

@@ -8,7 +8,7 @@ import (
 func getRecoverError(recoverResult interface{}) error {
 	var err, ok = recoverResult.(error)
 	if !ok {
-		err = fmt.Errorf("%v", recoverResult)
+		err = fmt.Errorf("Endpoint panic: %v", recoverResult)
 	}
 	return err
 }
@@ -35,7 +35,7 @@ func handlePanic(
 			session,
 			"panic",
 			"Handle",
-			"%v\n%v",
+			"%+v\n%v",
 			appError,
 			getDebugStack(),
 		)

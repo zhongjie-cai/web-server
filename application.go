@@ -8,7 +8,7 @@ import (
 
 // Application is the interface for web server application
 type Application interface {
-	Start(customization Customization)
+	Start()
 	Stop()
 }
 
@@ -26,8 +26,12 @@ func NewApplication(
 	name string,
 	port int,
 	version string,
+	customization Customization,
 ) Application {
-	var customization = &defaultCustomization{}
+	registerCustomization(
+		port,
+		customization,
+	)
 	return &application{
 		name,
 		port,
@@ -45,12 +49,7 @@ func NewApplication(
 	}
 }
 
-func (app *application) Start(
-	customization Customization,
-) {
-	if !isInterfaceValueNil(customization) {
-		app.customization = customization
-	}
+func (app *application) Start() {
 	if !app.preBootstraping() {
 		return
 	}
@@ -65,7 +64,9 @@ func (app *application) Start(
 }
 
 func (app *application) Stop() {
-	app.shutdownSignal <- os.Interrupt
+	haltServer(
+		app.shutdownSignal,
+	)
 }
 
 func (app *application) preBootstraping() bool {
@@ -74,8 +75,8 @@ func (app *application) preBootstraping() bool {
 		appRoot(
 			app.session,
 			"application",
-			"doPreBootstraping",
-			"Failed to execute customization.PreBootstrap. Error: %v",
+			"preBootstraping",
+			"Failed to execute customization.PreBootstrap. Error: %+v",
 			preBootstrapError,
 		)
 		return false
@@ -83,7 +84,7 @@ func (app *application) preBootstraping() bool {
 	appRoot(
 		app.session,
 		"application",
-		"doPreBootstraping",
+		"preBootstraping",
 		"customization.PreBootstrap executed successfully",
 	)
 	return true
@@ -99,7 +100,7 @@ func (app *application) bootstrap() bool {
 	appRoot(
 		app.session,
 		"application",
-		"bootstrapApplication",
+		"bootstrap",
 		"Application bootstrapped successfully",
 	)
 	return true
@@ -111,8 +112,8 @@ func (app *application) postBootstraping() bool {
 		appRoot(
 			app.session,
 			"application",
-			"doPostBootstraping",
-			"Failed to execute customization.PostBootstrap. Error: %v",
+			"postBootstraping",
+			"Failed to execute customization.PostBootstrap. Error: %+v",
 			postBootstrapError,
 		)
 		return false
@@ -120,7 +121,7 @@ func (app *application) postBootstraping() bool {
 	appRoot(
 		app.session,
 		"application",
-		"doPostBootstraping",
+		"postBootstraping",
 		"customization.PostBootstrap executed successfully",
 	)
 	return true
@@ -130,28 +131,29 @@ func (app *application) begin() {
 	appRoot(
 		app.session,
 		"application",
-		"doApplicationStarting",
+		"begin",
 		"Trying to start server (v-%v)",
 		app.version,
 	)
-	var serverHostError = serverHost(
+	var serverHostError = hostServer(
 		app.port,
 		app.session,
 		app.customization,
+		app.shutdownSignal,
 	)
 	if serverHostError != nil {
 		appRoot(
 			app.session,
 			"application",
-			"doApplicationStarting",
-			"Failed to host server. Error: %v",
+			"begin",
+			"Failed to host server. Error: %+v",
 			serverHostError,
 		)
 	} else {
 		appRoot(
 			app.session,
 			"application",
-			"doApplicationStarting",
+			"begin",
 			"Server hosting terminated",
 		)
 	}
@@ -163,15 +165,15 @@ func (app *application) end() {
 		appRoot(
 			app.session,
 			"application",
-			"doApplicationClosing",
-			"Failed to execute customization.AppClosing. Error: %v",
+			"end",
+			"Failed to execute customization.AppClosing. Error: %+v",
 			appClosingError,
 		)
 	} else {
 		appRoot(
 			app.session,
 			"application",
-			"doApplicationClosing",
+			"end",
 			"customization.AppClosing executed successfully",
 		)
 	}

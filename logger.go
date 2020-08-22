@@ -15,9 +15,6 @@ func prepareLogging(
 	if session == nil {
 		return
 	}
-	if isInterfaceValueNil(session.customization) {
-		return
-	}
 	session.customization.Log(
 		session,
 		logType,
