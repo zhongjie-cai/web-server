@@ -149,7 +149,7 @@ func customizeHTTPRequest(session *session, httpRequest *http.Request) *http.Req
 func createHTTPRequest(webRequest *webRequest) (*http.Request, error) {
 	if webRequest == nil ||
 		webRequest.session == nil {
-		return nil, errWebRequestNil
+		return nil, ErrWebRequestNil
 	}
 	var requestBody = strings.NewReader(
 		webRequest.payload,
@@ -250,7 +250,7 @@ func logHTTPResponse(session *session, response *http.Response, startTime time.T
 func doRequestProcessing(webRequest *webRequest) (*http.Response, error) {
 	if webRequest == nil ||
 		webRequest.session == nil {
-		return nil, errWebRequestNil
+		return nil, ErrWebRequestNil
 	}
 	var requestObject, requestError = createHTTPRequest(
 		webRequest,
@@ -288,7 +288,7 @@ func doRequestProcessing(webRequest *webRequest) (*http.Response, error) {
 // ProcessRaw sends the network request over the wire, retrieves the response, and returns that response and error if applicable
 func (webRequest *webRequest) ProcessRaw() (responseObject *http.Response, responseError error) {
 	if webRequest == nil {
-		return nil, errWebRequestNil
+		return nil, ErrWebRequestNil
 	}
 	return doRequestProcessing(
 		webRequest,
@@ -314,7 +314,7 @@ func parseResponse(session *session, body io.ReadCloser, dataTemplate interface{
 			"%+v",
 			unmarshalError,
 		)
-		return errResponseInvalid
+		return ErrResponseInvalid
 	}
 	return nil
 }
@@ -322,7 +322,7 @@ func parseResponse(session *session, body io.ReadCloser, dataTemplate interface{
 // Process sends the network request over the wire, retrieves and serialize the response to dataTemplate, and provides status code, header and error if applicable
 func (webRequest *webRequest) Process(dataTemplate interface{}) (statusCode int, responseHeader http.Header, responseError error) {
 	if webRequest == nil {
-		return http.StatusInternalServerError, http.Header{}, errWebRequestNil
+		return http.StatusInternalServerError, http.Header{}, ErrWebRequestNil
 	}
 	var responseObject *http.Response
 	responseObject, responseError = doRequestProcessing(

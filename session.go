@@ -155,7 +155,7 @@ func (session *session) GetRequestBody(dataTemplate interface{}) error {
 		httpRequest,
 	)
 	if requestBody == "" {
-		return errRequestBodyEmpty
+		return ErrRequestBodyEmpty
 	}
 	logEndpointRequest(
 		session,
@@ -175,7 +175,7 @@ func (session *session) GetRequestBody(dataTemplate interface{}) error {
 			"%+v",
 			unmarshalError,
 		)
-		return errRequestBodyInvalid
+		return ErrRequestBodyInvalid
 	}
 	return nil
 }
@@ -191,7 +191,7 @@ func (session *session) GetRequestParameter(name string, dataTemplate interface{
 	)
 	var value, found = parameters[name]
 	if !found {
-		return errParameterNotFound
+		return ErrParameterNotFound
 	}
 	logEndpointRequest(
 		session,
@@ -211,7 +211,7 @@ func (session *session) GetRequestParameter(name string, dataTemplate interface{
 			"%+v",
 			unmarshalError,
 		)
-		return errParameterInvalid
+		return ErrParameterInvalid
 	}
 	return nil
 }
@@ -235,7 +235,7 @@ func (session *session) GetRequestQuery(name string, index int, dataTemplate int
 		name,
 	)
 	if len(queries) <= index {
-		return errQueryNotFound
+		return ErrQueryNotFound
 	}
 	var value = queries[index]
 	logEndpointRequest(
@@ -256,7 +256,7 @@ func (session *session) GetRequestQuery(name string, index int, dataTemplate int
 			"%+v",
 			unmarshalError,
 		)
-		return errQueryInvalid
+		return ErrQueryInvalid
 	}
 	return nil
 }
@@ -281,7 +281,7 @@ func (session *session) GetRequestHeader(name string, index int, dataTemplate in
 		name,
 	)
 	if len(headers) <= index {
-		return errHeaderNotFound
+		return ErrHeaderNotFound
 	}
 	var value = headers[index]
 	logEndpointRequest(
@@ -302,7 +302,7 @@ func (session *session) GetRequestHeader(name string, index int, dataTemplate in
 			"%+v",
 			unmarshalError,
 		)
-		return errHeaderInvalid
+		return ErrHeaderInvalid
 	}
 	return nil
 }

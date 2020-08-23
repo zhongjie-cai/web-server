@@ -10,19 +10,6 @@ const (
 	ContentTypeJSON = "application/json; charset=utf-8"
 )
 
-func createOkResponse(
-	responseContent interface{},
-) (int, string) {
-	if responseContent == nil {
-		return http.StatusNoContent, ""
-	}
-	var responseMessage = marshalIgnoreError(responseContent)
-	if responseMessage == "" {
-		return http.StatusNoContent, ""
-	}
-	return http.StatusOK, responseMessage
-}
-
 func constructResponse(
 	session *session,
 	responseObject interface{},
@@ -33,7 +20,7 @@ func constructResponse(
 			responseError,
 		)
 	}
-	return createOkResponse(
+	return session.customization.InterpretSuccess(
 		responseObject,
 	)
 }

@@ -69,7 +69,10 @@ type HandlerCustomization interface {
 	// PostAction is to customize the post-actiontion used after each route action takes place, e.g. finalization, etc.
 	PostAction(session Session) error
 
-	// InterpretError is to customize how application interpret an error into HTTP status code and corresponding status message
+	// InterpretSuccess is to customize how application interpret a response content into HTTP status code and corresponding response body
+	InterpretSuccess(responseContent interface{}) (int, string)
+
+	// InterpretError is to customize how application interpret an error into HTTP status code and corresponding response body
 	InterpretError(err error) (int, string)
 
 	// NotFoundHandler is to customize the handler to be used when no route matches.
@@ -183,6 +186,18 @@ func (customization *DefaultCustomization) PostAction(session Session) error {
 	return nil
 }
 
+// InterpretSuccess is to customize how application interpret a response content into HTTP status code and corresponding response body
+func (customization *DefaultCustomization) InterpretSuccess(responseContent interface{}) (int, string) {
+	if responseContent == nil {
+		return http.StatusNoContent, ""
+	}
+	var responseMessage = marshalIgnoreError(responseContent)
+	if responseMessage == "" {
+		return http.StatusNoContent, ""
+	}
+	return http.StatusOK, responseMessage
+}
+
 // InterpretError is to customize how application interpret an error into HTTP status code and corresponding status message
 func (customization *DefaultCustomization) InterpretError(err error) (int, string) {
 	var statusCode int
@@ -195,25 +210,25 @@ func (customization *DefaultCustomization) InterpretError(err error) (int, strin
 		statusCode = http.StatusNotFound
 	case errHostServer:
 		statusCode = http.StatusInternalServerError
-	case errRequestBodyEmpty:
+	case ErrRequestBodyEmpty:
 		statusCode = http.StatusBadRequest
-	case errRequestBodyInvalid:
+	case ErrRequestBodyInvalid:
 		statusCode = http.StatusBadRequest
-	case errParameterNotFound:
+	case ErrParameterNotFound:
 		statusCode = http.StatusBadRequest
-	case errParameterInvalid:
+	case ErrParameterInvalid:
 		statusCode = http.StatusBadRequest
-	case errQueryNotFound:
+	case ErrQueryNotFound:
 		statusCode = http.StatusBadRequest
-	case errQueryInvalid:
+	case ErrQueryInvalid:
 		statusCode = http.StatusBadRequest
-	case errHeaderNotFound:
+	case ErrHeaderNotFound:
 		statusCode = http.StatusBadRequest
-	case errHeaderInvalid:
+	case ErrHeaderInvalid:
 		statusCode = http.StatusBadRequest
-	case errWebRequestNil:
+	case ErrWebRequestNil:
 		statusCode = http.StatusInternalServerError
-	case errResponseInvalid:
+	case ErrResponseInvalid:
 		statusCode = http.StatusInternalServerError
 	default:
 		statusCode = http.StatusInternalServerError
