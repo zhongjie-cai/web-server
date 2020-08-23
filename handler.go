@@ -3,6 +3,7 @@ package webserver
 import (
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -23,12 +24,15 @@ func executeCustomizedFunction(
 func getRequestedPort(
 	httpRequest *http.Request,
 ) int {
-	if httpRequest == nil ||
-		httpRequest.URL == nil {
+	if httpRequest == nil {
 		return 0
 	}
-	var portString = httpRequest.URL.Port()
-	var portNumber, parseError = strconv.Atoi(portString)
+	var hostAddress = httpRequest.Host
+	var hostParts = strings.Split(hostAddress, ":")
+	if len(hostParts) < 2 {
+		return 0
+	}
+	var portNumber, parseError = strconv.Atoi(hostParts[1])
 	if parseError != nil {
 		return 0
 	}
@@ -40,14 +44,17 @@ func handleSession(
 	writeResponser http.ResponseWriter,
 	httpRequest *http.Request,
 ) {
-	var endpoint, action, routeError = getRouteInfo(
+	var port = getRequestedPort(
 		httpRequest,
 	)
-	var customization = getCustomization(
-		getRequestedPort(
-			httpRequest,
-		),
+	var application = getApplication(
+		port,
 	)
+	var endpoint, action, routeError = getRouteInfo(
+		httpRequest,
+		application.actionFuncMap,
+	)
+	var customization = application.customization
 	var session = &session{
 		uuid.New(),
 		endpoint,
@@ -83,7 +90,7 @@ func handleSession(
 			routeError,
 		)
 	} else {
-		var preActionError = session.customization.PreAction(
+		var preActionError = customization.PreAction(
 			session,
 		)
 		if preActionError != nil {
@@ -96,7 +103,7 @@ func handleSession(
 			var responseObject, responseError = action(
 				session,
 			)
-			var postActionError = session.customization.PostAction(
+			var postActionError = customization.PostAction(
 				session,
 			)
 			if postActionError != nil {

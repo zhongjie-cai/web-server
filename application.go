@@ -2,6 +2,7 @@ package webserver
 
 import (
 	"os"
+	"sync"
 
 	"github.com/google/uuid"
 )
@@ -12,12 +13,29 @@ type Application interface {
 	Stop()
 }
 
+var (
+	applicationLock = sync.RWMutex{}
+	applicationMap  = map[int]*application{}
+	nilApplication  = &application{
+		session: &session{
+			request:        defaultRequest,
+			responseWriter: defaultResponseWriter,
+			attachment:     map[string]interface{}{},
+			customization:  customizationDefault,
+		},
+		customization:  customizationDefault,
+		actionFuncMap:  map[string]ActionFunc{},
+		shutdownSignal: make(chan os.Signal, 1),
+	}
+)
+
 type application struct {
 	name           string
 	port           int
 	version        string
 	session        *session
 	customization  Customization
+	actionFuncMap  map[string]ActionFunc
 	shutdownSignal chan os.Signal
 }
 
@@ -28,11 +46,12 @@ func NewApplication(
 	version string,
 	customization Customization,
 ) Application {
-	registerCustomization(
-		port,
-		customization,
-	)
-	return &application{
+	applicationLock.Lock()
+	defer applicationLock.Unlock()
+	if isInterfaceValueNil(customization) {
+		customization = customizationDefault
+	}
+	var application = &application{
 		name,
 		port,
 		version,
@@ -45,8 +64,23 @@ func NewApplication(
 			customization,
 		},
 		customization,
+		map[string]ActionFunc{},
 		make(chan os.Signal, 1),
 	}
+	applicationMap[port] = application
+	return application
+}
+
+func getApplication(
+	port int,
+) *application {
+	applicationLock.RLock()
+	defer applicationLock.RUnlock()
+	var application, found = applicationMap[port]
+	if !found {
+		return nilApplication
+	}
+	return application
 }
 
 func (app *application) Start() {

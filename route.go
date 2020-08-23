@@ -22,8 +22,6 @@ const (
 	stringSeparator string = "|"
 )
 
-var registeredRouteActionFuncs map[string]ActionFunc
-
 func getName(route *mux.Route) string {
 	return route.GetName()
 }
@@ -92,7 +90,6 @@ func walkRegisteredRoutes(
 
 // createRouter initializes a router for route registrations
 func createRouter() *mux.Router {
-	registeredRouteActionFuncs = map[string]ActionFunc{}
 	return mux.NewRouter()
 }
 
@@ -105,6 +102,7 @@ func handleFunc(
 	queries []string,
 	handleFunc func(http.ResponseWriter, *http.Request),
 	actionFunc ActionFunc,
+	port int,
 ) *mux.Route {
 	var name = fmt.Sprintf(
 		"%v:%v",
@@ -121,7 +119,8 @@ func handleFunc(
 	).Name(
 		name,
 	)
-	registeredRouteActionFuncs[name] = actionFunc
+	var application = getApplication(port)
+	application.actionFuncMap[name] = actionFunc
 	return route
 }
 
@@ -140,22 +139,17 @@ func getEndpointByName(name string) string {
 	return splitSubs[0]
 }
 
-func getActionByName(name string) ActionFunc {
-	var actionFunc, found = registeredRouteActionFuncs[name]
-	if !found {
-		return defaultActionFunc
-	}
-	return actionFunc
-}
-
 // getRouteInfo retrieves the registered name and action for the given route
-func getRouteInfo(httpRequest *http.Request) (string, ActionFunc, error) {
+func getRouteInfo(httpRequest *http.Request, actionFuncMap map[string]ActionFunc) (string, ActionFunc, error) {
 	var route = mux.CurrentRoute(httpRequest)
 	if route == nil {
 		return "", nil, errRouteNotFound
 	}
 	var name = getName(route)
 	var endpoint = getEndpointByName(name)
-	var action = getActionByName(name)
+	var action, found = actionFuncMap[name]
+	if !found {
+		action = defaultActionFunc
+	}
 	return endpoint, action, nil
 }

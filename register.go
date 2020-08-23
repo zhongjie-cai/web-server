@@ -86,6 +86,7 @@ func evaluateQueries(
 }
 
 func registerRoutes(
+	port int,
 	session *session,
 	customization Customization,
 	router *mux.Router,
@@ -118,6 +119,7 @@ func registerRoutes(
 			queries,
 			handleSession,
 			configuredRoute.ActionFunc,
+			port,
 		)
 	}
 }
@@ -189,11 +191,13 @@ func instrumentRouter(
 
 // instantiateRouter instantiates and registers the given routes according to custom specification
 func instantiateRouter(
+	port int,
 	session *session,
 	customization Customization,
 ) (*mux.Router, error) {
 	var router = createRouter()
 	registerRoutes(
+		port,
 		session,
 		customization,
 		router,

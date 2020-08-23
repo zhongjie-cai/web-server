@@ -19,6 +19,7 @@ func hostServer(
 	shutdownSignal chan os.Signal,
 ) error {
 	var router, routerError = instantiateRouter(
+		port,
 		session,
 		customization,
 	)
