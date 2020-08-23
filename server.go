@@ -26,7 +26,7 @@ func hostServer(
 	if routerError != nil {
 		return errRouteRegistion
 	}
-	appRoot(
+	logAppRoot(
 		session,
 		"server",
 		"Host",
@@ -41,7 +41,7 @@ func hostServer(
 		shutdownSignal,
 	)
 	if hostError != nil {
-		appRoot(
+		logAppRoot(
 			session,
 			"server",
 			"Host",
@@ -50,7 +50,7 @@ func hostServer(
 		)
 		return errHostServer
 	}
-	appRoot(
+	logAppRoot(
 		session,
 		"server",
 		"Host",
@@ -153,7 +153,7 @@ func runServer(
 
 	<-shutdownSignal
 
-	appRoot(
+	logAppRoot(
 		session,
 		"server",
 		"Host",
@@ -161,7 +161,7 @@ func runServer(
 	)
 
 	if hostError != http.ErrServerClosed {
-		appRoot(
+		logAppRoot(
 			session,
 			"server",
 			"Host",

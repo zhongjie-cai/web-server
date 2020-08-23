@@ -162,13 +162,13 @@ func createHTTPRequest(webRequest *webRequest) (*http.Request, error) {
 	if requestError != nil {
 		return nil, requestError
 	}
-	networkCall(
+	logWebcallStart(
 		webRequest.session,
 		webRequest.method,
 		"",
 		webRequest.url,
 	)
-	networkRequest(
+	logWebcallRequest(
 		webRequest.session,
 		"Payload",
 		"",
@@ -178,7 +178,7 @@ func createHTTPRequest(webRequest *webRequest) (*http.Request, error) {
 	for name, value := range webRequest.header {
 		requestObject.Header.Add(name, value)
 	}
-	networkRequest(
+	logWebcallRequest(
 		webRequest.session,
 		"Header",
 		"",
@@ -193,14 +193,14 @@ func createHTTPRequest(webRequest *webRequest) (*http.Request, error) {
 }
 
 func logErrorResponse(session *session, responseError error, startTime time.Time) {
-	networkResponse(
+	logWebcallResponse(
 		session,
 		"Message",
 		"",
 		"%+v",
 		responseError,
 	)
-	networkFinish(
+	logWebcallFinish(
 		session,
 		"Error",
 		"",
@@ -224,7 +224,7 @@ func logHTTPResponse(session *session, response *http.Response, startTime time.T
 			responseBody,
 		),
 	)
-	networkRequest(
+	logWebcallRequest(
 		session,
 		"Header",
 		"",
@@ -232,13 +232,13 @@ func logHTTPResponse(session *session, response *http.Response, startTime time.T
 			responseHeaders,
 		),
 	)
-	networkResponse(
+	logWebcallResponse(
 		session,
 		"Body",
 		"",
 		string(responseBody),
 	)
-	networkFinish(
+	logWebcallFinish(
 		session,
 		http.StatusText(responseStatusCode),
 		strconv.Itoa(responseStatusCode),
@@ -307,7 +307,7 @@ func parseResponse(session *session, body io.ReadCloser, dataTemplate interface{
 		dataTemplate,
 	)
 	if unmarshalError != nil {
-		networkResponse(
+		logWebcallResponse(
 			session,
 			"Body",
 			"UnmarshalError",

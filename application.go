@@ -9,7 +9,11 @@ import (
 
 // Application is the interface for web server application
 type Application interface {
+	// Start starts the web server hosting in the current running thread, causing the thread to be blocked until a Stop is called or an interrupt signal is received
 	Start()
+	// StartAsync starts the web server hosting in a new Goroutine (thread); if a sync wait group is provided, the wait group would be used for async management, otherwise a new wait group would be created and returned
+	StartAsync(*sync.WaitGroup) *sync.WaitGroup
+	// Stop interrupts the web server hosting, causing the web server to gracefully shutdown; a synchronous Start would then return, or an asynchronous StartSync would mark its wait group done and then return
 	Stop()
 }
 
@@ -97,6 +101,20 @@ func (app *application) Start() {
 	app.begin()
 }
 
+func (app *application) StartAsync(waitGroup *sync.WaitGroup) *sync.WaitGroup {
+	if waitGroup == nil {
+		waitGroup = &sync.WaitGroup{}
+	}
+	waitGroup.Add(1)
+	go func() {
+		if waitGroup != nil {
+			defer waitGroup.Done()
+		}
+		app.Start()
+	}()
+	return waitGroup
+}
+
 func (app *application) Stop() {
 	haltServer(
 		app.shutdownSignal,
@@ -106,7 +124,7 @@ func (app *application) Stop() {
 func (app *application) preBootstraping() bool {
 	var preBootstrapError = app.customization.PreBootstrap()
 	if preBootstrapError != nil {
-		appRoot(
+		logAppRoot(
 			app.session,
 			"application",
 			"preBootstraping",
@@ -115,7 +133,7 @@ func (app *application) preBootstraping() bool {
 		)
 		return false
 	}
-	appRoot(
+	logAppRoot(
 		app.session,
 		"application",
 		"preBootstraping",
@@ -131,7 +149,7 @@ func (app *application) bootstrap() bool {
 		app.customization.ClientCert(),
 		app.customization.RoundTripper,
 	)
-	appRoot(
+	logAppRoot(
 		app.session,
 		"application",
 		"bootstrap",
@@ -143,7 +161,7 @@ func (app *application) bootstrap() bool {
 func (app *application) postBootstraping() bool {
 	var postBootstrapError = app.customization.PostBootstrap()
 	if postBootstrapError != nil {
-		appRoot(
+		logAppRoot(
 			app.session,
 			"application",
 			"postBootstraping",
@@ -152,7 +170,7 @@ func (app *application) postBootstraping() bool {
 		)
 		return false
 	}
-	appRoot(
+	logAppRoot(
 		app.session,
 		"application",
 		"postBootstraping",
@@ -162,7 +180,7 @@ func (app *application) postBootstraping() bool {
 }
 
 func (app *application) begin() {
-	appRoot(
+	logAppRoot(
 		app.session,
 		"application",
 		"begin",
@@ -176,7 +194,7 @@ func (app *application) begin() {
 		app.shutdownSignal,
 	)
 	if serverHostError != nil {
-		appRoot(
+		logAppRoot(
 			app.session,
 			"application",
 			"begin",
@@ -184,7 +202,7 @@ func (app *application) begin() {
 			serverHostError,
 		)
 	} else {
-		appRoot(
+		logAppRoot(
 			app.session,
 			"application",
 			"begin",
@@ -196,7 +214,7 @@ func (app *application) begin() {
 func (app *application) end() {
 	var appClosingError = app.customization.AppClosing()
 	if appClosingError != nil {
-		appRoot(
+		logAppRoot(
 			app.session,
 			"application",
 			"end",
@@ -204,7 +222,7 @@ func (app *application) end() {
 			appClosingError,
 		)
 	} else {
-		appRoot(
+		logAppRoot(
 			app.session,
 			"application",
 			"end",

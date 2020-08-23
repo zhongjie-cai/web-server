@@ -157,7 +157,7 @@ func (session *session) GetRequestBody(dataTemplate interface{}) error {
 	if requestBody == "" {
 		return errRequestBodyEmpty
 	}
-	apiRequest(
+	logEndpointRequest(
 		session,
 		"Body",
 		"Content",
@@ -168,7 +168,7 @@ func (session *session) GetRequestBody(dataTemplate interface{}) error {
 		dataTemplate,
 	)
 	if unmarshalError != nil {
-		apiRequest(
+		logEndpointRequest(
 			session,
 			"Body",
 			"UnmarshalError",
@@ -193,7 +193,7 @@ func (session *session) GetRequestParameter(name string, dataTemplate interface{
 	if !found {
 		return errParameterNotFound
 	}
-	apiRequest(
+	logEndpointRequest(
 		session,
 		"Parameter",
 		name,
@@ -204,7 +204,7 @@ func (session *session) GetRequestParameter(name string, dataTemplate interface{
 		dataTemplate,
 	)
 	if unmarshalError != nil {
-		apiRequest(
+		logEndpointRequest(
 			session,
 			"Parameter",
 			"UnmarshalError",
@@ -238,7 +238,7 @@ func (session *session) GetRequestQuery(name string, index int, dataTemplate int
 		return errQueryNotFound
 	}
 	var value = queries[index]
-	apiRequest(
+	logEndpointRequest(
 		session,
 		"Query",
 		name,
@@ -249,7 +249,7 @@ func (session *session) GetRequestQuery(name string, index int, dataTemplate int
 		dataTemplate,
 	)
 	if unmarshalError != nil {
-		apiRequest(
+		logEndpointRequest(
 			session,
 			"Query",
 			"UnmarshalError",
@@ -284,7 +284,7 @@ func (session *session) GetRequestHeader(name string, index int, dataTemplate in
 		return errHeaderNotFound
 	}
 	var value = headers[index]
-	apiRequest(
+	logEndpointRequest(
 		session,
 		"Header",
 		name,
@@ -295,7 +295,7 @@ func (session *session) GetRequestHeader(name string, index int, dataTemplate in
 		dataTemplate,
 	)
 	if unmarshalError != nil {
-		apiRequest(
+		logEndpointRequest(
 			session,
 			"Header",
 			"UnmarshalError",
@@ -374,7 +374,7 @@ func getMethodName() string {
 // LogMethodEnter sends a logging entry of MethodEnter log type for the given session associated to the session ID
 func (session *session) LogMethodEnter() {
 	var methodName = getMethodName()
-	methodEnter(
+	logMethodEnter(
 		session,
 		methodName,
 		"",
@@ -386,7 +386,7 @@ func (session *session) LogMethodEnter() {
 func (session *session) LogMethodParameter(parameters ...interface{}) {
 	var methodName = getMethodName()
 	for index, parameter := range parameters {
-		methodParameter(
+		logMethodParameter(
 			session,
 			methodName,
 			strconv.Itoa(index),
@@ -398,7 +398,7 @@ func (session *session) LogMethodParameter(parameters ...interface{}) {
 
 // LogMethodLogic sends a logging entry of MethodLogic log type for the given session associated to the session ID
 func (session *session) LogMethodLogic(logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-	methodLogic(
+	logMethodLogic(
 		session,
 		logLevel,
 		category,
@@ -412,7 +412,7 @@ func (session *session) LogMethodLogic(logLevel LogLevel, category string, subca
 func (session *session) LogMethodReturn(returns ...interface{}) {
 	var methodName = getMethodName()
 	for index, returnValue := range returns {
-		methodReturn(
+		logMethodReturn(
 			session,
 			methodName,
 			strconv.Itoa(index),
@@ -425,7 +425,7 @@ func (session *session) LogMethodReturn(returns ...interface{}) {
 // LogMethodExit sends a logging entry of MethodExit log type for the given session associated to the session ID
 func (session *session) LogMethodExit() {
 	var methodName = getMethodName()
-	methodExit(
+	logMethodExit(
 		session,
 		methodName,
 		"",

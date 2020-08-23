@@ -25,8 +25,8 @@ func prepareLogging(
 	)
 }
 
-// appRoot logs the given message as AppRoot category
-func appRoot(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+// logAppRoot logs the given message as AppRoot category
+func logAppRoot(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 	prepareLogging(
 		session,
 		AppRoot,
@@ -40,11 +40,11 @@ func appRoot(session *session, category string, subcategory string, messageForma
 	)
 }
 
-// apiEnter logs the given message as APIEnter category
-func apiEnter(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+// logEndpointEnter logs the given message as EndpointEnter category
+func logEndpointEnter(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 	prepareLogging(
 		session,
-		APIEnter,
+		EndpointEnter,
 		Info,
 		category,
 		subcategory,
@@ -55,11 +55,11 @@ func apiEnter(session *session, category string, subcategory string, messageForm
 	)
 }
 
-// apiRequest logs the given message as APIRequest category
-func apiRequest(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+// logEndpointRequest logs the given message as EndpointRequest category
+func logEndpointRequest(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 	prepareLogging(
 		session,
-		APIRequest,
+		EndpointRequest,
 		Info,
 		category,
 		subcategory,
@@ -70,8 +70,8 @@ func apiRequest(session *session, category string, subcategory string, messageFo
 	)
 }
 
-// methodEnter logs the given message as MethodEnter category
-func methodEnter(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+// logMethodEnter logs the given message as MethodEnter category
+func logMethodEnter(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 	prepareLogging(
 		session,
 		MethodEnter,
@@ -85,8 +85,8 @@ func methodEnter(session *session, category string, subcategory string, messageF
 	)
 }
 
-// methodParameter logs the given message as MethodParameter category
-func methodParameter(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+// logMethodParameter logs the given message as MethodParameter category
+func logMethodParameter(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 	prepareLogging(
 		session,
 		MethodParameter,
@@ -100,8 +100,8 @@ func methodParameter(session *session, category string, subcategory string, mess
 	)
 }
 
-// methodLogic logs the given message as MethodLogic category
-func methodLogic(session *session, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+// logMethodLogic logs the given message as MethodLogic category
+func logMethodLogic(session *session, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 	prepareLogging(
 		session,
 		MethodLogic,
@@ -115,11 +115,11 @@ func methodLogic(session *session, logLevel LogLevel, category string, subcatego
 	)
 }
 
-// networkCall logs the given message as NetworkCall category
-func networkCall(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+// logWebcallStart logs the given message as WebcallStart category
+func logWebcallStart(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 	prepareLogging(
 		session,
-		NetworkCall,
+		WebcallStart,
 		Info,
 		category,
 		subcategory,
@@ -130,11 +130,11 @@ func networkCall(session *session, category string, subcategory string, messageF
 	)
 }
 
-// networkRequest logs the given message as NetworkRequest category
-func networkRequest(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+// logWebcallRequest logs the given message as WebcallRequest category
+func logWebcallRequest(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 	prepareLogging(
 		session,
-		NetworkRequest,
+		WebcallRequest,
 		Info,
 		category,
 		subcategory,
@@ -145,11 +145,11 @@ func networkRequest(session *session, category string, subcategory string, messa
 	)
 }
 
-// networkResponse logs the given message as NetworkResponse category
-func networkResponse(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+// logWebcallResponse logs the given message as WebcallResponse category
+func logWebcallResponse(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 	prepareLogging(
 		session,
-		NetworkResponse,
+		WebcallResponse,
 		Info,
 		category,
 		subcategory,
@@ -160,11 +160,11 @@ func networkResponse(session *session, category string, subcategory string, mess
 	)
 }
 
-// networkFinish logs the given message as NetworkFinish category
-func networkFinish(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+// logWebcallFinish logs the given message as WebcallFinish category
+func logWebcallFinish(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 	prepareLogging(
 		session,
-		NetworkFinish,
+		WebcallFinish,
 		Info,
 		category,
 		subcategory,
@@ -175,8 +175,8 @@ func networkFinish(session *session, category string, subcategory string, messag
 	)
 }
 
-// methodReturn logs the given message as MethodReturn category
-func methodReturn(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+// logMethodReturn logs the given message as MethodReturn category
+func logMethodReturn(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 	prepareLogging(
 		session,
 		MethodReturn,
@@ -190,8 +190,8 @@ func methodReturn(session *session, category string, subcategory string, message
 	)
 }
 
-// methodExit logs the given message as MethodExit category
-func methodExit(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+// logMethodExit logs the given message as MethodExit category
+func logMethodExit(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 	prepareLogging(
 		session,
 		MethodExit,
@@ -205,11 +205,11 @@ func methodExit(session *session, category string, subcategory string, messageFo
 	)
 }
 
-// apiResponse logs the given message as APIResponse category
-func apiResponse(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+// logEndpointResponse logs the given message as EndpointResponse category
+func logEndpointResponse(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 	prepareLogging(
 		session,
-		APIResponse,
+		EndpointResponse,
 		Info,
 		category,
 		subcategory,
@@ -220,11 +220,11 @@ func apiResponse(session *session, category string, subcategory string, messageF
 	)
 }
 
-// apiExit logs the given message as APIExit category
-func apiExit(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+// logEndpointExit logs the given message as EndpointExit category
+func logEndpointExit(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 	prepareLogging(
 		session,
-		APIExit,
+		EndpointExit,
 		Info,
 		category,
 		subcategory,

@@ -31,7 +31,7 @@ func handlePanic(
 			nil,
 			appError,
 		)
-		appRoot(
+		logAppRoot(
 			session,
 			"panic",
 			"Handle",

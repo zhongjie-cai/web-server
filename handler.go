@@ -64,7 +64,7 @@ func handleSession(
 		customization,
 	}
 	var startTime = getTimeNowUTC()
-	apiEnter(
+	logEndpointEnter(
 		session,
 		endpoint,
 		httpRequest.Method,
@@ -75,7 +75,7 @@ func handleSession(
 			session,
 			recover(),
 		)
-		apiExit(
+		logEndpointExit(
 			session,
 			endpoint,
 			httpRequest.Method,
@@ -108,7 +108,7 @@ func handleSession(
 			)
 			if postActionError != nil {
 				if responseError != nil {
-					apiExit(
+					logEndpointExit(
 						session,
 						endpoint,
 						httpRequest.Method,

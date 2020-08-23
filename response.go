@@ -49,7 +49,7 @@ func writeResponse(
 		responseObject,
 		responseError,
 	)
-	apiResponse(
+	logEndpointResponse(
 		session,
 		http.StatusText(statusCode),
 		strconv.Itoa(statusCode),

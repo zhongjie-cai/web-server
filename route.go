@@ -76,7 +76,7 @@ func walkRegisteredRoutes(
 		printRegisteredRouteDetails,
 	)
 	if walkError != nil {
-		appRoot(
+		logAppRoot(
 			session,
 			"route",
 			"walkRegisteredRoutes",

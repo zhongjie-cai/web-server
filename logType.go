@@ -10,29 +10,29 @@ type LogType int
 
 // These are the enum definitions of log types and presets
 const (
-	AppRoot  LogType = 0
-	APIEnter LogType = 1 << iota
-	APIRequest
+	AppRoot       LogType = 0
+	EndpointEnter LogType = 1 << iota
+	EndpointRequest
 	MethodEnter
 	MethodParameter
 	MethodLogic
-	NetworkCall
-	NetworkRequest
-	NetworkResponse
-	NetworkFinish
+	WebcallStart
+	WebcallRequest
+	WebcallResponse
+	WebcallFinish
 	MethodReturn
 	MethodExit
-	APIResponse
-	APIExit
+	EndpointResponse
+	EndpointExit
 
 	BasicTracing   LogType = MethodLogic
-	GeneralTracing LogType = BasicTracing | APIEnter | APIExit
-	VerboseTracing LogType = GeneralTracing | NetworkCall | NetworkFinish
+	GeneralTracing LogType = BasicTracing | EndpointEnter | EndpointExit
+	VerboseTracing LogType = GeneralTracing | WebcallStart | WebcallFinish
 	FullTracing    LogType = VerboseTracing | MethodEnter | MethodExit
 
 	BasicDebugging   LogType = MethodLogic
-	GeneralDebugging LogType = BasicDebugging | APIRequest | APIResponse
-	VerboseDebugging LogType = GeneralDebugging | NetworkRequest | NetworkResponse
+	GeneralDebugging LogType = BasicDebugging | EndpointRequest | EndpointResponse
+	VerboseDebugging LogType = GeneralDebugging | WebcallRequest | WebcallResponse
 	FullDebugging    LogType = VerboseDebugging | MethodParameter | MethodReturn
 
 	BasicLogging   LogType = BasicTracing | BasicDebugging
@@ -44,19 +44,19 @@ const (
 // These are the string representations of log category and preset names
 const (
 	appRootName         string = "AppRoot"
-	apiEnterName        string = "APIEnter"
-	apiRequestName      string = "APIRequest"
+	apiEnterName        string = "EndpointEnter"
+	apiRequestName      string = "EndpointRequest"
 	methodEnterName     string = "MethodEnter"
 	methodParameterName string = "MethodParameter"
 	methodLogicName     string = "MethodLogic"
-	networkCallName     string = "NetworkCall"
-	networkRequestName  string = "NetworkRequest"
-	networkResponseName string = "NetworkResponse"
-	networkFinishName   string = "NetworkFinish"
+	networkCallName     string = "WebcallStart"
+	networkRequestName  string = "WebcallRequest"
+	networkResponseName string = "WebcallResponse"
+	networkFinishName   string = "WebcallFinish"
 	methodReturnName    string = "MethodReturn"
 	methodExitName      string = "MethodExit"
-	apiResponseName     string = "APIResponse"
-	apiExitName         string = "APIExit"
+	apiResponseName     string = "EndpointResponse"
+	apiExitName         string = "EndpointExit"
 
 	basicTracingName   string = "BasicTracing"
 	generalTracingName string = "GeneralTracing"
@@ -75,36 +75,36 @@ const (
 )
 
 var supportedLogTypes = map[LogType]string{
-	APIEnter:        apiEnterName,
-	APIRequest:      apiRequestName,
-	MethodEnter:     methodEnterName,
-	MethodParameter: methodParameterName,
-	MethodLogic:     methodLogicName,
-	NetworkCall:     networkCallName,
-	NetworkRequest:  networkRequestName,
-	NetworkResponse: networkResponseName,
-	NetworkFinish:   networkFinishName,
-	MethodReturn:    methodReturnName,
-	MethodExit:      methodExitName,
-	APIResponse:     apiResponseName,
-	APIExit:         apiExitName,
+	EndpointEnter:    apiEnterName,
+	EndpointRequest:  apiRequestName,
+	MethodEnter:      methodEnterName,
+	MethodParameter:  methodParameterName,
+	MethodLogic:      methodLogicName,
+	WebcallStart:     networkCallName,
+	WebcallRequest:   networkRequestName,
+	WebcallResponse:  networkResponseName,
+	WebcallFinish:    networkFinishName,
+	MethodReturn:     methodReturnName,
+	MethodExit:       methodExitName,
+	EndpointResponse: apiResponseName,
+	EndpointExit:     apiExitName,
 }
 
 var logTypeNameMapping = map[string]LogType{
 	appRootName:          AppRoot,
-	apiEnterName:         APIEnter,
-	apiRequestName:       APIRequest,
+	apiEnterName:         EndpointEnter,
+	apiRequestName:       EndpointRequest,
 	methodEnterName:      MethodEnter,
 	methodParameterName:  MethodParameter,
 	methodLogicName:      MethodLogic,
-	networkCallName:      NetworkCall,
-	networkRequestName:   NetworkRequest,
-	networkResponseName:  NetworkResponse,
-	networkFinishName:    NetworkFinish,
+	networkCallName:      WebcallStart,
+	networkRequestName:   WebcallRequest,
+	networkResponseName:  WebcallResponse,
+	networkFinishName:    WebcallFinish,
 	methodReturnName:     MethodReturn,
 	methodExitName:       MethodExit,
-	apiResponseName:      APIResponse,
-	apiExitName:          APIExit,
+	apiResponseName:      EndpointResponse,
+	apiExitName:          EndpointExit,
 	basicTracingName:     BasicTracing,
 	generalTracingName:   GeneralTracing,
 	verboseTracingName:   VerboseTracing,

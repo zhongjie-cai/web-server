@@ -14,7 +14,7 @@ func doParameterReplacement(
 	parameterType ParameterType,
 ) string {
 	if parameterType == "" {
-		appRoot(
+		logAppRoot(
 			session,
 			"register",
 			"doParameterReplacement",
@@ -94,7 +94,7 @@ func registerRoutes(
 	var configuredRoutes = customization.Routes()
 	if configuredRoutes == nil ||
 		len(configuredRoutes) == 0 {
-		appRoot(
+		logAppRoot(
 			session,
 			"register",
 			"registerRoutes",
@@ -132,7 +132,7 @@ func registerStatics(
 	var statics = customization.Statics()
 	if statics == nil ||
 		len(statics) == 0 {
-		appRoot(
+		logAppRoot(
 			session,
 			"register",
 			"registerStatics",
@@ -158,7 +158,7 @@ func registerMiddlewares(
 	var middlewares = customization.Middlewares()
 	if middlewares == nil ||
 		len(middlewares) == 0 {
-		appRoot(
+		logAppRoot(
 			session,
 			"register",
 			"registerMiddlewares",
