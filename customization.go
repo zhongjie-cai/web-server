@@ -98,28 +98,29 @@ type WebRequestCustomization interface {
 }
 
 var (
-	customizationDefault = &defaultCustomization{}
+	customizationDefault = &DefaultCustomization{}
 )
 
-type defaultCustomization struct{}
+// DefaultCustomization can be used for easier customization override
+type DefaultCustomization struct{}
 
 // PreBootstrap is to customize the pre-processing logic before bootstrapping
-func (customization *defaultCustomization) PreBootstrap() error {
+func (customization *DefaultCustomization) PreBootstrap() error {
 	return nil
 }
 
 // PostBootstrap is to customize the post-processing logic after bootstrapping
-func (customization *defaultCustomization) PostBootstrap() error {
+func (customization *DefaultCustomization) PostBootstrap() error {
 	return nil
 }
 
 // AppClosing is to customize the application closing logic after server shutdown
-func (customization *defaultCustomization) AppClosing() error {
+func (customization *DefaultCustomization) AppClosing() error {
 	return nil
 }
 
 // Log is to customize the logging backend for the whole application
-func (customization *defaultCustomization) Log(session Session, logType LogType, logLevel LogLevel, category, subcategory, description string) {
+func (customization *DefaultCustomization) Log(session Session, logType LogType, logLevel LogLevel, category, subcategory, description string) {
 	if isInterfaceValueNil(session) {
 		return
 	}
@@ -138,56 +139,82 @@ func (customization *defaultCustomization) Log(session Session, logType LogType,
 }
 
 // ServerCert is to customize the server certificate for application; also determines the server hosting security option (HTTP v.s. HTTPS)
-func (customization *defaultCustomization) ServerCert() *tls.Certificate {
+func (customization *DefaultCustomization) ServerCert() *tls.Certificate {
 	return nil
 }
 
 // CaCertPool is to customize the CA cert pool for incoming client certificate validation; if not set or nil, no validation is conducted for incoming client certificates
-func (customization *defaultCustomization) CaCertPool() *x509.CertPool {
+func (customization *DefaultCustomization) CaCertPool() *x509.CertPool {
 	return nil
 }
 
 // GraceShutdownWaitTime is to customize the graceful shutdown wait time for the application
-func (customization *defaultCustomization) GraceShutdownWaitTime() time.Duration {
+func (customization *DefaultCustomization) GraceShutdownWaitTime() time.Duration {
 	return 3 * time.Minute
 }
 
 // Routes is to customize the routes registration
-func (customization *defaultCustomization) Routes() []Route {
+func (customization *DefaultCustomization) Routes() []Route {
 	return []Route{}
 }
 
 // Statics is to customize the static contents registration
-func (customization *defaultCustomization) Statics() []Static {
+func (customization *DefaultCustomization) Statics() []Static {
 	return []Static{}
 }
 
 // Middlewares is to customize the middlewares registration
-func (customization *defaultCustomization) Middlewares() []MiddlewareFunc {
+func (customization *DefaultCustomization) Middlewares() []MiddlewareFunc {
 	return []MiddlewareFunc{}
 }
 
 // InstrumentRouter is to customize the instrumentation on top of a fully configured router; usually useful for 3rd party monitoring tools such as new relic, etc.
-func (customization *defaultCustomization) InstrumentRouter(router *mux.Router) *mux.Router {
+func (customization *DefaultCustomization) InstrumentRouter(router *mux.Router) *mux.Router {
 	return router
 }
 
 // PreAction is to customize the pre-actiontion used before each route action takes place, e.g. authorization, etc.
-func (customization *defaultCustomization) PreAction(session Session) error {
+func (customization *DefaultCustomization) PreAction(session Session) error {
 	return nil
 }
 
 // PostAction is to customize the post-actiontion used after each route action takes place, e.g. finalization, etc.
-func (customization *defaultCustomization) PostAction(session Session) error {
+func (customization *DefaultCustomization) PostAction(session Session) error {
 	return nil
 }
 
 // InterpretError is to customize how application interpret an error into HTTP status code and corresponding status message
-func (customization *defaultCustomization) InterpretError(err error) (int, string) {
+func (customization *DefaultCustomization) InterpretError(err error) (int, string) {
 	var statusCode int
 	switch err {
+	case errSessionNil:
+		statusCode = http.StatusInternalServerError
+	case errRouteRegistion:
+		statusCode = http.StatusInternalServerError
+	case errRouteNotFound:
+		statusCode = http.StatusNotFound
+	case errHostServer:
+		statusCode = http.StatusInternalServerError
+	case errRequestBodyEmpty:
+		statusCode = http.StatusBadRequest
+	case errRequestBodyInvalid:
+		statusCode = http.StatusBadRequest
+	case errParameterNotFound:
+		statusCode = http.StatusBadRequest
+	case errParameterInvalid:
+		statusCode = http.StatusBadRequest
+	case errQueryNotFound:
+		statusCode = http.StatusBadRequest
+	case errQueryInvalid:
+		statusCode = http.StatusBadRequest
+	case errHeaderNotFound:
+		statusCode = http.StatusBadRequest
 	case errHeaderInvalid:
 		statusCode = http.StatusBadRequest
+	case errWebRequestNil:
+		statusCode = http.StatusInternalServerError
+	case errResponseInvalid:
+		statusCode = http.StatusInternalServerError
 	default:
 		statusCode = http.StatusInternalServerError
 	}
@@ -199,36 +226,36 @@ func (customization *defaultCustomization) InterpretError(err error) (int, strin
 }
 
 // NotFoundHandler is to customize the handler to be used when no route matches.
-func (customization *defaultCustomization) NotFoundHandler() http.Handler {
+func (customization *DefaultCustomization) NotFoundHandler() http.Handler {
 	return nil
 }
 
-// MethodNotAllowed is to customize the handler to be used when the request method does not match the route
-func (customization *defaultCustomization) MethodNotAllowedHandler() http.Handler {
+// MethodNotAllowedHandler is to customize the handler to be used when the request method does not match the route
+func (customization *DefaultCustomization) MethodNotAllowedHandler() http.Handler {
 	return nil
 }
 
 // ClientCert is to customize the client certificate for external requests; if not set or nil, no client certificate is sent to external web services
-func (customization *defaultCustomization) ClientCert() *tls.Certificate {
+func (customization *DefaultCustomization) ClientCert() *tls.Certificate {
 	return nil
 }
 
 // DefaultTimeout is to customize the default timeout for any network communications through HTTP/HTTPS by session
-func (customization *defaultCustomization) DefaultTimeout() time.Duration {
+func (customization *DefaultCustomization) DefaultTimeout() time.Duration {
 	return 3 * time.Minute
 }
 
 // SkipServerCertVerification is to customize the skip of server certificate verification for any network communications through HTTP/HTTPS by session
-func (customization *defaultCustomization) SkipServerCertVerification() bool {
+func (customization *DefaultCustomization) SkipServerCertVerification() bool {
 	return false
 }
 
 // RoundTripper is to customize the creation of the HTTP transport for any network communications through HTTP/HTTPS by session
-func (customization *defaultCustomization) RoundTripper(originalTransport http.RoundTripper) http.RoundTripper {
+func (customization *DefaultCustomization) RoundTripper(originalTransport http.RoundTripper) http.RoundTripper {
 	return originalTransport
 }
 
 // WrapRequest is to customize the creation of the HTTP request for any network communications through HTTP/HTTPS by session; utilize this method if needed for new relic wrapping, etc.
-func (customization *defaultCustomization) WrapRequest(session Session, httpRequest *http.Request) *http.Request {
+func (customization *DefaultCustomization) WrapRequest(session Session, httpRequest *http.Request) *http.Request {
 	return httpRequest
 }
