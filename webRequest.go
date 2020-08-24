@@ -95,28 +95,28 @@ func getHTTPTransport(
 }
 
 func initializeHTTPClients(
-	networkTimeout time.Duration,
+	webcallTimeout time.Duration,
 	skipServerCertVerification bool,
 	clientCertificate *tls.Certificate,
 	roundTripperWrapper func(originalTransport http.RoundTripper) http.RoundTripper,
 ) {
 	httpClientWithCert = &http.Client{
 		Transport: getHTTPTransport(skipServerCertVerification, clientCertificate, roundTripperWrapper),
-		Timeout:   networkTimeout,
+		Timeout:   webcallTimeout,
 	}
 	httpClientNoCert = &http.Client{
 		Transport: getHTTPTransport(skipServerCertVerification, nil, roundTripperWrapper),
-		Timeout:   networkTimeout,
+		Timeout:   webcallTimeout,
 	}
 }
 
-// WebRequest is an interface for easy operating on network requests and responses
+// WebRequest is an interface for easy operating on webcall requests and responses
 type WebRequest interface {
 	// EnableRetry sets up automatic retry upon error of specific HTTP status codes; each entry maps an HTTP status code to how many times retry should happen if code matches
 	EnableRetry(connectivityRetryCount int, httpStatusRetryCount map[int]int, retryDuration time.Duration)
-	// Process sends the network request over the wire, retrieves and serialize the response to dataTemplate, and provides status code, header and error if applicable
+	// Process sends the webcall request over the wire, retrieves and serialize the response to dataTemplate, and provides status code, header and error if applicable
 	Process(dataTemplate interface{}) (statusCode int, responseHeader http.Header, responseError error)
-	// ProcessRaw sends the network request over the wire, retrieves the response, and returns that response and error if applicable
+	// ProcessRaw sends the webcall request over the wire, retrieves the response, and returns that response and error if applicable
 	ProcessRaw() (responseObject *http.Response, responseError error)
 }
 
@@ -132,7 +132,7 @@ type webRequest struct {
 	retryDelay     time.Duration
 }
 
-// EnableRetry sets up automatic retry upon error of specific HTTP status codes; each entry maps an HTTP status code to how many times retry should happen if code matches; 0 stands for error not mapped to an HTTP status code, e.g. network or connectivity issue
+// EnableRetry sets up automatic retry upon error of specific HTTP status codes; each entry maps an HTTP status code to how many times retry should happen if code matches; 0 stands for error not mapped to an HTTP status code, e.g. webcall or connectivity issue
 func (webRequest *webRequest) EnableRetry(connectivityRetryCount int, httpStatusRetryCount map[int]int, retryDelay time.Duration) {
 	webRequest.connRetry = connectivityRetryCount
 	webRequest.httpRetry = httpStatusRetryCount
@@ -285,7 +285,7 @@ func doRequestProcessing(webRequest *webRequest) (*http.Response, error) {
 	return responseObject, responseError
 }
 
-// ProcessRaw sends the network request over the wire, retrieves the response, and returns that response and error if applicable
+// ProcessRaw sends the webcall request over the wire, retrieves the response, and returns that response and error if applicable
 func (webRequest *webRequest) ProcessRaw() (responseObject *http.Response, responseError error) {
 	if webRequest == nil {
 		return nil, ErrWebRequestNil
@@ -319,7 +319,7 @@ func parseResponse(session *session, body io.ReadCloser, dataTemplate interface{
 	return nil
 }
 
-// Process sends the network request over the wire, retrieves and serialize the response to dataTemplate, and provides status code, header and error if applicable
+// Process sends the webcall request over the wire, retrieves and serialize the response to dataTemplate, and provides status code, header and error if applicable
 func (webRequest *webRequest) Process(dataTemplate interface{}) (statusCode int, responseHeader http.Header, responseError error) {
 	if webRequest == nil {
 		return http.StatusInternalServerError, http.Header{}, ErrWebRequestNil

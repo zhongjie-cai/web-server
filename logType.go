@@ -49,10 +49,10 @@ const (
 	methodEnterName     string = "MethodEnter"
 	methodParameterName string = "MethodParameter"
 	methodLogicName     string = "MethodLogic"
-	networkCallName     string = "WebcallStart"
-	networkRequestName  string = "WebcallRequest"
-	networkResponseName string = "WebcallResponse"
-	networkFinishName   string = "WebcallFinish"
+	webcallCallName     string = "WebcallStart"
+	webcallRequestName  string = "WebcallRequest"
+	webcallResponseName string = "WebcallResponse"
+	webcallFinishName   string = "WebcallFinish"
 	methodReturnName    string = "MethodReturn"
 	methodExitName      string = "MethodExit"
 	apiResponseName     string = "EndpointResponse"
@@ -80,10 +80,10 @@ var supportedLogTypes = map[LogType]string{
 	MethodEnter:      methodEnterName,
 	MethodParameter:  methodParameterName,
 	MethodLogic:      methodLogicName,
-	WebcallStart:     networkCallName,
-	WebcallRequest:   networkRequestName,
-	WebcallResponse:  networkResponseName,
-	WebcallFinish:    networkFinishName,
+	WebcallStart:     webcallCallName,
+	WebcallRequest:   webcallRequestName,
+	WebcallResponse:  webcallResponseName,
+	WebcallFinish:    webcallFinishName,
 	MethodReturn:     methodReturnName,
 	MethodExit:       methodExitName,
 	EndpointResponse: apiResponseName,
@@ -97,10 +97,10 @@ var logTypeNameMapping = map[string]LogType{
 	methodEnterName:      MethodEnter,
 	methodParameterName:  MethodParameter,
 	methodLogicName:      MethodLogic,
-	networkCallName:      WebcallStart,
-	networkRequestName:   WebcallRequest,
-	networkResponseName:  WebcallResponse,
-	networkFinishName:    WebcallFinish,
+	webcallCallName:      WebcallStart,
+	webcallRequestName:   WebcallRequest,
+	webcallResponseName:  WebcallResponse,
+	webcallFinishName:    WebcallFinish,
 	methodReturnName:     MethodReturn,
 	methodExitName:       MethodExit,
 	apiResponseName:      EndpointResponse,

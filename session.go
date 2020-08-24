@@ -22,7 +22,7 @@ type Session interface {
 	SessionHTTP
 	SessionAttachment
 	SessionLogging
-	SessionNetwork
+	SessionWebcall
 }
 
 // SessionMeta is a subset of Session interface, containing only meta data related methods
@@ -97,10 +97,10 @@ type SessionLogging interface {
 	LogMethodExit()
 }
 
-// SessionNetwork is a subset of Session interface, containing only network related methods
-type SessionNetwork interface {
-	// CreateNetworkRequest generates a network request object to the targeted external web service for the given session associated to the session ID
-	CreateNetworkRequest(method string, url string, payload string, header map[string]string, sendClientCert bool) WebRequest
+// SessionWebcall is a subset of Session interface, containing only webcall related methods
+type SessionWebcall interface {
+	// CreateWebcallRequest generates a webcall request object to the targeted external web service for the given session associated to the session ID
+	CreateWebcallRequest(method string, url string, payload string, header map[string]string, sendClientCert bool) WebRequest
 }
 
 type session struct {
@@ -433,8 +433,8 @@ func (session *session) LogMethodExit() {
 	)
 }
 
-// CreateNetworkRequest generates a network request object to the targeted external web service for the given session associated to the session ID
-func (session *session) CreateNetworkRequest(method string, url string, payload string, header map[string]string, sendClientCert bool) WebRequest {
+// CreateWebcallRequest generates a webcall request object to the targeted external web service for the given session associated to the session ID
+func (session *session) CreateWebcallRequest(method string, url string, payload string, header map[string]string, sendClientCert bool) WebRequest {
 	return &webRequest{
 		session,
 		method,

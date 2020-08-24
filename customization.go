@@ -3,7 +3,6 @@ package webserver
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -87,16 +86,16 @@ type WebRequestCustomization interface {
 	// ClientCert is to customize the client certificate for external requests; if not set or nil, no client certificate is sent to external web services
 	ClientCert() *tls.Certificate
 
-	// DefaultTimeout is to customize the default timeout for any network communications through HTTP/HTTPS by session
+	// DefaultTimeout is to customize the default timeout for any webcall communications through HTTP/HTTPS by session
 	DefaultTimeout() time.Duration
 
-	// SkipServerCertVerification is to customize the skip of server certificate verification for any network communications through HTTP/HTTPS by session
+	// SkipServerCertVerification is to customize the skip of server certificate verification for any webcall communications through HTTP/HTTPS by session
 	SkipServerCertVerification() bool
 
-	// RoundTripper is to customize the creation of the HTTP transport for any network communications through HTTP/HTTPS by session
+	// RoundTripper is to customize the creation of the HTTP transport for any webcall communications through HTTP/HTTPS by session
 	RoundTripper(originalTransport http.RoundTripper) http.RoundTripper
 
-	// WrapRequest is to customize the creation of the HTTP request for any network communications through HTTP/HTTPS by session; utilize this method if needed for new relic wrapping, etc.
+	// WrapRequest is to customize the creation of the HTTP request for any webcall communications through HTTP/HTTPS by session; utilize this method if needed for new relic wrapping, etc.
 	WrapRequest(session Session, httpRequest *http.Request) *http.Request
 }
 
@@ -124,20 +123,18 @@ func (customization *DefaultCustomization) AppClosing() error {
 
 // Log is to customize the logging backend for the whole application
 func (customization *DefaultCustomization) Log(session Session, logType LogType, logLevel LogLevel, category, subcategory, description string) {
-	if isInterfaceValueNil(session) {
+	if isInterfaceValueNilFunc(session) {
 		return
 	}
-	fmt.Println(
-		fmt.Sprintf(
-			"<%v|%v> (%v|%v) [%v|%v] %v",
-			session.GetID(),
-			session.GetName(),
-			logType,
-			logLevel,
-			category,
-			subcategory,
-			description,
-		),
+	fmtPrintf(
+		"<%v|%v> (%v|%v) [%v|%v] %v\n",
+		session.GetID(),
+		session.GetName(),
+		logType,
+		logLevel,
+		category,
+		subcategory,
+		description,
 	)
 }
 
@@ -188,10 +185,10 @@ func (customization *DefaultCustomization) PostAction(session Session) error {
 
 // InterpretSuccess is to customize how application interpret a response content into HTTP status code and corresponding response body
 func (customization *DefaultCustomization) InterpretSuccess(responseContent interface{}) (int, string) {
-	if responseContent == nil {
+	if isInterfaceValueNilFunc(responseContent) {
 		return http.StatusNoContent, ""
 	}
-	var responseMessage = marshalIgnoreError(responseContent)
+	var responseMessage = marshalIgnoreErrorFunc(responseContent)
 	if responseMessage == "" {
 		return http.StatusNoContent, ""
 	}
@@ -233,7 +230,7 @@ func (customization *DefaultCustomization) InterpretError(err error) (int, strin
 	default:
 		statusCode = http.StatusInternalServerError
 	}
-	var statusMessage = fmt.Sprintf(
+	var statusMessage = fmtSprintf(
 		"%+v",
 		err,
 	)
@@ -255,22 +252,22 @@ func (customization *DefaultCustomization) ClientCert() *tls.Certificate {
 	return nil
 }
 
-// DefaultTimeout is to customize the default timeout for any network communications through HTTP/HTTPS by session
+// DefaultTimeout is to customize the default timeout for any webcall communications through HTTP/HTTPS by session
 func (customization *DefaultCustomization) DefaultTimeout() time.Duration {
 	return 3 * time.Minute
 }
 
-// SkipServerCertVerification is to customize the skip of server certificate verification for any network communications through HTTP/HTTPS by session
+// SkipServerCertVerification is to customize the skip of server certificate verification for any webcall communications through HTTP/HTTPS by session
 func (customization *DefaultCustomization) SkipServerCertVerification() bool {
 	return false
 }
 
-// RoundTripper is to customize the creation of the HTTP transport for any network communications through HTTP/HTTPS by session
+// RoundTripper is to customize the creation of the HTTP transport for any webcall communications through HTTP/HTTPS by session
 func (customization *DefaultCustomization) RoundTripper(originalTransport http.RoundTripper) http.RoundTripper {
 	return originalTransport
 }
 
-// WrapRequest is to customize the creation of the HTTP request for any network communications through HTTP/HTTPS by session; utilize this method if needed for new relic wrapping, etc.
+// WrapRequest is to customize the creation of the HTTP request for any webcall communications through HTTP/HTTPS by session; utilize this method if needed for new relic wrapping, etc.
 func (customization *DefaultCustomization) WrapRequest(session Session, httpRequest *http.Request) *http.Request {
 	return httpRequest
 }

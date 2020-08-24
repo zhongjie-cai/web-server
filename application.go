@@ -3,8 +3,6 @@ package webserver
 import (
 	"os"
 	"sync"
-
-	"github.com/google/uuid"
 )
 
 // Application is the interface for web server application
@@ -52,7 +50,7 @@ func NewApplication(
 ) Application {
 	applicationLock.Lock()
 	defer applicationLock.Unlock()
-	if isInterfaceValueNil(customization) {
+	if isInterfaceValueNilFunc(customization) {
 		customization = customizationDefault
 	}
 	var application = &application{
@@ -60,7 +58,7 @@ func NewApplication(
 		port,
 		version,
 		&session{
-			uuid.New(),
+			uuidNew(),
 			name,
 			defaultRequest,
 			defaultResponseWriter,
@@ -81,24 +79,17 @@ func getApplication(
 	applicationLock.RLock()
 	defer applicationLock.RUnlock()
 	var application, found = applicationMap[port]
-	if !found {
+	if !found ||
+		isInterfaceValueNilFunc(application) {
 		return nilApplication
 	}
 	return application
 }
 
 func (app *application) Start() {
-	if !app.preBootstraping() {
-		return
-	}
-	if !app.bootstrap() {
-		return
-	}
-	if !app.postBootstraping() {
-		return
-	}
-	defer app.end()
-	app.begin()
+	startApplicationFunc(
+		app,
+	)
 }
 
 func (app *application) StartAsync(waitGroup *sync.WaitGroup) *sync.WaitGroup {
@@ -110,21 +101,35 @@ func (app *application) StartAsync(waitGroup *sync.WaitGroup) *sync.WaitGroup {
 		if waitGroup != nil {
 			defer waitGroup.Done()
 		}
-		app.Start()
+		startApplicationFunc(
+			app,
+		)
 	}()
 	return waitGroup
 }
 
 func (app *application) Stop() {
-	haltServer(
+	haltServerFunc(
 		app.shutdownSignal,
 	)
 }
 
-func (app *application) preBootstraping() bool {
+func startApplication(app *application) {
+	if !preBootstrapingFunc(app) {
+		return
+	}
+	bootstrapFunc(app)
+	if !postBootstrapingFunc(app) {
+		return
+	}
+	defer endApplicationFunc(app)
+	beginApplicationFunc(app)
+}
+
+func preBootstraping(app *application) bool {
 	var preBootstrapError = app.customization.PreBootstrap()
 	if preBootstrapError != nil {
-		logAppRoot(
+		logAppRootFunc(
 			app.session,
 			"application",
 			"preBootstraping",
@@ -133,7 +138,7 @@ func (app *application) preBootstraping() bool {
 		)
 		return false
 	}
-	logAppRoot(
+	logAppRootFunc(
 		app.session,
 		"application",
 		"preBootstraping",
@@ -142,26 +147,25 @@ func (app *application) preBootstraping() bool {
 	return true
 }
 
-func (app *application) bootstrap() bool {
-	initializeHTTPClients(
+func bootstrap(app *application) {
+	initializeHTTPClientsFunc(
 		app.customization.DefaultTimeout(),
 		app.customization.SkipServerCertVerification(),
 		app.customization.ClientCert(),
 		app.customization.RoundTripper,
 	)
-	logAppRoot(
+	logAppRootFunc(
 		app.session,
 		"application",
 		"bootstrap",
 		"Application bootstrapped successfully",
 	)
-	return true
 }
 
-func (app *application) postBootstraping() bool {
+func postBootstraping(app *application) bool {
 	var postBootstrapError = app.customization.PostBootstrap()
 	if postBootstrapError != nil {
-		logAppRoot(
+		logAppRootFunc(
 			app.session,
 			"application",
 			"postBootstraping",
@@ -170,7 +174,7 @@ func (app *application) postBootstraping() bool {
 		)
 		return false
 	}
-	logAppRoot(
+	logAppRootFunc(
 		app.session,
 		"application",
 		"postBootstraping",
@@ -179,53 +183,54 @@ func (app *application) postBootstraping() bool {
 	return true
 }
 
-func (app *application) begin() {
-	logAppRoot(
+func beginApplication(app *application) {
+	logAppRootFunc(
 		app.session,
 		"application",
-		"begin",
-		"Trying to start server (v-%v)",
+		"beginApplication",
+		"Trying to start server [%v] (v-%v)",
+		app.name,
 		app.version,
 	)
-	var serverHostError = hostServer(
+	var serverHostError = hostServerFunc(
 		app.port,
 		app.session,
 		app.customization,
 		app.shutdownSignal,
 	)
 	if serverHostError != nil {
-		logAppRoot(
+		logAppRootFunc(
 			app.session,
 			"application",
-			"begin",
+			"beginApplication",
 			"Failed to host server. Error: %+v",
 			serverHostError,
 		)
 	} else {
-		logAppRoot(
+		logAppRootFunc(
 			app.session,
 			"application",
-			"begin",
+			"beginApplication",
 			"Server hosting terminated",
 		)
 	}
 }
 
-func (app *application) end() {
+func endApplication(app *application) {
 	var appClosingError = app.customization.AppClosing()
 	if appClosingError != nil {
-		logAppRoot(
+		logAppRootFunc(
 			app.session,
 			"application",
-			"end",
+			"endApplication",
 			"Failed to execute customization.AppClosing. Error: %+v",
 			appClosingError,
 		)
 	} else {
-		logAppRoot(
+		logAppRootFunc(
 			app.session,
 			"application",
-			"end",
+			"endApplication",
 			"customization.AppClosing executed successfully",
 		)
 	}
