@@ -2,6 +2,7 @@ package webserver
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
@@ -9,9 +10,12 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/textproto"
 	"os"
+	"os/signal"
 	"reflect"
 	"regexp"
+	"runtime"
 	"runtime/debug"
 	"sort"
 	"strconv"
@@ -26,152 +30,238 @@ import (
 )
 
 var (
-	isInterfaceValueNilFuncExpected        int
-	isInterfaceValueNilFuncCalled          int
-	uuidNewExpected                        int
-	uuidNewCalled                          int
-	startApplicationFuncExpected           int
-	startApplicationFuncCalled             int
-	haltServerFuncExpected                 int
-	haltServerFuncCalled                   int
-	preBootstrapingFuncExpected            int
-	preBootstrapingFuncCalled              int
-	bootstrapFuncExpected                  int
-	bootstrapFuncCalled                    int
-	postBootstrapingFuncExpected           int
-	postBootstrapingFuncCalled             int
-	endApplicationFuncExpected             int
-	endApplicationFuncCalled               int
-	beginApplicationFuncExpected           int
-	beginApplicationFuncCalled             int
-	logAppRootFuncExpected                 int
-	logAppRootFuncCalled                   int
-	initializeHTTPClientsFuncExpected      int
-	initializeHTTPClientsFuncCalled        int
-	hostServerFuncExpected                 int
-	hostServerFuncCalled                   int
-	fmtPrintfExpected                      int
-	fmtPrintfCalled                        int
-	fmtSprintfExpected                     int
-	fmtSprintfCalled                       int
-	marshalIgnoreErrorFuncExpected         int
-	marshalIgnoreErrorFuncCalled           int
-	stringsSplitExpected                   int
-	stringsSplitCalled                     int
-	strconvAtoiExpected                    int
-	strconvAtoiCalled                      int
-	getRequestedPortFuncExpected           int
-	getRequestedPortFuncCalled             int
-	getApplicationFuncExpected             int
-	getApplicationFuncCalled               int
-	getRouteInfoFuncExpected               int
-	getRouteInfoFuncCalled                 int
-	initiateSessionFuncExpected            int
-	initiateSessionFuncCalled              int
-	getTimeNowUTCFuncExpected              int
-	getTimeNowUTCFuncCalled                int
-	finalizeSessionFuncExpected            int
-	finalizeSessionFuncCalled              int
-	logEndpointEnterFuncExpected           int
-	logEndpointEnterFuncCalled             int
-	logEndpointExitFuncExpected            int
-	logEndpointExitFuncCalled              int
-	timeSinceExpected                      int
-	timeSinceCalled                        int
-	handlePanicFuncExpected                int
-	handlePanicFuncCalled                  int
-	writeResponseFuncExpected              int
-	writeResponseFuncCalled                int
-	handleActionFuncExpected               int
-	handleActionFuncCalled                 int
-	jsonNewEncoderExpected                 int
-	jsonNewEncoderCalled                   int
-	stringsTrimRightExpected               int
-	stringsTrimRightCalled                 int
-	jsonUnmarshalExpected                  int
-	jsonUnmarshalCalled                    int
-	fmtErrorfExpected                      int
-	fmtErrorfCalled                        int
-	reflectTypeOfExpected                  int
-	reflectTypeOfCalled                    int
-	stringsToLowerExpected                 int
-	stringsToLowerCalled                   int
-	strconvParseBoolExpected               int
-	strconvParseBoolCalled                 int
-	strconvParseIntExpected                int
-	strconvParseIntCalled                  int
-	strconvParseFloatExpected              int
-	strconvParseFloatCalled                int
-	strconvParseUintExpected               int
-	strconvParseUintCalled                 int
-	tryUnmarshalPrimitiveTypesFuncExpected int
-	tryUnmarshalPrimitiveTypesFuncCalled   int
-	prepareLoggingFuncExpected             int
-	prepareLoggingFuncCalled               int
-	sortStringsExpected                    int
-	sortStringsCalled                      int
-	stringsJoinExpected                    int
-	stringsJoinCalled                      int
-	debugStackExpected                     int
-	debugStackCalled                       int
-	getRecoverErrorFuncExpected            int
-	getRecoverErrorFuncCalled              int
-	getDebugStackFuncExpected              int
-	getDebugStackFuncCalled                int
-	regexpMatchStringExpected              int
-	regexpMatchStringCalled                int
-	stringsReplaceExpected                 int
-	stringsReplaceCalled                   int
-	doParameterReplacementFuncExpected     int
-	doParameterReplacementFuncCalled       int
-	evaluatePathWithParametersFuncExpected int
-	evaluatePathWithParametersFuncCalled   int
-	evaluateQueriesFuncExpected            int
-	evaluateQueriesFuncCalled              int
-	registerRouteFuncExpected              int
-	registerRouteFuncCalled                int
-	registerStaticFuncExpected             int
-	registerStaticFuncCalled               int
-	addMiddlewareFuncExpected              int
-	addMiddlewareFuncCalled                int
-	muxNewRouterExpected                   int
-	muxNewRouterCalled                     int
-	registerRoutesFuncExpected             int
-	registerRoutesFuncCalled               int
-	registerStaticsFuncExpected            int
-	registerStaticsFuncCalled              int
-	registerMiddlewaresFuncExpected        int
-	registerMiddlewaresFuncCalled          int
-	walkRegisteredRoutesFuncExpected       int
-	walkRegisteredRoutesFuncCalled         int
-	registerErrorHandlersFuncExpected      int
-	registerErrorHandlersFuncCalled        int
-	ioutilReadAllExpected                  int
-	ioutilReadAllCalled                    int
-	ioutilNopCloserExpected                int
-	ioutilNopCloserCalled                  int
-	bytesNewBufferExpected                 int
-	bytesNewBufferCalled                   int
-	constructResponseFuncExpected          int
-	constructResponseFuncCalled            int
-	logEndpointResponseFuncExpected        int
-	logEndpointResponseFuncCalled          int
-	httpStatusTextExpected                 int
-	httpStatusTextCalled                   int
-	strconvItoaExpected                    int
-	strconvItoaCalled                      int
-	getPathTemplateFuncExpected            int
-	getPathTemplateFuncCalled              int
-	getPathRegexpFuncExpected              int
-	getPathRegexpFuncCalled                int
-	evaluateRouteFuncExpected              int
-	evaluateRouteFuncCalled                int
-	muxCurrentRouteExpected                int
-	muxCurrentRouteCalled                  int
-	getNameFuncExpected                    int
-	getNameFuncCalled                      int
-	getEndpointByNameFuncExpected          int
-	getEndpointByNameFuncCalled            int
+	isInterfaceValueNilFuncExpected         int
+	isInterfaceValueNilFuncCalled           int
+	uuidNewExpected                         int
+	uuidNewCalled                           int
+	startApplicationFuncExpected            int
+	startApplicationFuncCalled              int
+	haltServerFuncExpected                  int
+	haltServerFuncCalled                    int
+	preBootstrapingFuncExpected             int
+	preBootstrapingFuncCalled               int
+	bootstrapFuncExpected                   int
+	bootstrapFuncCalled                     int
+	postBootstrapingFuncExpected            int
+	postBootstrapingFuncCalled              int
+	endApplicationFuncExpected              int
+	endApplicationFuncCalled                int
+	beginApplicationFuncExpected            int
+	beginApplicationFuncCalled              int
+	logAppRootFuncExpected                  int
+	logAppRootFuncCalled                    int
+	initializeHTTPClientsFuncExpected       int
+	initializeHTTPClientsFuncCalled         int
+	hostServerFuncExpected                  int
+	hostServerFuncCalled                    int
+	fmtPrintfExpected                       int
+	fmtPrintfCalled                         int
+	fmtSprintfExpected                      int
+	fmtSprintfCalled                        int
+	marshalIgnoreErrorFuncExpected          int
+	marshalIgnoreErrorFuncCalled            int
+	stringsSplitExpected                    int
+	stringsSplitCalled                      int
+	strconvAtoiExpected                     int
+	strconvAtoiCalled                       int
+	getRequestedPortFuncExpected            int
+	getRequestedPortFuncCalled              int
+	getApplicationFuncExpected              int
+	getApplicationFuncCalled                int
+	getRouteInfoFuncExpected                int
+	getRouteInfoFuncCalled                  int
+	initiateSessionFuncExpected             int
+	initiateSessionFuncCalled               int
+	getTimeNowUTCFuncExpected               int
+	getTimeNowUTCFuncCalled                 int
+	finalizeSessionFuncExpected             int
+	finalizeSessionFuncCalled               int
+	logEndpointEnterFuncExpected            int
+	logEndpointEnterFuncCalled              int
+	logEndpointExitFuncExpected             int
+	logEndpointExitFuncCalled               int
+	timeSinceExpected                       int
+	timeSinceCalled                         int
+	handlePanicFuncExpected                 int
+	handlePanicFuncCalled                   int
+	writeResponseFuncExpected               int
+	writeResponseFuncCalled                 int
+	handleActionFuncExpected                int
+	handleActionFuncCalled                  int
+	jsonNewEncoderExpected                  int
+	jsonNewEncoderCalled                    int
+	stringsTrimRightExpected                int
+	stringsTrimRightCalled                  int
+	jsonUnmarshalExpected                   int
+	jsonUnmarshalCalled                     int
+	fmtErrorfExpected                       int
+	fmtErrorfCalled                         int
+	reflectTypeOfExpected                   int
+	reflectTypeOfCalled                     int
+	stringsToLowerExpected                  int
+	stringsToLowerCalled                    int
+	strconvParseBoolExpected                int
+	strconvParseBoolCalled                  int
+	strconvParseIntExpected                 int
+	strconvParseIntCalled                   int
+	strconvParseFloatExpected               int
+	strconvParseFloatCalled                 int
+	strconvParseUintExpected                int
+	strconvParseUintCalled                  int
+	tryUnmarshalPrimitiveTypesFuncExpected  int
+	tryUnmarshalPrimitiveTypesFuncCalled    int
+	prepareLoggingFuncExpected              int
+	prepareLoggingFuncCalled                int
+	sortStringsExpected                     int
+	sortStringsCalled                       int
+	stringsJoinExpected                     int
+	stringsJoinCalled                       int
+	debugStackExpected                      int
+	debugStackCalled                        int
+	getRecoverErrorFuncExpected             int
+	getRecoverErrorFuncCalled               int
+	getDebugStackFuncExpected               int
+	getDebugStackFuncCalled                 int
+	regexpMatchStringExpected               int
+	regexpMatchStringCalled                 int
+	reflectValueOfExpected                  int
+	reflectValueOfCalled                    int
+	stringsReplaceExpected                  int
+	stringsReplaceCalled                    int
+	doParameterReplacementFuncExpected      int
+	doParameterReplacementFuncCalled        int
+	evaluatePathWithParametersFuncExpected  int
+	evaluatePathWithParametersFuncCalled    int
+	evaluateQueriesFuncExpected             int
+	evaluateQueriesFuncCalled               int
+	registerRouteFuncExpected               int
+	registerRouteFuncCalled                 int
+	registerStaticFuncExpected              int
+	registerStaticFuncCalled                int
+	addMiddlewareFuncExpected               int
+	addMiddlewareFuncCalled                 int
+	muxNewRouterExpected                    int
+	muxNewRouterCalled                      int
+	registerRoutesFuncExpected              int
+	registerRoutesFuncCalled                int
+	registerStaticsFuncExpected             int
+	registerStaticsFuncCalled               int
+	registerMiddlewaresFuncExpected         int
+	registerMiddlewaresFuncCalled           int
+	walkRegisteredRoutesFuncExpected        int
+	walkRegisteredRoutesFuncCalled          int
+	registerErrorHandlersFuncExpected       int
+	registerErrorHandlersFuncCalled         int
+	ioutilReadAllExpected                   int
+	ioutilReadAllCalled                     int
+	ioutilNopCloserExpected                 int
+	ioutilNopCloserCalled                   int
+	bytesNewBufferExpected                  int
+	bytesNewBufferCalled                    int
+	constructResponseFuncExpected           int
+	constructResponseFuncCalled             int
+	logEndpointResponseFuncExpected         int
+	logEndpointResponseFuncCalled           int
+	httpStatusTextExpected                  int
+	httpStatusTextCalled                    int
+	strconvItoaExpected                     int
+	strconvItoaCalled                       int
+	getPathTemplateFuncExpected             int
+	getPathTemplateFuncCalled               int
+	getPathRegexpFuncExpected               int
+	getPathRegexpFuncCalled                 int
+	evaluateRouteFuncExpected               int
+	evaluateRouteFuncCalled                 int
+	muxCurrentRouteExpected                 int
+	muxCurrentRouteCalled                   int
+	getNameFuncExpected                     int
+	getNameFuncCalled                       int
+	getEndpointByNameFuncExpected           int
+	getEndpointByNameFuncCalled             int
+	instantiateRouterFuncExpected           int
+	instantiateRouterFuncCalled             int
+	runServerFuncExpected                   int
+	runServerFuncCalled                     int
+	createServerFuncExpected                int
+	createServerFuncCalled                  int
+	signalNotifyExpected                    int
+	signalNotifyCalled                      int
+	listenAndServeFuncExpected              int
+	listenAndServeFuncCalled                int
+	contextWithTimeoutExpected              int
+	contextWithTimeoutCalled                int
+	contextBackgroundExpected               int
+	contextBackgroundCalled                 int
+	shutdownServerFuncExpected              int
+	shutdownServerFuncCalled                int
+	evaluateServerErrorsFuncExpected        int
+	evaluateServerErrorsFuncCalled          int
+	getRequestBodyFuncExpected              int
+	getRequestBodyFuncCalled                int
+	logEndpointRequestFuncExpected          int
+	logEndpointRequestFuncCalled            int
+	tryUnmarshalFuncExpected                int
+	tryUnmarshalFuncCalled                  int
+	muxVarsExpected                         int
+	muxVarsCalled                           int
+	getAllQueriesFuncExpected               int
+	getAllQueriesFuncCalled                 int
+	textprotoCanonicalMIMEHeaderKeyExpected int
+	textprotoCanonicalMIMEHeaderKeyCalled   int
+	getAllHeadersFuncExpected               int
+	getAllHeadersFuncCalled                 int
+	jsonMarshalExpected                     int
+	jsonMarshalCalled                       int
+	runtimeCallerExpected                   int
+	runtimeCallerCalled                     int
+	runtimeFuncForPCExpected                int
+	runtimeFuncForPCCalled                  int
+	getMethodNameFuncExpected               int
+	getMethodNameFuncCalled                 int
+	logMethodEnterFuncExpected              int
+	logMethodEnterFuncCalled                int
+	logMethodParameterFuncExpected          int
+	logMethodParameterFuncCalled            int
+	logMethodLogicFuncExpected              int
+	logMethodLogicFuncCalled                int
+	logMethodReturnFuncExpected             int
+	logMethodReturnFuncCalled               int
+	logMethodExitFuncExpected               int
+	logMethodExitFuncCalled                 int
+	timeNowExpected                         int
+	timeNowCalled                           int
+	clientDoFuncExpected                    int
+	clientDoFuncCalled                      int
+	timeSleepExpected                       int
+	timeSleepCalled                         int
+	getHTTPTransportFuncExpected            int
+	getHTTPTransportFuncCalled              int
+	stringsNewReaderExpected                int
+	stringsNewReaderCalled                  int
+	httpNewRequestExpected                  int
+	httpNewRequestCalled                    int
+	logWebcallStartFuncExpected             int
+	logWebcallStartFuncCalled               int
+	logWebcallRequestFuncExpected           int
+	logWebcallRequestFuncCalled             int
+	logWebcallResponseFuncExpected          int
+	logWebcallResponseFuncCalled            int
+	logWebcallFinishFuncExpected            int
+	logWebcallFinishFuncCalled              int
+	createHTTPRequestFuncExpected           int
+	createHTTPRequestFuncCalled             int
+	getClientForRequestFuncExpected         int
+	getClientForRequestFuncCalled           int
+	clientDoWithRetryFuncExpected           int
+	clientDoWithRetryFuncCalled             int
+	logErrorResponseFuncExpected            int
+	logErrorResponseFuncCalled              int
+	logSuccessResponseFuncExpected          int
+	logSuccessResponseFuncCalled            int
+	doRequestProcessingFuncExpected         int
+	doRequestProcessingFuncCalled           int
+	parseResponseFuncExpected               int
+	parseResponseFuncCalled                 int
 )
 
 func createMock(t *testing.T) {
@@ -442,6 +532,12 @@ func createMock(t *testing.T) {
 		regexpMatchStringCalled++
 		return false, nil
 	}
+	reflectValueOfExpected = 0
+	reflectValueOfCalled = 0
+	reflectValueOf = func(i interface{}) reflect.Value {
+		reflectValueOfCalled++
+		return reflect.Value{}
+	}
 	stringsReplaceExpected = 0
 	stringsReplaceCalled = 0
 	stringsReplace = func(s, old, new string, n int) string {
@@ -592,6 +688,244 @@ func createMock(t *testing.T) {
 		getEndpointByNameFuncCalled++
 		return ""
 	}
+	instantiateRouterFuncExpected = 0
+	instantiateRouterFuncCalled = 0
+	instantiateRouterFunc = func(port int, session *session) (*mux.Router, error) {
+		instantiateRouterFuncCalled++
+		return nil, nil
+	}
+	runServerFuncExpected = 0
+	runServerFuncCalled = 0
+	runServerFunc = func(port int, session *session, router *mux.Router, shutdownSignal chan os.Signal) bool {
+		runServerFuncCalled++
+		return false
+	}
+	createServerFuncExpected = 0
+	createServerFuncCalled = 0
+	createServerFunc = func(port int, session *session, router *mux.Router) (*http.Server, bool) {
+		createServerFuncCalled++
+		return nil, false
+	}
+	signalNotifyExpected = 0
+	signalNotifyCalled = 0
+	signalNotify = func(c chan<- os.Signal, sig ...os.Signal) {
+		signalNotifyCalled++
+	}
+	listenAndServeFuncExpected = 0
+	listenAndServeFuncCalled = 0
+	listenAndServeFunc = func(server *http.Server, serveHTTPS bool) error {
+		listenAndServeFuncCalled++
+		return nil
+	}
+	contextWithTimeoutExpected = 0
+	contextWithTimeoutCalled = 0
+	contextWithTimeout = func(parent context.Context, timeout time.Duration) (context.Context, context.CancelFunc) {
+		contextWithTimeoutCalled++
+		return nil, nil
+	}
+	contextBackgroundExpected = 0
+	contextBackgroundCalled = 0
+	contextBackground = func() context.Context {
+		contextBackgroundCalled++
+		return nil
+	}
+	shutdownServerFuncExpected = 0
+	shutdownServerFuncCalled = 0
+	shutdownServerFunc = func(runtimeContext context.Context, server *http.Server) error {
+		shutdownServerFuncCalled++
+		return nil
+	}
+	evaluateServerErrorsFuncExpected = 0
+	evaluateServerErrorsFuncCalled = 0
+	evaluateServerErrorsFunc = func(session *session, hostError error, shutdownError error) bool {
+		evaluateServerErrorsFuncCalled++
+		return false
+	}
+	getRequestBodyFuncExpected = 0
+	getRequestBodyFuncCalled = 0
+	getRequestBodyFunc = func(httpRequest *http.Request) string {
+		getRequestBodyFuncCalled++
+		return ""
+	}
+	logEndpointRequestFuncExpected = 0
+	logEndpointRequestFuncCalled = 0
+	logEndpointRequestFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+		logEndpointRequestFuncCalled++
+	}
+	tryUnmarshalFuncExpected = 0
+	tryUnmarshalFuncCalled = 0
+	tryUnmarshalFunc = func(value string, dataTemplate interface{}) error {
+		tryUnmarshalFuncCalled++
+		return nil
+	}
+	muxVarsExpected = 0
+	muxVarsCalled = 0
+	muxVars = func(r *http.Request) map[string]string {
+		muxVarsCalled++
+		return nil
+	}
+	getAllQueriesFuncExpected = 0
+	getAllQueriesFuncCalled = 0
+	getAllQueriesFunc = func(session *session, name string) []string {
+		getAllQueriesFuncCalled++
+		return nil
+	}
+	textprotoCanonicalMIMEHeaderKeyExpected = 0
+	textprotoCanonicalMIMEHeaderKeyCalled = 0
+	textprotoCanonicalMIMEHeaderKey = func(s string) string {
+		textprotoCanonicalMIMEHeaderKeyCalled++
+		return ""
+	}
+	getAllHeadersFuncExpected = 0
+	getAllHeadersFuncCalled = 0
+	getAllHeadersFunc = func(session *session, name string) []string {
+		getAllHeadersFuncCalled++
+		return nil
+	}
+	jsonMarshalExpected = 0
+	jsonMarshalCalled = 0
+	jsonMarshal = func(v interface{}) ([]byte, error) {
+		jsonMarshalCalled++
+		return nil, nil
+	}
+	runtimeCallerExpected = 0
+	runtimeCallerCalled = 0
+	runtimeCaller = func(skip int) (pc uintptr, file string, line int, ok bool) {
+		runtimeCallerCalled++
+		return 0, "", 0, false
+	}
+	runtimeFuncForPCExpected = 0
+	runtimeFuncForPCCalled = 0
+	runtimeFuncForPC = func(pc uintptr) *runtime.Func {
+		runtimeFuncForPCCalled++
+		return nil
+	}
+	getMethodNameFuncExpected = 0
+	getMethodNameFuncCalled = 0
+	getMethodNameFunc = func() string {
+		getMethodNameFuncCalled++
+		return ""
+	}
+	logMethodEnterFuncExpected = 0
+	logMethodEnterFuncCalled = 0
+	logMethodEnterFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+		logMethodEnterFuncCalled++
+	}
+	logMethodParameterFuncExpected = 0
+	logMethodParameterFuncCalled = 0
+	logMethodParameterFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+		logMethodParameterFuncCalled++
+	}
+	logMethodLogicFuncExpected = 0
+	logMethodLogicFuncCalled = 0
+	logMethodLogicFunc = func(session *session, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+		logMethodLogicFuncCalled++
+	}
+	logMethodReturnFuncExpected = 0
+	logMethodReturnFuncCalled = 0
+	logMethodReturnFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+		logMethodReturnFuncCalled++
+	}
+	logMethodExitFuncExpected = 0
+	logMethodExitFuncCalled = 0
+	logMethodExitFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+		logMethodExitFuncCalled++
+	}
+	timeNowExpected = 0
+	timeNowCalled = 0
+	timeNow = func() time.Time {
+		timeNowCalled++
+		return time.Time{}
+	}
+	clientDoFuncExpected = 0
+	clientDoFuncCalled = 0
+	clientDoFunc = func(httpClient *http.Client, httpRequest *http.Request) (*http.Response, error) {
+		clientDoFuncCalled++
+		return nil, nil
+	}
+	timeSleepExpected = 0
+	timeSleepCalled = 0
+	timeSleep = func(time.Duration) {
+		timeSleepCalled++
+	}
+	getHTTPTransportFuncExpected = 0
+	getHTTPTransportFuncCalled = 0
+	getHTTPTransportFunc = func(skipServerCertVerification bool, clientCertificate *tls.Certificate, roundTripperWrapper func(originalTransport http.RoundTripper) http.RoundTripper) http.RoundTripper {
+		getHTTPTransportFuncCalled++
+		return nil
+	}
+	stringsNewReaderExpected = 0
+	stringsNewReaderCalled = 0
+	stringsNewReader = func(s string) *strings.Reader {
+		stringsNewReaderCalled++
+		return nil
+	}
+	httpNewRequestExpected = 0
+	httpNewRequestCalled = 0
+	httpNewRequest = func(method, url string, body io.Reader) (*http.Request, error) {
+		httpNewRequestCalled++
+		return nil, nil
+	}
+	logWebcallStartFuncExpected = 0
+	logWebcallStartFuncCalled = 0
+	logWebcallStartFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+		logWebcallStartFuncCalled++
+	}
+	logWebcallRequestFuncExpected = 0
+	logWebcallRequestFuncCalled = 0
+	logWebcallRequestFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+		logWebcallRequestFuncCalled++
+	}
+	logWebcallResponseFuncExpected = 0
+	logWebcallResponseFuncCalled = 0
+	logWebcallResponseFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+		logWebcallResponseFuncCalled++
+	}
+	logWebcallFinishFuncExpected = 0
+	logWebcallFinishFuncCalled = 0
+	logWebcallFinishFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+		logWebcallFinishFuncCalled++
+	}
+	createHTTPRequestFuncExpected = 0
+	createHTTPRequestFuncCalled = 0
+	createHTTPRequestFunc = func(webRequest *webRequest) (*http.Request, error) {
+		createHTTPRequestFuncCalled++
+		return nil, nil
+	}
+	getClientForRequestFuncExpected = 0
+	getClientForRequestFuncCalled = 0
+	getClientForRequestFunc = func(sendClientCert bool) *http.Client {
+		getClientForRequestFuncCalled++
+		return nil
+	}
+	clientDoWithRetryFuncExpected = 0
+	clientDoWithRetryFuncCalled = 0
+	clientDoWithRetryFunc = func(httpClient *http.Client, httpRequest *http.Request, connectivityRetryCount int, httpStatusRetryCount map[int]int, retryDelay time.Duration) (*http.Response, error) {
+		clientDoWithRetryFuncCalled++
+		return nil, nil
+	}
+	logErrorResponseFuncExpected = 0
+	logErrorResponseFuncCalled = 0
+	logErrorResponseFunc = func(session *session, responseError error, startTime time.Time) {
+		logErrorResponseFuncCalled++
+	}
+	logSuccessResponseFuncExpected = 0
+	logSuccessResponseFuncCalled = 0
+	logSuccessResponseFunc = func(session *session, response *http.Response, startTime time.Time) {
+		logSuccessResponseFuncCalled++
+	}
+	doRequestProcessingFuncExpected = 0
+	doRequestProcessingFuncCalled = 0
+	doRequestProcessingFunc = func(webRequest *webRequest) (*http.Response, error) {
+		doRequestProcessingFuncCalled++
+		return nil, nil
+	}
+	parseResponseFuncExpected = 0
+	parseResponseFuncCalled = 0
+	parseResponseFunc = func(session *session, body io.ReadCloser, dataTemplate interface{}) error {
+		parseResponseFuncCalled++
+		return nil
+	}
 }
 
 func verifyAll(t *testing.T) {
@@ -689,6 +1023,8 @@ func verifyAll(t *testing.T) {
 	assert.Equal(t, getDebugStackFuncExpected, getDebugStackFuncCalled, "Unexpected number of calls to getDebugStackFunc")
 	regexpMatchString = regexp.MatchString
 	assert.Equal(t, regexpMatchStringExpected, regexpMatchStringCalled, "Unexpected number of calls to regexpMatchString")
+	reflectValueOf = reflect.ValueOf
+	assert.Equal(t, reflectValueOfExpected, reflectValueOfCalled, "Unexpected number of calls to reflectValueOf")
 	stringsReplace = strings.Replace
 	assert.Equal(t, stringsReplaceExpected, stringsReplaceCalled, "Unexpected number of calls to method stringsReplace")
 	doParameterReplacementFunc = doParameterReplacement
@@ -741,6 +1077,90 @@ func verifyAll(t *testing.T) {
 	assert.Equal(t, getNameFuncExpected, getNameFuncCalled, "Unexpected number of calls to method getNameFunc")
 	getEndpointByNameFunc = getEndpointByName
 	assert.Equal(t, getEndpointByNameFuncExpected, getEndpointByNameFuncCalled, "Unexpected number of calls to method getEndpointByNameFunc")
+	instantiateRouterFunc = instantiateRouter
+	assert.Equal(t, instantiateRouterFuncExpected, instantiateRouterFuncCalled, "Unexpected number of calls to method instantiateRouterFunc")
+	runServerFunc = runServer
+	assert.Equal(t, runServerFuncExpected, runServerFuncCalled, "Unexpected number of calls to method runServerFunc")
+	createServerFunc = createServer
+	assert.Equal(t, createServerFuncExpected, createServerFuncCalled, "Unexpected number of calls to method createServerFunc")
+	signalNotify = signal.Notify
+	assert.Equal(t, signalNotifyExpected, signalNotifyCalled, "Unexpected number of calls to method signalNotify")
+	listenAndServeFunc = listenAndServe
+	assert.Equal(t, listenAndServeFuncExpected, listenAndServeFuncCalled, "Unexpected number of calls to method listenAndServeFunc")
+	contextWithTimeout = context.WithTimeout
+	assert.Equal(t, contextWithTimeoutExpected, contextWithTimeoutCalled, "Unexpected number of calls to method contextWithTimeout")
+	contextBackground = context.Background
+	assert.Equal(t, contextBackgroundExpected, contextBackgroundCalled, "Unexpected number of calls to method contextBackground")
+	shutdownServerFunc = shutdownServer
+	assert.Equal(t, shutdownServerFuncExpected, shutdownServerFuncCalled, "Unexpected number of calls to method shutdownServerFunc")
+	evaluateServerErrorsFunc = evaluateServerErrors
+	assert.Equal(t, evaluateServerErrorsFuncExpected, evaluateServerErrorsFuncCalled, "Unexpected number of calls to method evaluateServerErrorsFunc")
+	getRequestBodyFunc = getRequestBody
+	assert.Equal(t, getRequestBodyFuncExpected, getRequestBodyFuncCalled, "Unexpected number of calls to method getRequestBodyFunc")
+	logEndpointRequestFunc = logEndpointRequest
+	assert.Equal(t, logEndpointRequestFuncExpected, logEndpointRequestFuncCalled, "Unexpected number of calls to method logEndpointRequestFunc")
+	tryUnmarshalFunc = tryUnmarshal
+	assert.Equal(t, tryUnmarshalFuncExpected, tryUnmarshalFuncCalled, "Unexpected number of calls to method tryUnmarshalFunc")
+	muxVars = mux.Vars
+	assert.Equal(t, muxVarsExpected, muxVarsCalled, "Unexpected number of calls to method muxVars")
+	getAllQueriesFunc = getAllQueries
+	assert.Equal(t, getAllQueriesFuncExpected, getAllQueriesFuncCalled, "Unexpected number of calls to method getAllQueriesFunc")
+	textprotoCanonicalMIMEHeaderKey = textproto.CanonicalMIMEHeaderKey
+	assert.Equal(t, textprotoCanonicalMIMEHeaderKeyExpected, textprotoCanonicalMIMEHeaderKeyCalled, "Unexpected number of calls to method textprotoCanonicalMIMEHeaderKey")
+	getAllHeadersFunc = getAllHeaders
+	assert.Equal(t, getAllHeadersFuncExpected, getAllHeadersFuncCalled, "Unexpected number of calls to method getAllHeadersFunc")
+	jsonMarshal = json.Marshal
+	assert.Equal(t, jsonMarshalExpected, jsonMarshalCalled, "Unexpected number of calls to method jsonMarshal")
+	runtimeCaller = runtime.Caller
+	assert.Equal(t, runtimeCallerExpected, runtimeCallerCalled, "Unexpected number of calls to method runtimeCaller")
+	runtimeFuncForPC = runtime.FuncForPC
+	assert.Equal(t, runtimeFuncForPCExpected, runtimeFuncForPCCalled, "Unexpected number of calls to method runtimeFuncForPC")
+	getMethodNameFunc = getMethodName
+	assert.Equal(t, getMethodNameFuncExpected, getMethodNameFuncCalled, "Unexpected number of calls to method getMethodNameFunc")
+	logMethodEnterFunc = logMethodEnter
+	assert.Equal(t, logMethodEnterFuncExpected, logMethodEnterFuncCalled, "Unexpected number of calls to method logMethodEnterFunc")
+	logMethodParameterFunc = logMethodParameter
+	assert.Equal(t, logMethodParameterFuncExpected, logMethodParameterFuncCalled, "Unexpected number of calls to method logMethodParameterFunc")
+	logMethodLogicFunc = logMethodLogic
+	assert.Equal(t, logMethodLogicFuncExpected, logMethodLogicFuncCalled, "Unexpected number of calls to method logMethodLogicFunc")
+	logMethodReturnFunc = logMethodReturn
+	assert.Equal(t, logMethodReturnFuncExpected, logMethodReturnFuncCalled, "Unexpected number of calls to method logMethodReturnFunc")
+	logMethodExitFunc = logMethodExit
+	assert.Equal(t, logMethodExitFuncExpected, logMethodExitFuncCalled, "Unexpected number of calls to method logMethodExitFunc")
+	timeNow = time.Now
+	assert.Equal(t, timeNowExpected, timeNowCalled, "Unexpected number of calls to timeNow")
+	clientDoFunc = clientDo
+	assert.Equal(t, clientDoFuncExpected, clientDoFuncCalled, "Unexpected number of calls to method clientDoFunc")
+	timeSleep = time.Sleep
+	assert.Equal(t, timeSleepExpected, timeSleepCalled, "Unexpected number of calls to method timeSleep")
+	getHTTPTransportFunc = getHTTPTransport
+	assert.Equal(t, getHTTPTransportFuncExpected, getHTTPTransportFuncCalled, "Unexpected number of calls to method getHTTPTransportFunc")
+	stringsNewReader = strings.NewReader
+	assert.Equal(t, stringsNewReaderExpected, stringsNewReaderCalled, "Unexpected number of calls to method stringsNewReader")
+	httpNewRequest = http.NewRequest
+	assert.Equal(t, httpNewRequestExpected, httpNewRequestCalled, "Unexpected number of calls to method httpNewRequest")
+	logWebcallStartFunc = logWebcallStart
+	assert.Equal(t, logWebcallStartFuncExpected, logWebcallStartFuncCalled, "Unexpected number of calls to method logWebcallStartFunc")
+	logWebcallRequestFunc = logWebcallRequest
+	assert.Equal(t, logWebcallRequestFuncExpected, logWebcallRequestFuncCalled, "Unexpected number of calls to method logWebcallRequestFunc")
+	logWebcallResponseFunc = logWebcallResponse
+	assert.Equal(t, logWebcallResponseFuncExpected, logWebcallResponseFuncCalled, "Unexpected number of calls to method logWebcallResponseFunc")
+	logWebcallFinishFunc = logWebcallFinish
+	assert.Equal(t, logWebcallFinishFuncExpected, logWebcallFinishFuncCalled, "Unexpected number of calls to method logWebcallFinishFunc")
+	createHTTPRequestFunc = createHTTPRequest
+	assert.Equal(t, createHTTPRequestFuncExpected, createHTTPRequestFuncCalled, "Unexpected number of calls to method createHTTPRequestFunc")
+	getClientForRequestFunc = getClientForRequest
+	assert.Equal(t, getClientForRequestFuncExpected, getClientForRequestFuncCalled, "Unexpected number of calls to method getClientForRequestFunc")
+	clientDoWithRetryFunc = clientDoWithRetry
+	assert.Equal(t, clientDoWithRetryFuncExpected, clientDoWithRetryFuncCalled, "Unexpected number of calls to method clientDoWithRetryFunc")
+	logErrorResponseFunc = logErrorResponse
+	assert.Equal(t, logErrorResponseFuncExpected, logErrorResponseFuncCalled, "Unexpected number of calls to method logErrorResponseFunc")
+	logSuccessResponseFunc = logSuccessResponse
+	assert.Equal(t, logSuccessResponseFuncExpected, logSuccessResponseFuncCalled, "Unexpected number of calls to method logSuccessResponseFunc")
+	doRequestProcessingFunc = doRequestProcessing
+	assert.Equal(t, doRequestProcessingFuncExpected, doRequestProcessingFuncCalled, "Unexpected number of calls to method doRequestProcessingFunc")
+	parseResponseFunc = parseResponse
+	assert.Equal(t, parseResponseFuncExpected, parseResponseFuncCalled, "Unexpected number of calls to method parseResponseFunc")
 
 	applicationLock = sync.RWMutex{}
 	applicationMap = map[int]*application{}

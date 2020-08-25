@@ -2,12 +2,16 @@ package webserver
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/textproto"
+	"os/signal"
 	"reflect"
 	"regexp"
+	"runtime"
 	"runtime/debug"
 	"sort"
 	"strconv"
@@ -97,6 +101,11 @@ var (
 	regexpMatchString = regexp.MatchString
 )
 
+// func pointers for injection / testing: pointerutil.go
+var (
+	reflectValueOf = reflect.ValueOf
+)
+
 // func pointers for injection / testing: register.go
 var (
 	stringsReplace                 = strings.Replace
@@ -137,4 +146,62 @@ var (
 	muxCurrentRoute       = mux.CurrentRoute
 	getNameFunc           = getName
 	getEndpointByNameFunc = getEndpointByName
+)
+
+// func pointers for injection / testing: server.go
+var (
+	instantiateRouterFunc    = instantiateRouter
+	runServerFunc            = runServer
+	createServerFunc         = createServer
+	signalNotify             = signal.Notify
+	listenAndServeFunc       = listenAndServe
+	contextWithTimeout       = context.WithTimeout
+	contextBackground        = context.Background
+	shutdownServerFunc       = shutdownServer
+	evaluateServerErrorsFunc = evaluateServerErrors
+)
+
+// func pointers for injection / testing: session.go
+var (
+	getRequestBodyFunc              = getRequestBody
+	logEndpointRequestFunc          = logEndpointRequest
+	tryUnmarshalFunc                = tryUnmarshal
+	muxVars                         = mux.Vars
+	getAllQueriesFunc               = getAllQueries
+	textprotoCanonicalMIMEHeaderKey = textproto.CanonicalMIMEHeaderKey
+	getAllHeadersFunc               = getAllHeaders
+	jsonMarshal                     = json.Marshal
+	runtimeCaller                   = runtime.Caller
+	runtimeFuncForPC                = runtime.FuncForPC
+	getMethodNameFunc               = getMethodName
+	logMethodEnterFunc              = logMethodEnter
+	logMethodParameterFunc          = logMethodParameter
+	logMethodLogicFunc              = logMethodLogic
+	logMethodReturnFunc             = logMethodReturn
+	logMethodExitFunc               = logMethodExit
+)
+
+// func pointers for injection / testing: timeutil.go
+var (
+	timeNow = time.Now
+)
+
+// func pointers for injection / testing: webReqiest.go
+var (
+	clientDoFunc            = clientDo
+	timeSleep               = time.Sleep
+	getHTTPTransportFunc    = getHTTPTransport
+	stringsNewReader        = strings.NewReader
+	httpNewRequest          = http.NewRequest
+	logWebcallStartFunc     = logWebcallStart
+	logWebcallRequestFunc   = logWebcallRequest
+	logWebcallResponseFunc  = logWebcallResponse
+	logWebcallFinishFunc    = logWebcallFinish
+	createHTTPRequestFunc   = createHTTPRequest
+	getClientForRequestFunc = getClientForRequest
+	clientDoWithRetryFunc   = clientDoWithRetry
+	logErrorResponseFunc    = logErrorResponse
+	logSuccessResponseFunc  = logSuccessResponse
+	doRequestProcessingFunc = doRequestProcessing
+	parseResponseFunc       = parseResponse
 )

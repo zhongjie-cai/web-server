@@ -3,13 +3,10 @@ package webserver
 import (
 	"context"
 	"crypto/tls"
-	"fmt"
 	"net/http"
 	"os"
-	"os/signal"
 
 	"github.com/gorilla/mux"
-	"github.com/zhongjie-cai/WebServiceTemplate/customization"
 )
 
 // hostServer hosts the service entries and starts HTTPS server
@@ -18,43 +15,41 @@ func hostServer(
 	session *session,
 	shutdownSignal chan os.Signal,
 ) error {
-	var router, routerError = instantiateRouter(
+	var router, routerError = instantiateRouterFunc(
 		port,
 		session,
 	)
 	if routerError != nil {
-		return errRouteRegistration
+		return routerError
 	}
-	logAppRoot(
+	logAppRootFunc(
 		session,
 		"server",
-		"Host",
+		"hostServer",
 		"Targeting port [%v]",
 		port,
 	)
-	var hostError = runServer(
+	if runServerFunc(
 		port,
 		session,
 		router,
 		shutdownSignal,
-	)
-	if hostError != nil {
-		logAppRoot(
+	) {
+		logAppRootFunc(
 			session,
 			"server",
-			"Host",
-			"Server failure: %+v",
-			hostError,
+			"hostServer",
+			"Server closed",
 		)
-		return errHostServer
+		return nil
 	}
-	logAppRoot(
+	logAppRootFunc(
 		session,
 		"server",
-		"Host",
+		"hostServer",
 		"Server terminated",
 	)
-	return nil
+	return errHostServer
 }
 
 func createServer(
@@ -77,17 +72,13 @@ func createServer(
 		}
 		var caCertPool = session.customization.CaCertPool()
 		if caCertPool != nil {
-			if caCertPool != nil {
-				tlsConfig.ClientAuth = tls.RequireAndVerifyClientCert
-				tlsConfig.ClientCAs = caCertPool
-			} else {
-				tlsConfig.ClientAuth = tls.RequireAnyClientCert
-			}
+			tlsConfig.ClientAuth = tls.RequireAndVerifyClientCert
+			tlsConfig.ClientCAs = caCertPool
 		} else {
-			tlsConfig.ClientAuth = tls.RequestClientCert
+			tlsConfig.ClientAuth = tls.RequireAnyClientCert
 		}
 	}
-	var address = fmt.Sprintf(
+	var address = fmtSprintf(
 		":%v",
 		port,
 	)
@@ -108,7 +99,7 @@ func listenAndServe(
 	return server.ListenAndServe()
 }
 
-func shutDown(
+func shutdownServer(
 	runtimeContext context.Context,
 	server *http.Server,
 ) error {
@@ -117,19 +108,50 @@ func shutDown(
 	)
 }
 
+func evaluateServerErrors(
+	session *session,
+	hostError error,
+	shutdownError error,
+) bool {
+	var result = true
+	if hostError != nil &&
+		hostError != http.ErrServerClosed {
+		logAppRootFunc(
+			session,
+			"server",
+			"runServer",
+			"Host error found: %+v",
+			hostError,
+		)
+		result = false
+	}
+	if shutdownError != nil &&
+		shutdownError != http.ErrServerClosed {
+		logAppRootFunc(
+			session,
+			"server",
+			"runServer",
+			"Shutdown error found: %+v",
+			shutdownError,
+		)
+		result = false
+	}
+	return result
+}
+
 func runServer(
 	port int,
 	session *session,
 	router *mux.Router,
 	shutdownSignal chan os.Signal,
-) error {
-	var server, https = createServer(
+) bool {
+	var server, https = createServerFunc(
 		port,
 		session,
 		router,
 	)
 
-	signal.Notify(
+	signalNotify(
 		shutdownSignal,
 		os.Interrupt,
 		os.Kill,
@@ -137,43 +159,39 @@ func runServer(
 
 	var hostError error
 	go func() {
-		hostError = listenAndServe(
+		hostError = listenAndServeFunc(
 			server,
 			https,
 		)
-		haltServer(
+		haltServerFunc(
 			shutdownSignal,
 		)
 	}()
 
 	<-shutdownSignal
 
-	logAppRoot(
+	logAppRootFunc(
 		session,
 		"server",
-		"Host",
+		"runServer",
 		"Interrupt signal received: Terminating server",
 	)
 
-	if hostError != http.ErrServerClosed {
-		logAppRoot(
-			session,
-			"server",
-			"Host",
-			"Host error found: %+v",
-			hostError,
-		)
-	}
-
-	var runtimeContext, cancelCallback = context.WithTimeout(
-		context.Background(),
-		customization.GraceShutdownWaitTime(),
+	var runtimeContext, cancelCallback = contextWithTimeout(
+		contextBackground(),
+		session.customization.GraceShutdownWaitTime(),
 	)
 	defer cancelCallback()
 
-	return shutDown(
+	var shutdownError = shutdownServerFunc(
 		runtimeContext,
 		server,
+	)
+
+	return evaluateServerErrorsFunc(
+		session,
+		hostError,
+		shutdownError,
 	)
 }
 

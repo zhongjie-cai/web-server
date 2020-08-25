@@ -416,7 +416,7 @@ func TestInterpretError(t *testing.T) {
 	// arrange
 	var testData = map[error]int{
 		errSessionNil:            http.StatusInternalServerError,
-		errRouteRegistration:        http.StatusInternalServerError,
+		errRouteRegistration:     http.StatusInternalServerError,
 		errRouteNotFound:         http.StatusNotFound,
 		errHostServer:            http.StatusInternalServerError,
 		ErrRequestBodyEmpty:      http.StatusBadRequest,
@@ -466,10 +466,10 @@ func TestDefaultCustomization_NotFoundHandler(t *testing.T) {
 	createMock(t)
 
 	// SUT + act
-	var err = customizationDefault.NotFoundHandler()
+	var result = customizationDefault.NotFoundHandler()
 
 	// assert
-	assert.Nil(t, err)
+	assert.Nil(t, result)
 
 	// verify
 	verifyAll(t)
@@ -480,10 +480,10 @@ func TestDefaultCustomization_MethodNotAllowedHandler(t *testing.T) {
 	createMock(t)
 
 	// SUT + act
-	var err = customizationDefault.MethodNotAllowedHandler()
+	var result = customizationDefault.MethodNotAllowedHandler()
 
 	// assert
-	assert.Nil(t, err)
+	assert.Nil(t, result)
 
 	// verify
 	verifyAll(t)

@@ -9,13 +9,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestDoParameterReplacement_EmptyParameterType(t *testing.T) {
 	// arrange
-	var dummySession = &session{name: "some name"}
+	var dummySession = &session{id: uuid.New()}
 	var dummyParameterName = "some name"
 	var dummyOriginalPath = "/some/original/path/with/{" + dummyParameterName + "}/in/it"
 	var dummyParameterType ParameterType
@@ -53,7 +54,7 @@ func TestDoParameterReplacement_EmptyParameterType(t *testing.T) {
 
 func TestDoParameterReplacement_ValidParameterType(t *testing.T) {
 	// arrange
-	var dummySession = &session{name: "some name"}
+	var dummySession = &session{id: uuid.New()}
 	var dummyParameterName = "some name"
 	var dummyOriginalPath = "/some/original/path/with/{" + dummyParameterName + "}/in/it"
 	var dummyParameterType = ParameterType("some type")
@@ -105,7 +106,7 @@ func TestDoParameterReplacement_ValidParameterType(t *testing.T) {
 
 func TestEvaluatePathWithParameters(t *testing.T) {
 	// arrange
-	var dummySession = &session{name: "some name"}
+	var dummySession = &session{id: uuid.New()}
 	var dummyOriginalPath = "some original path"
 	var dummyParameterName1 = "some parameter name 1"
 	var dummyParameterType1 = ParameterType("some parameter type 1")

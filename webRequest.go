@@ -1,13 +1,9 @@
 package webserver
 
 import (
-	"bytes"
 	"crypto/tls"
 	"io"
-	"io/ioutil"
 	"net/http"
-	"strconv"
-	"strings"
 	"time"
 )
 
@@ -32,10 +28,6 @@ func clientDo(
 	)
 }
 
-func delayForRetry(retryDelay time.Duration) {
-	time.Sleep(retryDelay)
-}
-
 func clientDoWithRetry(
 	httpClient *http.Client,
 	httpRequest *http.Request,
@@ -46,7 +38,7 @@ func clientDoWithRetry(
 	var responseObject *http.Response
 	var responseError error
 	for {
-		responseObject, responseError = clientDo(
+		responseObject, responseError = clientDoFunc(
 			httpClient,
 			httpRequest,
 		)
@@ -64,7 +56,7 @@ func clientDoWithRetry(
 		} else {
 			break
 		}
-		delayForRetry(
+		timeSleep(
 			retryDelay,
 		)
 	}
@@ -101,11 +93,11 @@ func initializeHTTPClients(
 	roundTripperWrapper func(originalTransport http.RoundTripper) http.RoundTripper,
 ) {
 	httpClientWithCert = &http.Client{
-		Transport: getHTTPTransport(skipServerCertVerification, clientCertificate, roundTripperWrapper),
+		Transport: getHTTPTransportFunc(skipServerCertVerification, clientCertificate, roundTripperWrapper),
 		Timeout:   webcallTimeout,
 	}
 	httpClientNoCert = &http.Client{
-		Transport: getHTTPTransport(skipServerCertVerification, nil, roundTripperWrapper),
+		Transport: getHTTPTransportFunc(skipServerCertVerification, nil, roundTripperWrapper),
 		Timeout:   webcallTimeout,
 	}
 }
@@ -139,22 +131,15 @@ func (webRequest *webRequest) EnableRetry(connectivityRetryCount int, httpStatus
 	webRequest.retryDelay = retryDelay
 }
 
-func customizeHTTPRequest(session *session, httpRequest *http.Request) *http.Request {
-	return session.customization.WrapRequest(
-		session,
-		httpRequest,
-	)
-}
-
 func createHTTPRequest(webRequest *webRequest) (*http.Request, error) {
 	if webRequest == nil ||
 		webRequest.session == nil {
 		return nil, ErrWebRequestNil
 	}
-	var requestBody = strings.NewReader(
+	var requestBody = stringsNewReader(
 		webRequest.payload,
 	)
-	var requestObject, requestError = http.NewRequest(
+	var requestObject, requestError = httpNewRequest(
 		webRequest.method,
 		webRequest.url,
 		requestBody,
@@ -162,13 +147,13 @@ func createHTTPRequest(webRequest *webRequest) (*http.Request, error) {
 	if requestError != nil {
 		return nil, requestError
 	}
-	logWebcallStart(
+	logWebcallStartFunc(
 		webRequest.session,
 		webRequest.method,
 		"",
 		webRequest.url,
 	)
-	logWebcallRequest(
+	logWebcallRequestFunc(
 		webRequest.session,
 		"Payload",
 		"",
@@ -178,72 +163,72 @@ func createHTTPRequest(webRequest *webRequest) (*http.Request, error) {
 	for name, value := range webRequest.header {
 		requestObject.Header.Add(name, value)
 	}
-	logWebcallRequest(
+	logWebcallRequestFunc(
 		webRequest.session,
 		"Header",
 		"",
-		marshalIgnoreError(
+		marshalIgnoreErrorFunc(
 			requestObject.Header,
 		),
 	)
-	return customizeHTTPRequest(
+	return webRequest.session.customization.WrapRequest(
 		webRequest.session,
 		requestObject,
 	), nil
 }
 
 func logErrorResponse(session *session, responseError error, startTime time.Time) {
-	logWebcallResponse(
+	logWebcallResponseFunc(
 		session,
 		"Message",
 		"",
 		"%+v",
 		responseError,
 	)
-	logWebcallFinish(
+	logWebcallFinishFunc(
 		session,
 		"Error",
 		"",
 		"%s",
-		time.Since(startTime),
+		timeSince(startTime),
 	)
 }
 
-func logHTTPResponse(session *session, response *http.Response, startTime time.Time) {
+func logSuccessResponse(session *session, response *http.Response, startTime time.Time) {
 	if response == nil {
 		return
 	}
 	var (
 		responseStatusCode = response.StatusCode
-		responseBody, _    = ioutil.ReadAll(response.Body)
+		responseBody, _    = ioutilReadAll(response.Body)
 		responseHeaders    = response.Header
 	)
 	response.Body.Close()
-	response.Body = ioutil.NopCloser(
-		bytes.NewBuffer(
+	response.Body = ioutilNopCloser(
+		bytesNewBuffer(
 			responseBody,
 		),
 	)
-	logWebcallRequest(
+	logWebcallResponseFunc(
 		session,
 		"Header",
 		"",
-		marshalIgnoreError(
+		marshalIgnoreErrorFunc(
 			responseHeaders,
 		),
 	)
-	logWebcallResponse(
+	logWebcallResponseFunc(
 		session,
 		"Body",
 		"",
 		string(responseBody),
 	)
-	logWebcallFinish(
+	logWebcallFinishFunc(
 		session,
-		http.StatusText(responseStatusCode),
-		strconv.Itoa(responseStatusCode),
+		httpStatusText(responseStatusCode),
+		strconvItoa(responseStatusCode),
 		"%s",
-		time.Since(startTime),
+		timeSince(startTime),
 	)
 }
 
@@ -252,17 +237,17 @@ func doRequestProcessing(webRequest *webRequest) (*http.Response, error) {
 		webRequest.session == nil {
 		return nil, ErrWebRequestNil
 	}
-	var requestObject, requestError = createHTTPRequest(
+	var requestObject, requestError = createHTTPRequestFunc(
 		webRequest,
 	)
 	if requestError != nil {
 		return nil, requestError
 	}
-	var httpClient = getClientForRequest(
+	var httpClient = getClientForRequestFunc(
 		webRequest.sendClientCert,
 	)
-	var startTime = getTimeNowUTC()
-	var responseObject, responseError = clientDoWithRetry(
+	var startTime = getTimeNowUTCFunc()
+	var responseObject, responseError = clientDoWithRetryFunc(
 		httpClient,
 		requestObject,
 		webRequest.connRetry,
@@ -270,13 +255,13 @@ func doRequestProcessing(webRequest *webRequest) (*http.Response, error) {
 		webRequest.retryDelay,
 	)
 	if responseError != nil {
-		logErrorResponse(
+		logErrorResponseFunc(
 			webRequest.session,
 			responseError,
 			startTime,
 		)
 	} else {
-		logHTTPResponse(
+		logSuccessResponseFunc(
 			webRequest.session,
 			responseObject,
 			startTime,
@@ -290,24 +275,24 @@ func (webRequest *webRequest) ProcessRaw() (responseObject *http.Response, respo
 	if webRequest == nil {
 		return nil, ErrWebRequestNil
 	}
-	return doRequestProcessing(
+	return doRequestProcessingFunc(
 		webRequest,
 	)
 }
 
 func parseResponse(session *session, body io.ReadCloser, dataTemplate interface{}) error {
-	var bodyBytes, bodyError = ioutil.ReadAll(
+	var bodyBytes, bodyError = ioutilReadAll(
 		body,
 	)
 	if bodyError != nil {
 		return bodyError
 	}
-	var unmarshalError = tryUnmarshal(
+	var unmarshalError = tryUnmarshalFunc(
 		string(bodyBytes),
 		dataTemplate,
 	)
 	if unmarshalError != nil {
-		logWebcallResponse(
+		logWebcallResponseFunc(
 			session,
 			"Body",
 			"UnmarshalError",
@@ -321,26 +306,31 @@ func parseResponse(session *session, body io.ReadCloser, dataTemplate interface{
 
 // Process sends the webcall request over the wire, retrieves and serialize the response to dataTemplate, and provides status code, header and error if applicable
 func (webRequest *webRequest) Process(dataTemplate interface{}) (statusCode int, responseHeader http.Header, responseError error) {
-	if webRequest == nil {
+	if webRequest == nil ||
+		webRequest.session == nil {
 		return http.StatusInternalServerError, http.Header{}, ErrWebRequestNil
 	}
 	var responseObject *http.Response
-	responseObject, responseError = doRequestProcessing(
+	responseObject, responseError = doRequestProcessingFunc(
 		webRequest,
 	)
 	if responseError != nil {
 		if responseObject == nil {
-			return http.StatusInternalServerError, make(http.Header), responseError
+			return http.StatusInternalServerError,
+				make(http.Header),
+				responseError
 		}
 	} else {
 		if responseObject == nil {
 			return 0, make(http.Header), nil
 		}
-		responseError = parseResponse(
+		responseError = parseResponseFunc(
 			webRequest.session,
 			responseObject.Body,
 			dataTemplate,
 		)
 	}
-	return responseObject.StatusCode, responseObject.Header, responseError
+	return responseObject.StatusCode,
+		responseObject.Header,
+		responseError
 }

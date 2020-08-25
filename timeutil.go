@@ -10,12 +10,12 @@ const (
 
 // getTimeNow returns the current system time
 func getTimeNow() time.Time {
-	return time.Now()
+	return timeNow()
 }
 
 // getTimeNowUTC returns the UTC representation of the current system time
 func getTimeNowUTC() time.Time {
-	return time.Now().UTC()
+	return timeNow().UTC()
 }
 
 // formatDate returns the time in string format "yyyy-MM-dd"

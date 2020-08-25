@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -119,7 +120,7 @@ func TestPrepareLoggingFunc_HappyPath(t *testing.T) {
 func TestLogAppRoot(t *testing.T) {
 	// arrange
 	var dummySession = &session{
-		name: "some name",
+		id: uuid.New(),
 	}
 	var dummyCategory = "some category"
 	var dummySubcategory = "some subcategory"
@@ -165,7 +166,7 @@ func TestLogAppRoot(t *testing.T) {
 func TestLogEndpointEnter(t *testing.T) {
 	// arrange
 	var dummySession = &session{
-		name: "some name",
+		id: uuid.New(),
 	}
 	var dummyCategory = "some category"
 	var dummySubcategory = "some subcategory"
@@ -211,7 +212,7 @@ func TestLogEndpointEnter(t *testing.T) {
 func TestLogEndpointRequest(t *testing.T) {
 	// arrange
 	var dummySession = &session{
-		name: "some name",
+		id: uuid.New(),
 	}
 	var dummyCategory = "some category"
 	var dummySubcategory = "some subcategory"
@@ -257,7 +258,7 @@ func TestLogEndpointRequest(t *testing.T) {
 func TestLogMethodEnter(t *testing.T) {
 	// arrange
 	var dummySession = &session{
-		name: "some name",
+		id: uuid.New(),
 	}
 	var dummyCategory = "some category"
 	var dummySubcategory = "some subcategory"
@@ -303,7 +304,7 @@ func TestLogMethodEnter(t *testing.T) {
 func TestLogMethodParameter(t *testing.T) {
 	// arrange
 	var dummySession = &session{
-		name: "some name",
+		id: uuid.New(),
 	}
 	var dummyCategory = "some category"
 	var dummySubcategory = "some subcategory"
@@ -349,7 +350,7 @@ func TestLogMethodParameter(t *testing.T) {
 func TestLogMethodLogic(t *testing.T) {
 	// arrange
 	var dummySession = &session{
-		name: "some name",
+		id: uuid.New(),
 	}
 	var dummyLogLevel = LogLevel(rand.Intn(100))
 	var dummyCategory = "some category"
@@ -397,7 +398,7 @@ func TestLogMethodLogic(t *testing.T) {
 func TestLogWebcallStart(t *testing.T) {
 	// arrange
 	var dummySession = &session{
-		name: "some name",
+		id: uuid.New(),
 	}
 	var dummyCategory = "some category"
 	var dummySubcategory = "some subcategory"
@@ -443,7 +444,7 @@ func TestLogWebcallStart(t *testing.T) {
 func TestLogWebcallRequest(t *testing.T) {
 	// arrange
 	var dummySession = &session{
-		name: "some name",
+		id: uuid.New(),
 	}
 	var dummyCategory = "some category"
 	var dummySubcategory = "some subcategory"
@@ -489,7 +490,7 @@ func TestLogWebcallRequest(t *testing.T) {
 func TestLogWebcallResponse(t *testing.T) {
 	// arrange
 	var dummySession = &session{
-		name: "some name",
+		id: uuid.New(),
 	}
 	var dummyCategory = "some category"
 	var dummySubcategory = "some subcategory"
@@ -535,7 +536,7 @@ func TestLogWebcallResponse(t *testing.T) {
 func TestLogWebcallFinish(t *testing.T) {
 	// arrange
 	var dummySession = &session{
-		name: "some name",
+		id: uuid.New(),
 	}
 	var dummyCategory = "some category"
 	var dummySubcategory = "some subcategory"
@@ -581,7 +582,7 @@ func TestLogWebcallFinish(t *testing.T) {
 func TestLogMethodReturn(t *testing.T) {
 	// arrange
 	var dummySession = &session{
-		name: "some name",
+		id: uuid.New(),
 	}
 	var dummyCategory = "some category"
 	var dummySubcategory = "some subcategory"
@@ -627,7 +628,7 @@ func TestLogMethodReturn(t *testing.T) {
 func TestLogMethodExit(t *testing.T) {
 	// arrange
 	var dummySession = &session{
-		name: "some name",
+		id: uuid.New(),
 	}
 	var dummyCategory = "some category"
 	var dummySubcategory = "some subcategory"
@@ -673,7 +674,7 @@ func TestLogMethodExit(t *testing.T) {
 func TestLogEndpointResponse(t *testing.T) {
 	// arrange
 	var dummySession = &session{
-		name: "some name",
+		id: uuid.New(),
 	}
 	var dummyCategory = "some category"
 	var dummySubcategory = "some subcategory"
@@ -719,7 +720,7 @@ func TestLogEndpointResponse(t *testing.T) {
 func TestLogEndpointExit(t *testing.T) {
 	// arrange
 	var dummySession = &session{
-		name: "some name",
+		id: uuid.New(),
 	}
 	var dummyCategory = "some category"
 	var dummySubcategory = "some subcategory"

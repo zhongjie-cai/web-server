@@ -207,6 +207,12 @@ func TestWriteResponse(t *testing.T) {
 		assert.Equal(t, dummyMessage, messageFormat)
 		assert.Empty(t, parameters)
 	}
+	isInterfaceValueNilFuncExpected = 1
+	isInterfaceValueNilFunc = func(i interface{}) bool {
+		isInterfaceValueNilFuncCalled++
+		assert.Equal(t, dummyResponseWriterWriteResponse, i)
+		return false
+	}
 	responseWriterHeaderExpected = 1
 	dummyResponseWriterWriteResponse.header = func() http.Header {
 		responseWriterHeaderCalled++

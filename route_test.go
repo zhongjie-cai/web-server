@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 )
@@ -462,7 +463,7 @@ func TestPrintRegisteredRouteDetails_Success(t *testing.T) {
 
 func TestWalkRegisteredRoutes_Error(t *testing.T) {
 	// arrange
-	var dummySession = &session{name: "some name"}
+	var dummySession = &session{id: uuid.New()}
 	var dummyRouter = &mux.Router{}
 	var dummyError = errors.New("some error")
 
@@ -504,7 +505,7 @@ func TestWalkRegisteredRoutes_Error(t *testing.T) {
 
 func TestWalkRegisteredRoutes_Success(t *testing.T) {
 	// arrange
-	var dummySession = &session{name: "some name"}
+	var dummySession = &session{id: uuid.New()}
 	var dummyRouter = &mux.Router{}
 
 	// stub
@@ -614,14 +615,14 @@ func TestRegisterRoute(t *testing.T) {
 
 func TestDefaultActionFunc(t *testing.T) {
 	// arrange
-	var dummySessionObject = &dummySession{t}
+	var dummySession = &dummySession{t}
 
 	// mock
 	createMock(t)
 
 	// SUT + act
 	var result, err = defaultActionFunc(
-		dummySessionObject,
+		dummySession,
 	)
 
 	// assert

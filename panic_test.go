@@ -4,6 +4,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -69,7 +70,7 @@ func TestGetDebugStack(t *testing.T) {
 
 func TestHandlePanic_NilRecoverResult(t *testing.T) {
 	// arrange
-	var dummySession = &session{name: "some name"}
+	var dummySession = &session{id: uuid.New()}
 	var dummyRecoverResult interface{}
 
 	// mock
@@ -87,7 +88,7 @@ func TestHandlePanic_NilRecoverResult(t *testing.T) {
 
 func TestHandlePanic_HappyPath(t *testing.T) {
 	// arrange
-	var dummySession = &session{name: "some name"}
+	var dummySession = &session{id: uuid.New()}
 	var dummyError = errors.New("some error")
 	var dummyRecoverResult = dummyError.(interface{})
 	var dummyDebugStack = "some debug stack"
