@@ -195,7 +195,6 @@ func beginApplication(app *application) {
 	var serverHostError = hostServerFunc(
 		app.port,
 		app.session,
-		app.customization,
 		app.shutdownSignal,
 	)
 	if serverHostError != nil {

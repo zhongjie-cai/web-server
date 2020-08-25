@@ -2,39 +2,39 @@ package webserver
 
 import (
 	"bytes"
-	"encoding/json"
-	"fmt"
 	"reflect"
-	"strconv"
-	"strings"
 )
 
-// These are constants to configure the JSON encoder
-const (
-	escapeHTML bool = false
+var (
+	typeOfString  = reflect.TypeOf((*string)(nil))
+	typeOfBool    = reflect.TypeOf((*bool)(nil))
+	typeOfInteger = reflect.TypeOf((*int)(nil))
+	typeOfInt64   = reflect.TypeOf((*int64)(nil))
+	typeOfFloat64 = reflect.TypeOf((*float64)(nil))
+	typeOfByte    = reflect.TypeOf((*byte)(nil))
 )
 
 // marshalIgnoreError returns the string representation of the given object; returns empty string in case of error
 func marshalIgnoreError(v interface{}) string {
 	var buffer = &bytes.Buffer{}
-	var encoder = json.NewEncoder(buffer)
-	encoder.SetEscapeHTML(escapeHTML)
+	var encoder = jsonNewEncoder(buffer)
+	encoder.SetEscapeHTML(false)
 	encoder.Encode(v)
 	var result = string(buffer.Bytes())
-	return strings.TrimRight(result, "\n")
+	return stringsTrimRight(result, "\n")
 }
 
 func tryUnmarshalPrimitiveTypes(value string, dataTemplate interface{}) bool {
 	if value == "" {
 		return true
 	}
-	if reflect.TypeOf(dataTemplate) == reflect.TypeOf((*string)(nil)) {
+	switch reflectTypeOf(dataTemplate) {
+	case typeOfString:
 		(*(dataTemplate).(*string)) = value
 		return true
-	}
-	if reflect.TypeOf(dataTemplate) == reflect.TypeOf((*bool)(nil)) {
-		var parsedValue, parseError = strconv.ParseBool(
-			strings.ToLower(
+	case typeOfBool:
+		var parsedValue, parseError = strconvParseBool(
+			stringsToLower(
 				value,
 			),
 		)
@@ -43,33 +43,29 @@ func tryUnmarshalPrimitiveTypes(value string, dataTemplate interface{}) bool {
 		}
 		(*(dataTemplate).(*bool)) = parsedValue
 		return true
-	}
-	if reflect.TypeOf(dataTemplate) == reflect.TypeOf((*int)(nil)) {
-		var parsedValue, parseError = strconv.Atoi(value)
+	case typeOfInteger:
+		var parsedValue, parseError = strconvAtoi(value)
 		if parseError != nil {
 			return false
 		}
 		(*(dataTemplate).(*int)) = parsedValue
 		return true
-	}
-	if reflect.TypeOf(dataTemplate) == reflect.TypeOf((*int64)(nil)) {
-		var parsedValue, parseError = strconv.ParseInt(value, 0, 64)
+	case typeOfInt64:
+		var parsedValue, parseError = strconvParseInt(value, 0, 64)
 		if parseError != nil {
 			return false
 		}
 		(*(dataTemplate).(*int64)) = parsedValue
 		return true
-	}
-	if reflect.TypeOf(dataTemplate) == reflect.TypeOf((*float64)(nil)) {
-		var parsedValue, parseError = strconv.ParseFloat(value, 64)
+	case typeOfFloat64:
+		var parsedValue, parseError = strconvParseFloat(value, 64)
 		if parseError != nil {
 			return false
 		}
 		(*(dataTemplate).(*float64)) = parsedValue
 		return true
-	}
-	if reflect.TypeOf(dataTemplate) == reflect.TypeOf((*byte)(nil)) {
-		var parsedValue, parseError = strconv.ParseUint(value, 0, 8)
+	case typeOfByte:
+		var parsedValue, parseError = strconvParseUint(value, 0, 8)
 		if parseError != nil {
 			return false
 		}
@@ -81,27 +77,27 @@ func tryUnmarshalPrimitiveTypes(value string, dataTemplate interface{}) bool {
 
 // tryUnmarshal tries to unmarshal given value to dataTemplate
 func tryUnmarshal(value string, dataTemplate interface{}) error {
-	if tryUnmarshalPrimitiveTypes(
+	if tryUnmarshalPrimitiveTypesFunc(
 		value,
 		dataTemplate,
 	) {
 		return nil
 	}
-	var noQuoteJSONError = json.Unmarshal(
+	var noQuoteJSONError = jsonUnmarshal(
 		[]byte(value),
 		dataTemplate,
 	)
 	if noQuoteJSONError == nil {
 		return nil
 	}
-	var withQuoteJSONError = json.Unmarshal(
+	var withQuoteJSONError = jsonUnmarshal(
 		[]byte("\""+value+"\""),
 		dataTemplate,
 	)
 	if withQuoteJSONError == nil {
 		return nil
 	}
-	return fmt.Errorf(
+	return fmtErrorf(
 		"Unable to unmarshal value [%v] into data template",
 		value,
 	)

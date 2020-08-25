@@ -416,7 +416,7 @@ func TestInterpretError(t *testing.T) {
 	// arrange
 	var testData = map[error]int{
 		errSessionNil:            http.StatusInternalServerError,
-		errRouteRegistion:        http.StatusInternalServerError,
+		errRouteRegistration:        http.StatusInternalServerError,
 		errRouteNotFound:         http.StatusNotFound,
 		errHostServer:            http.StatusInternalServerError,
 		ErrRequestBodyEmpty:      http.StatusBadRequest,

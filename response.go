@@ -1,10 +1,5 @@
 package webserver
 
-import (
-	"net/http"
-	"strconv"
-)
-
 // These are the constants used by the HTTP modules
 const (
 	ContentTypeJSON = "application/json; charset=utf-8"
@@ -31,15 +26,15 @@ func writeResponse(
 	responseObject interface{},
 	responseError error,
 ) {
-	var statusCode, responseMessage = constructResponse(
+	var statusCode, responseMessage = constructResponseFunc(
 		session,
 		responseObject,
 		responseError,
 	)
-	logEndpointResponse(
+	logEndpointResponseFunc(
 		session,
-		http.StatusText(statusCode),
-		strconv.Itoa(statusCode),
+		httpStatusText(statusCode),
+		strconvItoa(statusCode),
 		responseMessage,
 	)
 	var responseWriter = session.GetResponseWriter()

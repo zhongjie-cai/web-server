@@ -201,7 +201,7 @@ func (customization *DefaultCustomization) InterpretError(err error) (int, strin
 	switch err {
 	case errSessionNil:
 		statusCode = http.StatusInternalServerError
-	case errRouteRegistion:
+	case errRouteRegistration:
 		statusCode = http.StatusInternalServerError
 	case errRouteNotFound:
 		statusCode = http.StatusNotFound

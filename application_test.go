@@ -840,11 +840,10 @@ func TestBeginApplication_HostError(t *testing.T) {
 		}
 	}
 	hostServerFuncExpected = 1
-	hostServerFunc = func(port int, session *session, customization Customization, shutdownSignal chan os.Signal) error {
+	hostServerFunc = func(port int, session *session, shutdownSignal chan os.Signal) error {
 		hostServerFuncCalled++
 		assert.Equal(t, dummyPort, port)
 		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyCustomization, customization)
 		assert.Equal(t, dummyShutdownSignal, shutdownSignal)
 		return dummyError
 	}
@@ -896,11 +895,10 @@ func TestBeginApplication_HostSuccess(t *testing.T) {
 		}
 	}
 	hostServerFuncExpected = 1
-	hostServerFunc = func(port int, session *session, customization Customization, shutdownSignal chan os.Signal) error {
+	hostServerFunc = func(port int, session *session, shutdownSignal chan os.Signal) error {
 		hostServerFuncCalled++
 		assert.Equal(t, dummyPort, port)
 		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyCustomization, customization)
 		assert.Equal(t, dummyShutdownSignal, shutdownSignal)
 		return nil
 	}

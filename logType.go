@@ -1,7 +1,6 @@
 package webserver
 
 import (
-	"sort"
 	"strings"
 )
 
@@ -130,8 +129,8 @@ func (logtype LogType) String() string {
 			result = append(result, value)
 		}
 	}
-	sort.Strings(result)
-	return strings.Join(result, "|")
+	sortStrings(result)
+	return stringsJoin(result, "|")
 }
 
 // HasFlag checks whether this log category has the flag set or not

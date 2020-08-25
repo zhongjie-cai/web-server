@@ -13,8 +13,8 @@ type Static struct {
 	Handler    http.Handler
 }
 
-// hostStatic wraps the mux static content handler
-func hostStatic(
+// registerStatic wraps the mux static content handler
+func registerStatic(
 	router *mux.Router,
 	name string,
 	path string,

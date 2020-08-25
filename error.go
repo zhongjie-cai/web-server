@@ -4,10 +4,11 @@ import "errors"
 
 // internal errors
 var (
-	errSessionNil     error = errors.New("The session object is nil")
-	errRouteRegistion error = errors.New("The route registration failed")
-	errRouteNotFound  error = errors.New("The route is not found")
-	errHostServer     error = errors.New("The server hosting failed")
+	errSessionNil          error = errors.New("The session object is nil")
+	errRouteRegistration   error = errors.New("The route registration failed")
+	errRouteNotFound       error = errors.New("The route is not found")
+	errRouteNotImplemented error = errors.New("The route is not implemented")
+	errHostServer          error = errors.New("The server hosting failed")
 )
 
 // external errors

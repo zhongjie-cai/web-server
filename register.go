@@ -1,9 +1,6 @@
 package webserver
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/gorilla/mux"
 )
 
@@ -14,7 +11,7 @@ func doParameterReplacement(
 	parameterType ParameterType,
 ) string {
 	if parameterType == "" {
-		logAppRoot(
+		logAppRootFunc(
 			session,
 			"register",
 			"doParameterReplacement",
@@ -24,16 +21,16 @@ func doParameterReplacement(
 		)
 		return originalPath
 	}
-	var oldParameter = fmt.Sprintf(
+	var oldParameter = fmtSprintf(
 		"{%v}",
 		parameterName,
 	)
-	var newParameter = fmt.Sprintf(
+	var newParameter = fmtSprintf(
 		"{%v:%v}",
 		parameterName,
 		parameterType,
 	)
-	return strings.Replace(
+	return stringsReplace(
 		originalPath,
 		oldParameter,
 		newParameter,
@@ -48,7 +45,7 @@ func evaluatePathWithParameters(
 ) string {
 	var updatedPath = path
 	for parameterName, parameterType := range parameters {
-		updatedPath = doParameterReplacement(
+		updatedPath = doParameterReplacementFunc(
 			session,
 			updatedPath,
 			parameterName,
@@ -65,12 +62,12 @@ func evaluateQueries(
 	for key, value := range queries {
 		var queryParameter string
 		if value == "" {
-			queryParameter = fmt.Sprintf(
+			queryParameter = fmtSprintf(
 				"{%v}",
 				key,
 			)
 		} else {
-			queryParameter = fmt.Sprintf(
+			queryParameter = fmtSprintf(
 				"{%v:%v}",
 				key,
 				value,
@@ -88,13 +85,11 @@ func evaluateQueries(
 func registerRoutes(
 	port int,
 	session *session,
-	customization Customization,
 	router *mux.Router,
 ) {
-	var configuredRoutes = customization.Routes()
-	if configuredRoutes == nil ||
-		len(configuredRoutes) == 0 {
-		logAppRoot(
+	var configuredRoutes = session.customization.Routes()
+	if len(configuredRoutes) == 0 {
+		logAppRootFunc(
 			session,
 			"register",
 			"registerRoutes",
@@ -103,15 +98,15 @@ func registerRoutes(
 		return
 	}
 	for _, configuredRoute := range configuredRoutes {
-		var evaluatedPath = evaluatePathWithParameters(
+		var evaluatedPath = evaluatePathWithParametersFunc(
 			session,
 			configuredRoute.Path,
 			configuredRoute.Parameters,
 		)
-		var queries = evaluateQueries(
+		var queries = evaluateQueriesFunc(
 			configuredRoute.Queries,
 		)
-		handleFunc(
+		registerRouteFunc(
 			router,
 			configuredRoute.Endpoint,
 			configuredRoute.Method,
@@ -126,13 +121,11 @@ func registerRoutes(
 
 func registerStatics(
 	session *session,
-	customization Customization,
 	router *mux.Router,
 ) {
-	var statics = customization.Statics()
-	if statics == nil ||
-		len(statics) == 0 {
-		logAppRoot(
+	var statics = session.customization.Statics()
+	if len(statics) == 0 {
+		logAppRootFunc(
 			session,
 			"register",
 			"registerStatics",
@@ -141,7 +134,7 @@ func registerStatics(
 		return
 	}
 	for _, static := range statics {
-		hostStatic(
+		registerStaticFunc(
 			router,
 			static.Name,
 			static.PathPrefix,
@@ -152,13 +145,11 @@ func registerStatics(
 
 func registerMiddlewares(
 	session *session,
-	customization Customization,
 	router *mux.Router,
 ) {
-	var middlewares = customization.Middlewares()
-	if middlewares == nil ||
-		len(middlewares) == 0 {
-		logAppRoot(
+	var middlewares = session.customization.Middlewares()
+	if len(middlewares) == 0 {
+		logAppRootFunc(
 			session,
 			"register",
 			"registerMiddlewares",
@@ -167,7 +158,7 @@ func registerMiddlewares(
 		return
 	}
 	for _, middleware := range middlewares {
-		addMiddleware(
+		addMiddlewareFunc(
 			router,
 			middleware,
 		)
@@ -182,49 +173,44 @@ func registerErrorHandlers(
 	router.NotFoundHandler = customization.NotFoundHandler()
 }
 
-func instrumentRouter(
-	customization Customization,
-	router *mux.Router,
-) *mux.Router {
-	return customization.InstrumentRouter(router)
-}
-
 // instantiateRouter instantiates and registers the given routes according to custom specification
 func instantiateRouter(
 	port int,
 	session *session,
-	customization Customization,
 ) (*mux.Router, error) {
-	var router = createRouter()
-	registerRoutes(
+	var router = muxNewRouter()
+	registerRoutesFunc(
 		port,
 		session,
-		customization,
 		router,
 	)
-	registerStatics(
+	registerStaticsFunc(
 		session,
-		customization,
 		router,
 	)
-	registerMiddlewares(
+	registerMiddlewaresFunc(
 		session,
-		customization,
 		router,
 	)
-	var routerError = walkRegisteredRoutes(
+	var routerError = walkRegisteredRoutesFunc(
 		session,
 		router,
 	)
 	if routerError != nil {
-		return nil, errRouteRegistion
+		logAppRootFunc(
+			session,
+			"register",
+			"instantiateRouter",
+			"%+v",
+			routerError,
+		)
+		return router, errRouteRegistration
 	}
-	registerErrorHandlers(
-		customization,
+	registerErrorHandlersFunc(
+		session.customization,
 		router,
 	)
-	return instrumentRouter(
-		customization,
+	return session.customization.InstrumentRouter(
 		router,
 	), nil
 }

@@ -9,22 +9,21 @@ import (
 	"os/signal"
 
 	"github.com/gorilla/mux"
+	"github.com/zhongjie-cai/WebServiceTemplate/customization"
 )
 
 // hostServer hosts the service entries and starts HTTPS server
 func hostServer(
 	port int,
 	session *session,
-	customization Customization,
 	shutdownSignal chan os.Signal,
 ) error {
 	var router, routerError = instantiateRouter(
 		port,
 		session,
-		customization,
 	)
 	if routerError != nil {
-		return errRouteRegistion
+		return errRouteRegistration
 	}
 	logAppRoot(
 		session,
@@ -36,7 +35,6 @@ func hostServer(
 	var hostError = runServer(
 		port,
 		session,
-		customization,
 		router,
 		shutdownSignal,
 	)
@@ -62,7 +60,6 @@ func hostServer(
 func createServer(
 	port int,
 	session *session,
-	customization Customization,
 	router *mux.Router,
 ) (*http.Server, bool) {
 	var tlsConfig = &tls.Config{
@@ -72,13 +69,13 @@ func createServer(
 		MinVersion: tls.VersionTLS12,
 	}
 	var https = false
-	var serverCert = customization.ServerCert()
+	var serverCert = session.customization.ServerCert()
 	if serverCert != nil {
 		https = true
 		tlsConfig.Certificates = []tls.Certificate{
 			*serverCert,
 		}
-		var caCertPool = customization.CaCertPool()
+		var caCertPool = session.customization.CaCertPool()
 		if caCertPool != nil {
 			if caCertPool != nil {
 				tlsConfig.ClientAuth = tls.RequireAndVerifyClientCert
@@ -123,14 +120,12 @@ func shutDown(
 func runServer(
 	port int,
 	session *session,
-	customization Customization,
 	router *mux.Router,
 	shutdownSignal chan os.Signal,
 ) error {
 	var server, https = createServer(
 		port,
 		session,
-		customization,
 		router,
 	)
 

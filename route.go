@@ -1,9 +1,7 @@
 package webserver
 
 import (
-	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/gorilla/mux"
 )
@@ -36,27 +34,27 @@ func getPathRegexp(route *mux.Route) (string, error) {
 
 func getQueriesTemplates(route *mux.Route) string {
 	var queriesTemplates, _ = route.GetQueriesTemplates()
-	return strings.Join(queriesTemplates, stringSeparator)
+	return stringsJoin(queriesTemplates, stringSeparator)
 }
 
 func getQueriesRegexp(route *mux.Route) string {
 	var queriesRegexps, _ = route.GetQueriesRegexp()
-	return strings.Join(queriesRegexps, stringSeparator)
+	return stringsJoin(queriesRegexps, stringSeparator)
 }
 
 func getMethods(route *mux.Route) string {
 	var methods, _ = route.GetMethods()
-	return strings.Join(methods, stringSeparator)
+	return stringsJoin(methods, stringSeparator)
 }
 
-func printRegisteredRouteDetails(
+func evaluateRoute(
 	route *mux.Route,
 	router *mux.Router,
 	ancestors []*mux.Route,
 ) error {
 	var (
-		_, pathTemplateError = getPathTemplate(route)
-		_, pathRegexpError   = getPathRegexp(route)
+		_, pathTemplateError = getPathTemplateFunc(route)
+		_, pathRegexpError   = getPathRegexpFunc(route)
 	)
 	if pathTemplateError != nil {
 		return pathTemplateError
@@ -73,28 +71,23 @@ func walkRegisteredRoutes(
 	router *mux.Router,
 ) error {
 	var walkError = router.Walk(
-		printRegisteredRouteDetails,
+		evaluateRouteFunc,
 	)
 	if walkError != nil {
-		logAppRoot(
+		logAppRootFunc(
 			session,
 			"route",
 			"walkRegisteredRoutes",
 			"Failure: %+v",
 			walkError,
 		)
-		return errRouteRegistion
+		return errRouteRegistration
 	}
 	return nil
 }
 
-// createRouter initializes a router for route registrations
-func createRouter() *mux.Router {
-	return mux.NewRouter()
-}
-
-// handleFunc wraps the mux route handler
-func handleFunc(
+// registerRoute wraps the mux route handler
+func registerRoute(
 	router *mux.Router,
 	endpoint string,
 	method string,
@@ -104,7 +97,7 @@ func handleFunc(
 	actionFunc ActionFunc,
 	port int,
 ) *mux.Route {
-	var name = fmt.Sprintf(
+	var name = fmtSprintf(
 		"%v:%v",
 		endpoint,
 		method,
@@ -119,17 +112,17 @@ func handleFunc(
 	).Name(
 		name,
 	)
-	var application = getApplication(port)
+	var application = getApplicationFunc(port)
 	application.actionFuncMap[name] = actionFunc
 	return route
 }
 
 func defaultActionFunc(session Session) (interface{}, error) {
-	return nil, nil
+	return nil, errRouteNotImplemented
 }
 
 func getEndpointByName(name string) string {
-	var splitSubs = strings.Split(
+	var splitSubs = stringsSplit(
 		name,
 		":",
 	)
@@ -141,12 +134,12 @@ func getEndpointByName(name string) string {
 
 // getRouteInfo retrieves the registered name and action for the given route
 func getRouteInfo(httpRequest *http.Request, actionFuncMap map[string]ActionFunc) (string, ActionFunc, error) {
-	var route = mux.CurrentRoute(httpRequest)
+	var route = muxCurrentRoute(httpRequest)
 	if route == nil {
 		return "", nil, errRouteNotFound
 	}
-	var name = getName(route)
-	var endpoint = getEndpointByName(name)
+	var name = getNameFunc(route)
+	var endpoint = getEndpointByNameFunc(name)
 	var action, found = actionFuncMap[name]
 	if !found {
 		action = defaultActionFunc

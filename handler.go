@@ -2,24 +2,8 @@ package webserver
 
 import (
 	"net/http"
-	"strconv"
-	"strings"
 	"time"
-
-	"github.com/google/uuid"
 )
-
-func executeCustomizedFunction(
-	session Session,
-	customFunc func(Session) error,
-) error {
-	if customFunc == nil {
-		return nil
-	}
-	return customFunc(
-		session,
-	)
-}
 
 func getRequestedPort(
 	httpRequest *http.Request,
@@ -28,112 +12,123 @@ func getRequestedPort(
 		return 0
 	}
 	var hostAddress = httpRequest.Host
-	var hostParts = strings.Split(hostAddress, ":")
+	var hostParts = stringsSplit(hostAddress, ":")
 	if len(hostParts) < 2 {
 		return 0
 	}
-	var portNumber, parseError = strconv.Atoi(hostParts[1])
+	var portNumber, parseError = strconvAtoi(hostParts[1])
 	if parseError != nil {
 		return 0
 	}
 	return portNumber
 }
 
-// handleSession wraps the HTTP handler with session related operations
-func handleSession(
-	writeResponser http.ResponseWriter,
+func initiateSession(
+	responseWriter http.ResponseWriter,
 	httpRequest *http.Request,
-) {
-	var port = getRequestedPort(
+) (*session, ActionFunc, error) {
+	var port = getRequestedPortFunc(
 		httpRequest,
 	)
-	var application = getApplication(
+	var application = getApplicationFunc(
 		port,
 	)
-	var endpoint, action, routeError = getRouteInfo(
+	var endpoint, action, routeError = getRouteInfoFunc(
 		httpRequest,
 		application.actionFuncMap,
 	)
-	var customization = application.customization
-	var session = &session{
-		uuid.New(),
+	return &session{
+		uuidNew(),
 		endpoint,
 		httpRequest,
-		writeResponser,
+		responseWriter,
 		map[string]interface{}{},
-		customization,
-	}
-	var startTime = getTimeNowUTC()
-	logEndpointEnter(
+		application.customization,
+	}, action, routeError
+}
+
+func finalizeSession(
+	session *session,
+	startTime time.Time,
+) {
+	handlePanicFunc(
 		session,
-		endpoint,
+		recover(),
+	)
+	logEndpointExitFunc(
+		session,
+		session.name,
+		session.request.Method,
+		"%s",
+		timeSince(startTime),
+	)
+}
+
+func handleAction(
+	session *session,
+	action ActionFunc,
+) {
+	var preActionError = session.customization.PreAction(
+		session,
+	)
+	if preActionError != nil {
+		writeResponseFunc(
+			session,
+			nil,
+			preActionError,
+		)
+		return
+	}
+	var responseObject, responseError = action(
+		session,
+	)
+	if responseError != nil {
+		writeResponseFunc(
+			session,
+			responseObject,
+			responseError,
+		)
+		return
+	}
+	var postActionError = session.customization.PostAction(
+		session,
+	)
+	writeResponseFunc(
+		session,
+		responseObject,
+		postActionError,
+	)
+}
+
+// handleSession wraps the HTTP handler with session related operations
+func handleSession(
+	responseWriter http.ResponseWriter,
+	httpRequest *http.Request,
+) {
+	var session, action, routeError = initiateSessionFunc(
+		responseWriter,
+		httpRequest,
+	)
+	logEndpointEnterFunc(
+		session,
+		session.name,
 		httpRequest.Method,
 		"",
 	)
-	defer func() {
-		handlePanic(
-			session,
-			recover(),
-		)
-		logEndpointExit(
-			session,
-			endpoint,
-			httpRequest.Method,
-			"%s",
-			time.Since(startTime),
-		)
-	}()
+	defer finalizeSessionFunc(
+		session,
+		getTimeNowUTCFunc(),
+	)
 	if routeError != nil {
-		writeResponse(
+		writeResponseFunc(
 			session,
 			nil,
 			routeError,
 		)
-	} else {
-		var preActionError = customization.PreAction(
-			session,
-		)
-		if preActionError != nil {
-			writeResponse(
-				session,
-				nil,
-				preActionError,
-			)
-		} else {
-			var responseObject, responseError = action(
-				session,
-			)
-			var postActionError = customization.PostAction(
-				session,
-			)
-			if postActionError != nil {
-				if responseError != nil {
-					logEndpointExit(
-						session,
-						endpoint,
-						httpRequest.Method,
-						"Post-action error: %+v",
-						postActionError,
-					)
-					writeResponse(
-						session,
-						nil,
-						responseError,
-					)
-				} else {
-					writeResponse(
-						session,
-						nil,
-						postActionError,
-					)
-				}
-			} else {
-				writeResponse(
-					session,
-					responseObject,
-					responseError,
-				)
-			}
-		}
+		return
 	}
+	handleActionFunc(
+		session,
+		action,
+	)
 }
