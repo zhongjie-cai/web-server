@@ -215,3 +215,101 @@ func TestError_ResponseInvalid(t *testing.T) {
 	// verify
 	verifyAll(t)
 }
+
+func TestError_InvalidOperation(t *testing.T) {
+	// mock
+	createMock(t)
+
+	// SUT + act
+	var message = ErrInvalidOperation.Error()
+
+	// assert
+	assert.Equal(t, "The underlying operation is invalid", message)
+
+	// verify
+	verifyAll(t)
+}
+
+func TestError_Forbidden(t *testing.T) {
+	// mock
+	createMock(t)
+
+	// SUT + act
+	var message = ErrForbidden.Error()
+
+	// assert
+	assert.Equal(t, "The underlying operation is forbidden", message)
+
+	// verify
+	verifyAll(t)
+}
+
+func TestError_NotImplemented(t *testing.T) {
+	// mock
+	createMock(t)
+
+	// SUT + act
+	var message = ErrNotImplemented.Error()
+
+	// assert
+	assert.Equal(t, "The underlying operation is not implemented", message)
+
+	// verify
+	verifyAll(t)
+}
+
+func TestError_BadRequest(t *testing.T) {
+	// mock
+	createMock(t)
+
+	// SUT + act
+	var message = ErrBadRequest.Error()
+
+	// assert
+	assert.Equal(t, "The client request is invalid", message)
+
+	// verify
+	verifyAll(t)
+}
+
+func TestError_ResourceNotFound(t *testing.T) {
+	// mock
+	createMock(t)
+
+	// SUT + act
+	var message = ErrResourceNotFound.Error()
+
+	// assert
+	assert.Equal(t, "The requested resource is not found", message)
+
+	// verify
+	verifyAll(t)
+}
+
+func TestError_ResourceLocked(t *testing.T) {
+	// mock
+	createMock(t)
+
+	// SUT + act
+	var message = ErrResourceLocked.Error()
+
+	// assert
+	assert.Equal(t, "The requested resource is locked", message)
+
+	// verify
+	verifyAll(t)
+}
+
+func TestError_ResourceConflict(t *testing.T) {
+	// mock
+	createMock(t)
+
+	// SUT + act
+	var message = ErrResourceConflict.Error()
+
+	// assert
+	assert.Equal(t, "The requested resource has data conflicts", message)
+
+	// verify
+	verifyAll(t)
+}

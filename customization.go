@@ -227,6 +227,20 @@ func (customization *DefaultCustomization) InterpretError(err error) (int, strin
 		statusCode = http.StatusInternalServerError
 	case ErrResponseInvalid:
 		statusCode = http.StatusInternalServerError
+	case ErrInvalidOperation:
+		statusCode = http.StatusMethodNotAllowed
+	case ErrForbidden:
+		statusCode = http.StatusForbidden
+	case ErrNotImplemented:
+		statusCode = http.StatusNotImplemented
+	case ErrBadRequest:
+		statusCode = http.StatusBadRequest
+	case ErrResourceNotFound:
+		statusCode = http.StatusNotFound
+	case ErrResourceLocked:
+		statusCode = http.StatusLocked
+	case ErrResourceConflict:
+		statusCode = http.StatusConflict
 	default:
 		statusCode = http.StatusInternalServerError
 	}

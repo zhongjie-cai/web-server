@@ -11,7 +11,7 @@ var (
 	errHostServer          error = errors.New("The server hosting failed")
 )
 
-// external errors
+// built-in errors
 var (
 	ErrRequestBodyEmpty   error = errors.New("The request body is empty")
 	ErrRequestBodyInvalid error = errors.New("The request body is invalid")
@@ -23,4 +23,15 @@ var (
 	ErrHeaderInvalid      error = errors.New("The request header is invalid")
 	ErrWebRequestNil      error = errors.New("The web request object is nil")
 	ErrResponseInvalid    error = errors.New("The response body is invalid")
+)
+
+// other errors
+var (
+	ErrInvalidOperation error = errors.New("The underlying operation is invalid")
+	ErrForbidden        error = errors.New("The underlying operation is forbidden")
+	ErrNotImplemented   error = errors.New("The underlying operation is not implemented")
+	ErrBadRequest       error = errors.New("The client request is invalid")
+	ErrResourceNotFound error = errors.New("The requested resource is not found")
+	ErrResourceLocked   error = errors.New("The requested resource is locked")
+	ErrResourceConflict error = errors.New("The requested resource has data conflicts")
 )

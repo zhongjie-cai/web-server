@@ -7,10 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gorilla/mux"
-
 	"github.com/google/uuid"
-
+	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -314,7 +312,7 @@ func TestDefaultCustomization_PostAction(t *testing.T) {
 	verifyAll(t)
 }
 
-func TestInterpretSuccess_NilResponseContent(t *testing.T) {
+func TestDefaultCustomization_InterpretSuccess_NilResponseContent(t *testing.T) {
 	// arrange
 	var dummyResponseContent interface{}
 
@@ -342,7 +340,7 @@ func TestInterpretSuccess_NilResponseContent(t *testing.T) {
 	verifyAll(t)
 }
 
-func TestInterpretSuccess_EmptyResponseContent(t *testing.T) {
+func TestDefaultCustomization_InterpretSuccess_EmptyResponseContent(t *testing.T) {
 	// arrange
 	var dummyResponseContent interface{}
 	var dummyContent string
@@ -377,7 +375,7 @@ func TestInterpretSuccess_EmptyResponseContent(t *testing.T) {
 	verifyAll(t)
 }
 
-func TestInterpretSuccess_HappyPath(t *testing.T) {
+func TestDefaultCustomization_InterpretSuccess_HappyPath(t *testing.T) {
 	// arrange
 	var dummyResponseContent interface{}
 	var dummyContent = "some content"
@@ -412,7 +410,7 @@ func TestInterpretSuccess_HappyPath(t *testing.T) {
 	verifyAll(t)
 }
 
-func TestInterpretError(t *testing.T) {
+func TestDefaultCustomization_InterpretError(t *testing.T) {
 	// arrange
 	var testData = map[error]int{
 		errSessionNil:            http.StatusInternalServerError,
@@ -429,6 +427,13 @@ func TestInterpretError(t *testing.T) {
 		ErrHeaderInvalid:         http.StatusBadRequest,
 		ErrWebRequestNil:         http.StatusInternalServerError,
 		ErrResponseInvalid:       http.StatusInternalServerError,
+		ErrInvalidOperation:      http.StatusMethodNotAllowed,
+		ErrForbidden:             http.StatusForbidden,
+		ErrNotImplemented:        http.StatusNotImplemented,
+		ErrBadRequest:            http.StatusBadRequest,
+		ErrResourceNotFound:      http.StatusNotFound,
+		ErrResourceLocked:        http.StatusLocked,
+		ErrResourceConflict:      http.StatusConflict,
 		errors.New("some error"): http.StatusInternalServerError,
 	}
 	var dummyMessage = "some message"
