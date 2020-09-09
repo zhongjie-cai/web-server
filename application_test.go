@@ -327,12 +327,30 @@ func TestStartAsync_GivenWaitGroup(t *testing.T) {
 	verifyAll(t)
 }
 
-func TestStop(t *testing.T) {
+func TestStop_NotStarted(t *testing.T) {
+	// arrange
+	var dummyApplication = &application{
+		name:    "some name",
+		started: false,
+	}
+
+	// mock
+	createMock(t)
+
+	// SUT + act
+	dummyApplication.Stop()
+
+	// verify
+	verifyAll(t)
+}
+
+func TestStop_HasStarted(t *testing.T) {
 	// arrange
 	var dummyShutdownSignal = make(chan os.Signal, 1)
 	var dummyApplication = &application{
 		name:           "some name",
 		shutdownSignal: dummyShutdownSignal,
+		started:        true,
 	}
 
 	// mock
@@ -347,6 +365,23 @@ func TestStop(t *testing.T) {
 
 	// SUT + act
 	dummyApplication.Stop()
+
+	// verify
+	verifyAll(t)
+}
+
+func TestStartApplication_AlreadyStarted(t *testing.T) {
+	// arrange
+	var dummyApplication = &application{
+		name:    "some name",
+		started: true,
+	}
+
+	// mock
+	createMock(t)
+
+	// SUT + act
+	startApplication(dummyApplication)
 
 	// verify
 	verifyAll(t)
@@ -808,6 +843,7 @@ func TestBeginApplication_HostError(t *testing.T) {
 	var dummySession = &session{id: uuid.New()}
 	var dummyCustomization = &dummyCustomization{t: t}
 	var dummyShutdownSignal = make(chan os.Signal, 1)
+	var dummyStarted = rand.Intn(100) > 50
 	var dummyApplication = &application{
 		name:           dummyName,
 		version:        dummyVersion,
@@ -815,6 +851,7 @@ func TestBeginApplication_HostError(t *testing.T) {
 		session:        dummySession,
 		customization:  dummyCustomization,
 		shutdownSignal: dummyShutdownSignal,
+		started:        dummyStarted,
 	}
 	var dummyError = errors.New("some error")
 
@@ -840,11 +877,12 @@ func TestBeginApplication_HostError(t *testing.T) {
 		}
 	}
 	hostServerFuncExpected = 1
-	hostServerFunc = func(port int, session *session, shutdownSignal chan os.Signal) error {
+	hostServerFunc = func(port int, session *session, shutdownSignal chan os.Signal, started *bool) error {
 		hostServerFuncCalled++
 		assert.Equal(t, dummyPort, port)
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyShutdownSignal, shutdownSignal)
+		assert.Equal(t, &dummyStarted, started)
 		return dummyError
 	}
 
@@ -865,6 +903,7 @@ func TestBeginApplication_HostSuccess(t *testing.T) {
 	var dummySession = &session{id: uuid.New()}
 	var dummyCustomization = &dummyCustomization{t: t}
 	var dummyShutdownSignal = make(chan os.Signal, 1)
+	var dummyStarted = rand.Intn(100) > 50
 	var dummyApplication = &application{
 		name:           dummyName,
 		version:        dummyVersion,
@@ -872,6 +911,7 @@ func TestBeginApplication_HostSuccess(t *testing.T) {
 		session:        dummySession,
 		customization:  dummyCustomization,
 		shutdownSignal: dummyShutdownSignal,
+		started:        dummyStarted,
 	}
 
 	// mock
@@ -895,11 +935,12 @@ func TestBeginApplication_HostSuccess(t *testing.T) {
 		}
 	}
 	hostServerFuncExpected = 1
-	hostServerFunc = func(port int, session *session, shutdownSignal chan os.Signal) error {
+	hostServerFunc = func(port int, session *session, shutdownSignal chan os.Signal, started *bool) error {
 		hostServerFuncCalled++
 		assert.Equal(t, dummyPort, port)
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyShutdownSignal, shutdownSignal)
+		assert.Equal(t, &dummyStarted, started)
 		return nil
 	}
 

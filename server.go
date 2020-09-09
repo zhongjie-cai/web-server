@@ -14,6 +14,7 @@ func hostServer(
 	port int,
 	session *session,
 	shutdownSignal chan os.Signal,
+	started *bool,
 ) error {
 	var router, routerError = instantiateRouterFunc(
 		port,
@@ -34,6 +35,7 @@ func hostServer(
 		session,
 		router,
 		shutdownSignal,
+		started,
 	) {
 		logAppRootFunc(
 			session,
@@ -144,6 +146,7 @@ func runServer(
 	session *session,
 	router *mux.Router,
 	shutdownSignal chan os.Signal,
+	started *bool,
 ) bool {
 	var server, https = createServerFunc(
 		port,
@@ -157,6 +160,8 @@ func runServer(
 		os.Kill,
 	)
 
+	*started = true
+
 	var hostError error
 	go func() {
 		hostError = listenAndServeFunc(
@@ -169,6 +174,8 @@ func runServer(
 	}()
 
 	<-shutdownSignal
+
+	*started = false
 
 	logAppRootFunc(
 		session,

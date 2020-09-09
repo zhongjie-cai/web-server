@@ -39,6 +39,7 @@ type application struct {
 	customization  Customization
 	actionFuncMap  map[string]ActionFunc
 	shutdownSignal chan os.Signal
+	started        bool
 }
 
 // NewApplication creates a new application for web server hosting
@@ -68,6 +69,7 @@ func NewApplication(
 		customization,
 		map[string]ActionFunc{},
 		make(chan os.Signal, 1),
+		false,
 	}
 	applicationMap[port] = application
 	return application
@@ -109,12 +111,18 @@ func (app *application) StartAsync(waitGroup *sync.WaitGroup) *sync.WaitGroup {
 }
 
 func (app *application) Stop() {
+	if !app.started {
+		return
+	}
 	haltServerFunc(
 		app.shutdownSignal,
 	)
 }
 
 func startApplication(app *application) {
+	if app.started {
+		return
+	}
 	if !preBootstrapingFunc(app) {
 		return
 	}
@@ -196,6 +204,7 @@ func beginApplication(app *application) {
 		app.port,
 		app.session,
 		app.shutdownSignal,
+		&app.started,
 	)
 	if serverHostError != nil {
 		logAppRootFunc(

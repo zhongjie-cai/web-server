@@ -326,7 +326,7 @@ func createMock(t *testing.T) {
 	}
 	hostServerFuncExpected = 0
 	hostServerFuncCalled = 0
-	hostServerFunc = func(port int, session *session, shutdownSignal chan os.Signal) error {
+	hostServerFunc = func(port int, session *session, shutdownSignal chan os.Signal, started *bool) error {
 		hostServerFuncCalled++
 		return nil
 	}
@@ -696,7 +696,7 @@ func createMock(t *testing.T) {
 	}
 	runServerFuncExpected = 0
 	runServerFuncCalled = 0
-	runServerFunc = func(port int, session *session, router *mux.Router, shutdownSignal chan os.Signal) bool {
+	runServerFunc = func(port int, session *session, router *mux.Router, shutdownSignal chan os.Signal, started *bool) bool {
 		runServerFuncCalled++
 		return false
 	}

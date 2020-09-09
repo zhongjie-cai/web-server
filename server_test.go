@@ -21,6 +21,7 @@ func TestHostServer_ErrorRegisterRoutes(t *testing.T) {
 	var dummyPort = rand.Intn(65536)
 	var dummySession = &session{id: uuid.New()}
 	var dummyShutdownSignal = make(chan os.Signal, 1)
+	var dummyStarted = rand.Intn(100) > 50
 	var dummyRouter = &mux.Router{}
 	var dummyError = errors.New("some error")
 
@@ -41,6 +42,7 @@ func TestHostServer_ErrorRegisterRoutes(t *testing.T) {
 		dummyPort,
 		dummySession,
 		dummyShutdownSignal,
+		&dummyStarted,
 	)
 
 	// assert
@@ -55,6 +57,7 @@ func TestHostServer_RunServerFailure(t *testing.T) {
 	var dummyPort = rand.Intn(65536)
 	var dummySession = &session{id: uuid.New()}
 	var dummyShutdownSignal = make(chan os.Signal, 1)
+	var dummyStarted = rand.Intn(100) > 50
 	var dummyRouter = &mux.Router{}
 
 	// mock
@@ -84,12 +87,13 @@ func TestHostServer_RunServerFailure(t *testing.T) {
 		}
 	}
 	runServerFuncExpected = 1
-	runServerFunc = func(port int, session *session, router *mux.Router, shutdownSignal chan os.Signal) bool {
+	runServerFunc = func(port int, session *session, router *mux.Router, shutdownSignal chan os.Signal, started *bool) bool {
 		runServerFuncCalled++
 		assert.Equal(t, dummyPort, port)
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyRouter, router)
 		assert.Equal(t, dummyShutdownSignal, shutdownSignal)
+		assert.Equal(t, &dummyStarted, started)
 		return false
 	}
 
@@ -98,6 +102,7 @@ func TestHostServer_RunServerFailure(t *testing.T) {
 		dummyPort,
 		dummySession,
 		dummyShutdownSignal,
+		&dummyStarted,
 	)
 
 	// assert
@@ -112,6 +117,7 @@ func TestHostServer_RunServerSuccess(t *testing.T) {
 	var dummyPort = rand.Intn(65536)
 	var dummySession = &session{id: uuid.New()}
 	var dummyShutdownSignal = make(chan os.Signal, 1)
+	var dummyStarted = rand.Intn(100) > 50
 	var dummyRouter = &mux.Router{}
 
 	// mock
@@ -141,12 +147,13 @@ func TestHostServer_RunServerSuccess(t *testing.T) {
 		}
 	}
 	runServerFuncExpected = 1
-	runServerFunc = func(port int, session *session, router *mux.Router, shutdownSignal chan os.Signal) bool {
+	runServerFunc = func(port int, session *session, router *mux.Router, shutdownSignal chan os.Signal, started *bool) bool {
 		runServerFuncCalled++
 		assert.Equal(t, dummyPort, port)
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyRouter, router)
 		assert.Equal(t, dummyShutdownSignal, shutdownSignal)
+		assert.Equal(t, &dummyStarted, started)
 		return true
 	}
 
@@ -155,6 +162,7 @@ func TestHostServer_RunServerSuccess(t *testing.T) {
 		dummyPort,
 		dummySession,
 		dummyShutdownSignal,
+		&dummyStarted,
 	)
 
 	// assert
@@ -578,6 +586,7 @@ func TestRunServer_HappyPath(t *testing.T) {
 	}
 	var dummyRouter = &mux.Router{}
 	var dummyShutdownSignal = make(chan os.Signal, 1)
+	var dummyStarted = false
 	var customizationGraceShutdownWaitTimeExpected int
 	var customizationGraceShutdownWaitTimeCalled int
 	var cancelCallbackExpected int
@@ -616,6 +625,7 @@ func TestRunServer_HappyPath(t *testing.T) {
 		listenAndServeFuncCalled++
 		assert.Equal(t, dummyServer, server)
 		assert.Equal(t, dummyHTTPS, serveHTTPS)
+		assert.True(t, dummyStarted)
 		return dummyHostError
 	}
 	haltServerFuncExpected = 1
@@ -631,6 +641,7 @@ func TestRunServer_HappyPath(t *testing.T) {
 		assert.Equal(t, "runServer", subcategory)
 		assert.Equal(t, "Interrupt signal received: Terminating server", messageFormat)
 		assert.Empty(t, parameters)
+		assert.False(t, dummyStarted)
 	}
 	contextBackgroundExpected = 1
 	contextBackground = func() context.Context {
@@ -675,10 +686,12 @@ func TestRunServer_HappyPath(t *testing.T) {
 		dummySession,
 		dummyRouter,
 		dummyShutdownSignal,
+		&dummyStarted,
 	)
 
 	// assert
 	assert.Equal(t, dummyResult, result)
+	assert.False(t, dummyStarted)
 
 	// verify
 	verifyAll(t)
