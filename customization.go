@@ -74,6 +74,9 @@ type HandlerCustomization interface {
 	// InterpretError is to customize how application interpret an error into HTTP status code and corresponding response body
 	InterpretError(err error) (int, string)
 
+	// RecoverPanic is to customize the recovery of panic into a valid response and error in case it happens (for recoverable panic only)
+	RecoverPanic(session Session, recoverResult interface{}) (interface{}, error)
+
 	// NotFoundHandler is to customize the handler to be used when no route matches.
 	NotFoundHandler() http.Handler
 
@@ -249,6 +252,32 @@ func (customization *DefaultCustomization) InterpretError(err error) (int, strin
 		err,
 	)
 	return statusCode, statusMessage
+}
+
+func getRecoverError(recoverResult interface{}) error {
+	var err, ok = recoverResult.(error)
+	if !ok {
+		err = fmtErrorf("Endpoint panic: %v", recoverResult)
+	}
+	return err
+}
+
+// RecoverPanic is to customize the recovery of panic into a valid response and error in case it happens (for recoverable panic only)
+func (customization *DefaultCustomization) RecoverPanic(session Session, recoverResult interface{}) (interface{}, error) {
+	var err = getRecoverErrorFunc(
+		recoverResult,
+	)
+	session.LogMethodLogic(
+		Error,
+		"RecoverPanic",
+		session.GetName(),
+		"Error: %+v\nCallstack: %v",
+		err,
+		string(
+			debugStack(),
+		),
+	)
+	return nil, err
 }
 
 // NotFoundHandler is to customize the handler to be used when no route matches.

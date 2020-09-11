@@ -60,6 +60,10 @@ var (
 	fmtSprintfCalled                        int
 	marshalIgnoreErrorFuncExpected          int
 	marshalIgnoreErrorFuncCalled            int
+	debugStackExpected                      int
+	debugStackCalled                        int
+	getRecoverErrorFuncExpected             int
+	getRecoverErrorFuncCalled               int
 	stringsSplitExpected                    int
 	stringsSplitCalled                      int
 	strconvAtoiExpected                     int
@@ -116,12 +120,6 @@ var (
 	sortStringsCalled                       int
 	stringsJoinExpected                     int
 	stringsJoinCalled                       int
-	debugStackExpected                      int
-	debugStackCalled                        int
-	getRecoverErrorFuncExpected             int
-	getRecoverErrorFuncCalled               int
-	getDebugStackFuncExpected               int
-	getDebugStackFuncCalled                 int
 	regexpMatchStringExpected               int
 	regexpMatchStringCalled                 int
 	reflectValueOfExpected                  int
@@ -348,6 +346,18 @@ func createMock(t *testing.T) {
 		marshalIgnoreErrorFuncCalled++
 		return ""
 	}
+	debugStackExpected = 0
+	debugStackCalled = 0
+	debugStack = func() []byte {
+		debugStackCalled++
+		return nil
+	}
+	getRecoverErrorFuncExpected = 0
+	getRecoverErrorFuncCalled = 0
+	getRecoverErrorFunc = func(recoverResult interface{}) error {
+		getRecoverErrorFuncCalled++
+		return nil
+	}
 	stringsSplitExpected = 0
 	stringsSplitCalled = 0
 	stringsSplit = func(s, sep string) []string {
@@ -506,24 +516,6 @@ func createMock(t *testing.T) {
 	stringsJoinCalled = 0
 	stringsJoin = func(a []string, sep string) string {
 		stringsJoinCalled++
-		return ""
-	}
-	debugStackExpected = 0
-	debugStackCalled = 0
-	debugStack = func() []byte {
-		debugStackCalled++
-		return nil
-	}
-	getRecoverErrorFuncExpected = 0
-	getRecoverErrorFuncCalled = 0
-	getRecoverErrorFunc = func(recoverResult interface{}) error {
-		getRecoverErrorFuncCalled++
-		return nil
-	}
-	getDebugStackFuncExpected = 0
-	getDebugStackFuncCalled = 0
-	getDebugStackFunc = func() string {
-		getDebugStackFuncCalled++
 		return ""
 	}
 	regexpMatchStringExpected = 0
@@ -959,6 +951,10 @@ func verifyAll(t *testing.T) {
 	assert.Equal(t, fmtSprintfExpected, fmtSprintfCalled, "Unexpected number of calls to method fmtSprintf")
 	marshalIgnoreErrorFunc = marshalIgnoreError
 	assert.Equal(t, marshalIgnoreErrorFuncExpected, marshalIgnoreErrorFuncCalled, "Unexpected number of calls to method marshalIgnoreErrorFunc")
+	debugStack = debug.Stack
+	assert.Equal(t, debugStackExpected, debugStackCalled, "Unexpected number of calls to debugStack")
+	getRecoverErrorFunc = getRecoverError
+	assert.Equal(t, getRecoverErrorFuncExpected, getRecoverErrorFuncCalled, "Unexpected number of calls to getRecoverErrorFunc")
 	stringsSplit = strings.Split
 	assert.Equal(t, stringsSplitExpected, stringsSplitCalled, "Unexpected number of calls to method stringsSplit")
 	strconvAtoi = strconv.Atoi
@@ -1015,12 +1011,6 @@ func verifyAll(t *testing.T) {
 	assert.Equal(t, sortStringsExpected, sortStringsCalled, "Unexpected number of calls to sortStrings")
 	stringsJoin = strings.Join
 	assert.Equal(t, stringsJoinExpected, stringsJoinCalled, "Unexpected number of calls to stringsJoin")
-	debugStack = debug.Stack
-	assert.Equal(t, debugStackExpected, debugStackCalled, "Unexpected number of calls to debugStack")
-	getRecoverErrorFunc = getRecoverError
-	assert.Equal(t, getRecoverErrorFuncExpected, getRecoverErrorFuncCalled, "Unexpected number of calls to getRecoverErrorFunc")
-	getDebugStackFunc = getDebugStack
-	assert.Equal(t, getDebugStackFuncExpected, getDebugStackFuncCalled, "Unexpected number of calls to getDebugStackFunc")
 	regexpMatchString = regexp.MatchString
 	assert.Equal(t, regexpMatchStringExpected, regexpMatchStringCalled, "Unexpected number of calls to regexpMatchString")
 	reflectValueOf = reflect.ValueOf
@@ -1266,6 +1256,11 @@ func (customization *dummyCustomization) InterpretSuccess(responseContent interf
 func (customization *dummyCustomization) InterpretError(err error) (int, string) {
 	assert.Fail(customization.t, "Unexpected call to InterpretError")
 	return 0, ""
+}
+
+func (customization *dummyCustomization) RecoverPanic(session Session, recoverResult interface{}) (interface{}, error) {
+	assert.Fail(customization.t, "Unexpected call to RecoverPanic")
+	return nil, nil
 }
 
 func (customization *dummyCustomization) NotFoundHandler() http.Handler {

@@ -43,6 +43,8 @@ var (
 	fmtPrintf              = fmt.Printf
 	fmtSprintf             = fmt.Sprintf
 	marshalIgnoreErrorFunc = marshalIgnoreError
+	debugStack             = debug.Stack
+	getRecoverErrorFunc    = getRecoverError
 )
 
 // func pointers for injection / testing: handler.go
@@ -87,13 +89,6 @@ var (
 var (
 	sortStrings = sort.Strings
 	stringsJoin = strings.Join
-)
-
-// func pointers for injection / testing: panic.go
-var (
-	debugStack          = debug.Stack
-	getRecoverErrorFunc = getRecoverError
-	getDebugStackFunc   = getDebugStack
 )
 
 // func pointers for injection / testing: parameter.go

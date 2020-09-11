@@ -466,6 +466,140 @@ func TestDefaultCustomization_InterpretError(t *testing.T) {
 	}
 }
 
+func TestGetRecoverError_Error(t *testing.T) {
+	// arrange
+	var dummyRecoverResult = errors.New("some error")
+
+	// mock
+	createMock(t)
+
+	// SUT + act
+	var result = getRecoverError(
+		dummyRecoverResult,
+	)
+
+	// assert
+	assert.Equal(t, dummyRecoverResult, result)
+
+	// verify
+	verifyAll(t)
+}
+
+func TestGetRecoverError_NonError(t *testing.T) {
+	// arrange
+	var dummyRecoverResult = "some recovery result"
+	var dummyError = errors.New("some error")
+
+	// mock
+	createMock(t)
+
+	// expect
+	fmtErrorfExpected = 1
+	fmtErrorf = func(format string, a ...interface{}) error {
+		fmtErrorfCalled++
+		assert.Equal(t, "Endpoint panic: %v", format)
+		assert.Equal(t, 1, len(a))
+		assert.Equal(t, dummyRecoverResult, a[0])
+		return dummyError
+	}
+
+	// SUT + act
+	var result = getRecoverError(
+		dummyRecoverResult,
+	)
+
+	// assert
+	assert.Equal(t, dummyError, result)
+
+	// verify
+	verifyAll(t)
+}
+
+type dummySessionRecoverPanic struct {
+	dummySession
+	getName        func() string
+	logMethodLogic func(logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{})
+}
+
+func (dummySessionRecoverPanic *dummySessionRecoverPanic) GetName() string {
+	if dummySessionRecoverPanic.getName != nil {
+		return dummySessionRecoverPanic.getName()
+	}
+	assert.Fail(dummySessionRecoverPanic.t, "Unexpected call to GetName")
+	return ""
+}
+
+func (dummySessionRecoverPanic *dummySessionRecoverPanic) LogMethodLogic(logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+	if dummySessionRecoverPanic.logMethodLogic != nil {
+		dummySessionRecoverPanic.logMethodLogic(logLevel, category, subcategory, messageFormat, parameters...)
+		return
+	}
+	assert.Fail(dummySessionRecoverPanic.t, "Unexpected call to LogMethodLogic")
+}
+
+func TestDefaultCustomization_RecoverPanic(t *testing.T) {
+	// arrange
+	var dummySessionRecoverPanic = &dummySessionRecoverPanic{
+		dummySession: dummySession{t: t},
+	}
+	var dummyError = errors.New("some error")
+	var dummyRecoverResult = dummyError.(interface{})
+	var dummyDebugStackString = "some debug stack string"
+	var dummyDebugStack = []byte(dummyDebugStackString)
+	var dummyName = "some name"
+	var sessionGetNameExpected int
+	var sessionGetNameCalled int
+	var sessionLogMethodLogicExpected int
+	var sessionLogMethodLogicCalled int
+
+	// mock
+	createMock(t)
+
+	// expect
+	getRecoverErrorFuncExpected = 1
+	getRecoverErrorFunc = func(recoverResult interface{}) error {
+		getRecoverErrorFuncCalled++
+		assert.Equal(t, dummyRecoverResult, recoverResult)
+		return dummyError
+	}
+	debugStackExpected = 1
+	debugStack = func() []byte {
+		debugStackCalled++
+		return dummyDebugStack
+	}
+	sessionGetNameExpected = 1
+	dummySessionRecoverPanic.getName = func() string {
+		sessionGetNameCalled++
+		return dummyName
+	}
+	sessionLogMethodLogicExpected = 1
+	dummySessionRecoverPanic.logMethodLogic = func(logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+		sessionLogMethodLogicCalled++
+		assert.Equal(t, Error, logLevel)
+		assert.Equal(t, "RecoverPanic", category)
+		assert.Equal(t, dummyName, subcategory)
+		assert.Equal(t, "Error: %+v\nCallstack: %v", messageFormat)
+		assert.Equal(t, 2, len(parameters))
+		assert.Equal(t, dummyError, parameters[0])
+		assert.Equal(t, dummyDebugStackString, parameters[1])
+	}
+
+	// SUT + act
+	var result, err = customizationDefault.RecoverPanic(
+		dummySessionRecoverPanic,
+		dummyRecoverResult,
+	)
+
+	// assert
+	assert.Nil(t, result)
+	assert.Equal(t, dummyError, err)
+
+	// verify
+	verifyAll(t)
+	assert.Equal(t, sessionGetNameExpected, sessionGetNameCalled, "Unexpected number of calls to method session.GetName")
+	assert.Equal(t, sessionLogMethodLogicExpected, sessionLogMethodLogicCalled, "Unexpected number of calls to method session.LogMethodLogic")
+}
+
 func TestDefaultCustomization_NotFoundHandler(t *testing.T) {
 	// mock
 	createMock(t)
