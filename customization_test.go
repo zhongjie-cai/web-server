@@ -575,7 +575,7 @@ func TestDefaultCustomization_RecoverPanic(t *testing.T) {
 	sessionLogMethodLogicExpected = 1
 	dummySessionRecoverPanic.logMethodLogic = func(logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		sessionLogMethodLogicCalled++
-		assert.Equal(t, Error, logLevel)
+		assert.Equal(t, LogLevelError, logLevel)
 		assert.Equal(t, "RecoverPanic", category)
 		assert.Equal(t, dummyName, subcategory)
 		assert.Equal(t, "Error: %+v\nCallstack: %v", messageFormat)

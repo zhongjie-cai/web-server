@@ -9,119 +9,119 @@ type LogType int
 
 // These are the enum definitions of log types and presets
 const (
-	AppRoot       LogType = 0
-	EndpointEnter LogType = 1 << iota
-	EndpointRequest
-	MethodEnter
-	MethodParameter
-	MethodLogic
-	WebcallStart
-	WebcallRequest
-	WebcallResponse
-	WebcallFinish
-	MethodReturn
-	MethodExit
-	EndpointResponse
-	EndpointExit
+	LogTypeAppRoot       LogType = 0
+	LogTypeEndpointEnter LogType = 1 << iota
+	LogTypeEndpointRequest
+	LogTypeMethodEnter
+	LogTypeMethodParameter
+	LogTypeMethodLogic
+	LogTypeWebcallStart
+	LogTypeWebcallRequest
+	LogTypeWebcallResponse
+	LogTypeWebcallFinish
+	LogTypeMethodReturn
+	LogTypeMethodExit
+	LogTypeEndpointResponse
+	LogTypeEndpointExit
 
-	BasicTracing   LogType = MethodLogic
-	GeneralTracing LogType = BasicTracing | EndpointEnter | EndpointExit
-	VerboseTracing LogType = GeneralTracing | WebcallStart | WebcallFinish
-	FullTracing    LogType = VerboseTracing | MethodEnter | MethodExit
+	LogTypeBasicTracing   LogType = LogTypeMethodLogic
+	LogTypeGeneralTracing LogType = LogTypeBasicTracing | LogTypeEndpointEnter | LogTypeEndpointExit
+	LogTypeVerboseTracing LogType = LogTypeGeneralTracing | LogTypeWebcallStart | LogTypeWebcallFinish
+	LogTypeFullTracing    LogType = LogTypeVerboseTracing | LogTypeMethodEnter | LogTypeMethodExit
 
-	BasicDebugging   LogType = MethodLogic
-	GeneralDebugging LogType = BasicDebugging | EndpointRequest | EndpointResponse
-	VerboseDebugging LogType = GeneralDebugging | WebcallRequest | WebcallResponse
-	FullDebugging    LogType = VerboseDebugging | MethodParameter | MethodReturn
+	LogTypeBasicDebugging   LogType = LogTypeMethodLogic
+	LogTypeGeneralDebugging LogType = LogTypeBasicDebugging | LogTypeEndpointRequest | LogTypeEndpointResponse
+	LogTypeVerboseDebugging LogType = LogTypeGeneralDebugging | LogTypeWebcallRequest | LogTypeWebcallResponse
+	LogTypeFullDebugging    LogType = LogTypeVerboseDebugging | LogTypeMethodParameter | LogTypeMethodReturn
 
-	BasicLogging   LogType = BasicTracing | BasicDebugging
-	GeneralLogging LogType = BasicLogging | GeneralTracing | GeneralDebugging
-	VerboseLogging LogType = GeneralLogging | VerboseTracing | VerboseDebugging
-	FullLogging    LogType = VerboseLogging | FullTracing | FullDebugging
+	LogTypeBasicLogging   LogType = LogTypeBasicTracing | LogTypeBasicDebugging
+	LogTypeGeneralLogging LogType = LogTypeBasicLogging | LogTypeGeneralTracing | LogTypeGeneralDebugging
+	LogTypeVerboseLogging LogType = LogTypeGeneralLogging | LogTypeVerboseTracing | LogTypeVerboseDebugging
+	LogTypeFullLogging    LogType = LogTypeVerboseLogging | LogTypeFullTracing | LogTypeFullDebugging
 )
 
 // These are the string representations of log category and preset names
 const (
-	appRootName         string = "AppRoot"
-	apiEnterName        string = "EndpointEnter"
-	apiRequestName      string = "EndpointRequest"
-	methodEnterName     string = "MethodEnter"
-	methodParameterName string = "MethodParameter"
-	methodLogicName     string = "MethodLogic"
-	webcallCallName     string = "WebcallStart"
-	webcallRequestName  string = "WebcallRequest"
-	webcallResponseName string = "WebcallResponse"
-	webcallFinishName   string = "WebcallFinish"
-	methodReturnName    string = "MethodReturn"
-	methodExitName      string = "MethodExit"
-	apiResponseName     string = "EndpointResponse"
-	apiExitName         string = "EndpointExit"
+	appRootLogTypeName         string = "AppRoot"
+	apiEnterLogTypeName        string = "EndpointEnter"
+	apiRequestLogTypeName      string = "EndpointRequest"
+	methodEnterLogTypeName     string = "MethodEnter"
+	methodParameterLogTypeName string = "MethodParameter"
+	methodLogicLogTypeName     string = "MethodLogic"
+	webcallCallLogTypeName     string = "WebcallStart"
+	webcallRequestLogTypeName  string = "WebcallRequest"
+	webcallResponseLogTypeName string = "WebcallResponse"
+	webcallFinishLogTypeName   string = "WebcallFinish"
+	methodReturnLogTypeName    string = "MethodReturn"
+	methodExitLogTypeName      string = "MethodExit"
+	apiResponseLogTypeName     string = "EndpointResponse"
+	apiExitLogTypeName         string = "EndpointExit"
 
-	basicTracingName   string = "BasicTracing"
-	generalTracingName string = "GeneralTracing"
-	verboseTracingName string = "VerboseTracing"
-	fullTracingName    string = "FullTracing"
+	basicTracingLogTypeName   string = "BasicTracing"
+	generalTracingLogTypeName string = "GeneralTracing"
+	verboseTracingLogTypeName string = "VerboseTracing"
+	fullTracingLogTypeName    string = "FullTracing"
 
-	basicDebuggingName   string = "BasicDebugging"
-	generalDebuggingName string = "GeneralDebugging"
-	verboseDebuggingName string = "VerboseDebugging"
-	fullDebuggingName    string = "FullDebugging"
+	basicDebuggingLogTypeName   string = "BasicDebugging"
+	generalDebuggingLogTypeName string = "GeneralDebugging"
+	verboseDebuggingLogTypeName string = "VerboseDebugging"
+	fullDebuggingLogTypeName    string = "FullDebugging"
 
-	basicLoggingName   string = "BasicLogging"
-	generalLoggingName string = "GeneralLogging"
-	verboseLoggingName string = "VerboseLogging"
-	fullLoggingName    string = "FullLogging"
+	basicLoggingLogTypeName   string = "BasicLogging"
+	generalLoggingLogTypeName string = "GeneralLogging"
+	verboseLoggingLogTypeName string = "VerboseLogging"
+	fullLoggingLogTypeName    string = "FullLogging"
 )
 
 var supportedLogTypes = map[LogType]string{
-	EndpointEnter:    apiEnterName,
-	EndpointRequest:  apiRequestName,
-	MethodEnter:      methodEnterName,
-	MethodParameter:  methodParameterName,
-	MethodLogic:      methodLogicName,
-	WebcallStart:     webcallCallName,
-	WebcallRequest:   webcallRequestName,
-	WebcallResponse:  webcallResponseName,
-	WebcallFinish:    webcallFinishName,
-	MethodReturn:     methodReturnName,
-	MethodExit:       methodExitName,
-	EndpointResponse: apiResponseName,
-	EndpointExit:     apiExitName,
+	LogTypeEndpointEnter:    apiEnterLogTypeName,
+	LogTypeEndpointRequest:  apiRequestLogTypeName,
+	LogTypeMethodEnter:      methodEnterLogTypeName,
+	LogTypeMethodParameter:  methodParameterLogTypeName,
+	LogTypeMethodLogic:      methodLogicLogTypeName,
+	LogTypeWebcallStart:     webcallCallLogTypeName,
+	LogTypeWebcallRequest:   webcallRequestLogTypeName,
+	LogTypeWebcallResponse:  webcallResponseLogTypeName,
+	LogTypeWebcallFinish:    webcallFinishLogTypeName,
+	LogTypeMethodReturn:     methodReturnLogTypeName,
+	LogTypeMethodExit:       methodExitLogTypeName,
+	LogTypeEndpointResponse: apiResponseLogTypeName,
+	LogTypeEndpointExit:     apiExitLogTypeName,
 }
 
 var logTypeNameMapping = map[string]LogType{
-	appRootName:          AppRoot,
-	apiEnterName:         EndpointEnter,
-	apiRequestName:       EndpointRequest,
-	methodEnterName:      MethodEnter,
-	methodParameterName:  MethodParameter,
-	methodLogicName:      MethodLogic,
-	webcallCallName:      WebcallStart,
-	webcallRequestName:   WebcallRequest,
-	webcallResponseName:  WebcallResponse,
-	webcallFinishName:    WebcallFinish,
-	methodReturnName:     MethodReturn,
-	methodExitName:       MethodExit,
-	apiResponseName:      EndpointResponse,
-	apiExitName:          EndpointExit,
-	basicTracingName:     BasicTracing,
-	generalTracingName:   GeneralTracing,
-	verboseTracingName:   VerboseTracing,
-	fullTracingName:      FullTracing,
-	basicDebuggingName:   BasicDebugging,
-	generalDebuggingName: GeneralDebugging,
-	verboseDebuggingName: VerboseDebugging,
-	fullDebuggingName:    FullDebugging,
-	basicLoggingName:     BasicLogging,
-	generalLoggingName:   GeneralLogging,
-	verboseLoggingName:   VerboseLogging,
-	fullLoggingName:      FullLogging,
+	appRootLogTypeName:          LogTypeAppRoot,
+	apiEnterLogTypeName:         LogTypeEndpointEnter,
+	apiRequestLogTypeName:       LogTypeEndpointRequest,
+	methodEnterLogTypeName:      LogTypeMethodEnter,
+	methodParameterLogTypeName:  LogTypeMethodParameter,
+	methodLogicLogTypeName:      LogTypeMethodLogic,
+	webcallCallLogTypeName:      LogTypeWebcallStart,
+	webcallRequestLogTypeName:   LogTypeWebcallRequest,
+	webcallResponseLogTypeName:  LogTypeWebcallResponse,
+	webcallFinishLogTypeName:    LogTypeWebcallFinish,
+	methodReturnLogTypeName:     LogTypeMethodReturn,
+	methodExitLogTypeName:       LogTypeMethodExit,
+	apiResponseLogTypeName:      LogTypeEndpointResponse,
+	apiExitLogTypeName:          LogTypeEndpointExit,
+	basicTracingLogTypeName:     LogTypeBasicTracing,
+	generalTracingLogTypeName:   LogTypeGeneralTracing,
+	verboseTracingLogTypeName:   LogTypeVerboseTracing,
+	fullTracingLogTypeName:      LogTypeFullTracing,
+	basicDebuggingLogTypeName:   LogTypeBasicDebugging,
+	generalDebuggingLogTypeName: LogTypeGeneralDebugging,
+	verboseDebuggingLogTypeName: LogTypeVerboseDebugging,
+	fullDebuggingLogTypeName:    LogTypeFullDebugging,
+	basicLoggingLogTypeName:     LogTypeBasicLogging,
+	generalLoggingLogTypeName:   LogTypeGeneralLogging,
+	verboseLoggingLogTypeName:   LogTypeVerboseLogging,
+	fullLoggingLogTypeName:      LogTypeFullLogging,
 }
 
 // FromString converts a LogType flag instance to its string representation
 func (logtype LogType) String() string {
-	if logtype == AppRoot {
-		return appRootName
+	if logtype == LogTypeAppRoot {
+		return appRootLogTypeName
 	}
 	var result []string
 	for key, value := range supportedLogTypes {
@@ -135,7 +135,7 @@ func (logtype LogType) String() string {
 
 // HasFlag checks whether this log category has the flag set or not
 func (logtype LogType) HasFlag(flag LogType) bool {
-	if flag == AppRoot {
+	if flag == LogTypeAppRoot {
 		return true
 	}
 	if logtype&flag == flag {

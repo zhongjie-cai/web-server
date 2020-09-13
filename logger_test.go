@@ -137,8 +137,8 @@ func TestLogAppRoot(t *testing.T) {
 	prepareLoggingFunc = func(session *session, logType LogType, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		prepareLoggingFuncCalled++
 		assert.Equal(t, dummySession, session)
-		assert.Equal(t, AppRoot, logType)
-		assert.Equal(t, Info, logLevel)
+		assert.Equal(t, LogTypeAppRoot, logType)
+		assert.Equal(t, LogLevelInfo, logLevel)
 		assert.Equal(t, dummyCategory, category)
 		assert.Equal(t, dummySubcategory, subcategory)
 		assert.Equal(t, dummyMessageFormat, messageFormat)
@@ -183,8 +183,8 @@ func TestLogEndpointEnter(t *testing.T) {
 	prepareLoggingFunc = func(session *session, logType LogType, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		prepareLoggingFuncCalled++
 		assert.Equal(t, dummySession, session)
-		assert.Equal(t, EndpointEnter, logType)
-		assert.Equal(t, Info, logLevel)
+		assert.Equal(t, LogTypeEndpointEnter, logType)
+		assert.Equal(t, LogLevelInfo, logLevel)
 		assert.Equal(t, dummyCategory, category)
 		assert.Equal(t, dummySubcategory, subcategory)
 		assert.Equal(t, dummyMessageFormat, messageFormat)
@@ -229,8 +229,8 @@ func TestLogEndpointRequest(t *testing.T) {
 	prepareLoggingFunc = func(session *session, logType LogType, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		prepareLoggingFuncCalled++
 		assert.Equal(t, dummySession, session)
-		assert.Equal(t, EndpointRequest, logType)
-		assert.Equal(t, Info, logLevel)
+		assert.Equal(t, LogTypeEndpointRequest, logType)
+		assert.Equal(t, LogLevelInfo, logLevel)
 		assert.Equal(t, dummyCategory, category)
 		assert.Equal(t, dummySubcategory, subcategory)
 		assert.Equal(t, dummyMessageFormat, messageFormat)
@@ -275,8 +275,8 @@ func TestLogMethodEnter(t *testing.T) {
 	prepareLoggingFunc = func(session *session, logType LogType, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		prepareLoggingFuncCalled++
 		assert.Equal(t, dummySession, session)
-		assert.Equal(t, MethodEnter, logType)
-		assert.Equal(t, Info, logLevel)
+		assert.Equal(t, LogTypeMethodEnter, logType)
+		assert.Equal(t, LogLevelInfo, logLevel)
 		assert.Equal(t, dummyCategory, category)
 		assert.Equal(t, dummySubcategory, subcategory)
 		assert.Equal(t, dummyMessageFormat, messageFormat)
@@ -321,8 +321,8 @@ func TestLogMethodParameter(t *testing.T) {
 	prepareLoggingFunc = func(session *session, logType LogType, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		prepareLoggingFuncCalled++
 		assert.Equal(t, dummySession, session)
-		assert.Equal(t, MethodParameter, logType)
-		assert.Equal(t, Info, logLevel)
+		assert.Equal(t, LogTypeMethodParameter, logType)
+		assert.Equal(t, LogLevelInfo, logLevel)
 		assert.Equal(t, dummyCategory, category)
 		assert.Equal(t, dummySubcategory, subcategory)
 		assert.Equal(t, dummyMessageFormat, messageFormat)
@@ -368,7 +368,7 @@ func TestLogMethodLogic(t *testing.T) {
 	prepareLoggingFunc = func(session *session, logType LogType, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		prepareLoggingFuncCalled++
 		assert.Equal(t, dummySession, session)
-		assert.Equal(t, MethodLogic, logType)
+		assert.Equal(t, LogTypeMethodLogic, logType)
 		assert.Equal(t, dummyLogLevel, logLevel)
 		assert.Equal(t, dummyCategory, category)
 		assert.Equal(t, dummySubcategory, subcategory)
@@ -415,8 +415,8 @@ func TestLogWebcallStart(t *testing.T) {
 	prepareLoggingFunc = func(session *session, logType LogType, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		prepareLoggingFuncCalled++
 		assert.Equal(t, dummySession, session)
-		assert.Equal(t, WebcallStart, logType)
-		assert.Equal(t, Info, logLevel)
+		assert.Equal(t, LogTypeWebcallStart, logType)
+		assert.Equal(t, LogLevelInfo, logLevel)
 		assert.Equal(t, dummyCategory, category)
 		assert.Equal(t, dummySubcategory, subcategory)
 		assert.Equal(t, dummyMessageFormat, messageFormat)
@@ -461,8 +461,8 @@ func TestLogWebcallRequest(t *testing.T) {
 	prepareLoggingFunc = func(session *session, logType LogType, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		prepareLoggingFuncCalled++
 		assert.Equal(t, dummySession, session)
-		assert.Equal(t, WebcallRequest, logType)
-		assert.Equal(t, Info, logLevel)
+		assert.Equal(t, LogTypeWebcallRequest, logType)
+		assert.Equal(t, LogLevelInfo, logLevel)
 		assert.Equal(t, dummyCategory, category)
 		assert.Equal(t, dummySubcategory, subcategory)
 		assert.Equal(t, dummyMessageFormat, messageFormat)
@@ -507,8 +507,8 @@ func TestLogWebcallResponse(t *testing.T) {
 	prepareLoggingFunc = func(session *session, logType LogType, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		prepareLoggingFuncCalled++
 		assert.Equal(t, dummySession, session)
-		assert.Equal(t, WebcallResponse, logType)
-		assert.Equal(t, Info, logLevel)
+		assert.Equal(t, LogTypeWebcallResponse, logType)
+		assert.Equal(t, LogLevelInfo, logLevel)
 		assert.Equal(t, dummyCategory, category)
 		assert.Equal(t, dummySubcategory, subcategory)
 		assert.Equal(t, dummyMessageFormat, messageFormat)
@@ -553,8 +553,8 @@ func TestLogWebcallFinish(t *testing.T) {
 	prepareLoggingFunc = func(session *session, logType LogType, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		prepareLoggingFuncCalled++
 		assert.Equal(t, dummySession, session)
-		assert.Equal(t, WebcallFinish, logType)
-		assert.Equal(t, Info, logLevel)
+		assert.Equal(t, LogTypeWebcallFinish, logType)
+		assert.Equal(t, LogLevelInfo, logLevel)
 		assert.Equal(t, dummyCategory, category)
 		assert.Equal(t, dummySubcategory, subcategory)
 		assert.Equal(t, dummyMessageFormat, messageFormat)
@@ -599,8 +599,8 @@ func TestLogMethodReturn(t *testing.T) {
 	prepareLoggingFunc = func(session *session, logType LogType, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		prepareLoggingFuncCalled++
 		assert.Equal(t, dummySession, session)
-		assert.Equal(t, MethodReturn, logType)
-		assert.Equal(t, Info, logLevel)
+		assert.Equal(t, LogTypeMethodReturn, logType)
+		assert.Equal(t, LogLevelInfo, logLevel)
 		assert.Equal(t, dummyCategory, category)
 		assert.Equal(t, dummySubcategory, subcategory)
 		assert.Equal(t, dummyMessageFormat, messageFormat)
@@ -645,8 +645,8 @@ func TestLogMethodExit(t *testing.T) {
 	prepareLoggingFunc = func(session *session, logType LogType, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		prepareLoggingFuncCalled++
 		assert.Equal(t, dummySession, session)
-		assert.Equal(t, MethodExit, logType)
-		assert.Equal(t, Info, logLevel)
+		assert.Equal(t, LogTypeMethodExit, logType)
+		assert.Equal(t, LogLevelInfo, logLevel)
 		assert.Equal(t, dummyCategory, category)
 		assert.Equal(t, dummySubcategory, subcategory)
 		assert.Equal(t, dummyMessageFormat, messageFormat)
@@ -691,8 +691,8 @@ func TestLogEndpointResponse(t *testing.T) {
 	prepareLoggingFunc = func(session *session, logType LogType, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		prepareLoggingFuncCalled++
 		assert.Equal(t, dummySession, session)
-		assert.Equal(t, EndpointResponse, logType)
-		assert.Equal(t, Info, logLevel)
+		assert.Equal(t, LogTypeEndpointResponse, logType)
+		assert.Equal(t, LogLevelInfo, logLevel)
 		assert.Equal(t, dummyCategory, category)
 		assert.Equal(t, dummySubcategory, subcategory)
 		assert.Equal(t, dummyMessageFormat, messageFormat)
@@ -737,8 +737,8 @@ func TestLogEndpointExit(t *testing.T) {
 	prepareLoggingFunc = func(session *session, logType LogType, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		prepareLoggingFuncCalled++
 		assert.Equal(t, dummySession, session)
-		assert.Equal(t, EndpointExit, logType)
-		assert.Equal(t, Info, logLevel)
+		assert.Equal(t, LogTypeEndpointExit, logType)
+		assert.Equal(t, LogLevelInfo, logLevel)
 		assert.Equal(t, dummyCategory, category)
 		assert.Equal(t, dummySubcategory, subcategory)
 		assert.Equal(t, dummyMessageFormat, messageFormat)

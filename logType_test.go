@@ -22,8 +22,8 @@ func TestString_AppRoot(t *testing.T) {
 	var result = sut.String()
 
 	// assert
-	assert.Equal(t, AppRoot, sut)
-	assert.Equal(t, appRootName, result)
+	assert.Equal(t, LogTypeAppRoot, sut)
+	assert.Equal(t, appRootLogTypeName, result)
 
 	// verify
 	verifyAll(t)
@@ -78,13 +78,13 @@ func TestString_SingleSupportedLogType(t *testing.T) {
 	}
 
 	// SUT
-	var sut = MethodLogic
+	var sut = LogTypeMethodLogic
 
 	// act
 	var result = sut.String()
 
 	// assert
-	assert.Equal(t, methodLogicName, result)
+	assert.Equal(t, methodLogicLogTypeName, result)
 
 	// verify
 	verifyAll(t)
@@ -92,7 +92,7 @@ func TestString_SingleSupportedLogType(t *testing.T) {
 
 func TestString_MultipleSupportedLogTypes(t *testing.T) {
 	// arrange
-	var supportedValue = EndpointEnter | EndpointRequest | MethodLogic | EndpointResponse | EndpointExit
+	var supportedValue = LogTypeEndpointEnter | LogTypeEndpointRequest | LogTypeMethodLogic | LogTypeEndpointResponse | LogTypeEndpointExit
 
 	// mock
 	createMock(t)
@@ -116,12 +116,12 @@ func TestString_MultipleSupportedLogTypes(t *testing.T) {
 	var result = sut.String()
 
 	// assert
-	assert.Equal(t, GeneralLogging, sut)
-	assert.True(t, strings.Contains(result, apiEnterName))
-	assert.True(t, strings.Contains(result, apiRequestName))
-	assert.True(t, strings.Contains(result, methodLogicName))
-	assert.True(t, strings.Contains(result, apiResponseName))
-	assert.True(t, strings.Contains(result, apiExitName))
+	assert.Equal(t, LogTypeGeneralLogging, sut)
+	assert.True(t, strings.Contains(result, apiEnterLogTypeName))
+	assert.True(t, strings.Contains(result, apiRequestLogTypeName))
+	assert.True(t, strings.Contains(result, methodLogicLogTypeName))
+	assert.True(t, strings.Contains(result, apiResponseLogTypeName))
+	assert.True(t, strings.Contains(result, apiExitLogTypeName))
 
 	// verify
 	verifyAll(t)
@@ -129,13 +129,13 @@ func TestString_MultipleSupportedLogTypes(t *testing.T) {
 
 func TestHasFlag_FlagMatch_AppRoot(t *testing.T) {
 	// arrange
-	var flag = AppRoot
+	var flag = LogTypeAppRoot
 
 	// mock
 	createMock(t)
 
 	// SUT
-	var sut = AppRoot
+	var sut = LogTypeAppRoot
 
 	// act
 	var result = sut.HasFlag(flag)
@@ -149,13 +149,13 @@ func TestHasFlag_FlagMatch_AppRoot(t *testing.T) {
 
 func TestHasFlag_FlagNoMatch_AppRoot(t *testing.T) {
 	// arrange
-	var flag = AppRoot
+	var flag = LogTypeAppRoot
 
 	// mock
 	createMock(t)
 
 	// SUT
-	var sut = EndpointEnter | EndpointExit
+	var sut = LogTypeEndpointEnter | LogTypeEndpointExit
 
 	// act
 	var result = sut.HasFlag(flag)
@@ -169,13 +169,13 @@ func TestHasFlag_FlagNoMatch_AppRoot(t *testing.T) {
 
 func TestHasFlag_FlagMatch_NotAppRoot(t *testing.T) {
 	// arrange
-	var flag = MethodLogic
+	var flag = LogTypeMethodLogic
 
 	// mock
 	createMock(t)
 
 	// SUT
-	var sut = EndpointEnter | MethodLogic | EndpointExit
+	var sut = LogTypeEndpointEnter | LogTypeMethodLogic | LogTypeEndpointExit
 
 	// act
 	var result = sut.HasFlag(flag)
@@ -189,13 +189,13 @@ func TestHasFlag_FlagMatch_NotAppRoot(t *testing.T) {
 
 func TestHasFlag_FlagNoMatch_NotAppRoot(t *testing.T) {
 	// arrange
-	var flag = MethodLogic
+	var flag = LogTypeMethodLogic
 
 	// mock
 	createMock(t)
 
 	// SUT
-	var sut = EndpointEnter | EndpointExit
+	var sut = LogTypeEndpointEnter | LogTypeEndpointExit
 
 	// act
 	var result = sut.HasFlag(flag)
@@ -223,7 +223,7 @@ func TestNewLogType_NoMatchFound(t *testing.T) {
 	var result = NewLogType(dummyValue)
 
 	// assert
-	assert.Equal(t, AppRoot, result)
+	assert.Equal(t, LogTypeAppRoot, result)
 
 	// tear down
 	verifyAll(t)
@@ -231,7 +231,7 @@ func TestNewLogType_NoMatchFound(t *testing.T) {
 
 func TestNewLogType_AppRoot(t *testing.T) {
 	// arrange
-	var dummyValue = appRootName
+	var dummyValue = appRootLogTypeName
 
 	// mock
 	createMock(t)
@@ -245,7 +245,7 @@ func TestNewLogType_AppRoot(t *testing.T) {
 	var result = NewLogType(dummyValue)
 
 	// assert
-	assert.Equal(t, AppRoot, result)
+	assert.Equal(t, LogTypeAppRoot, result)
 
 	// tear down
 	verifyAll(t)

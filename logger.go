@@ -29,8 +29,8 @@ func prepareLogging(
 func logAppRoot(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 	prepareLoggingFunc(
 		session,
-		AppRoot,
-		Info,
+		LogTypeAppRoot,
+		LogLevelInfo,
 		category,
 		subcategory,
 		messageFormat,
@@ -42,8 +42,8 @@ func logAppRoot(session *session, category string, subcategory string, messageFo
 func logEndpointEnter(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 	prepareLoggingFunc(
 		session,
-		EndpointEnter,
-		Info,
+		LogTypeEndpointEnter,
+		LogLevelInfo,
 		category,
 		subcategory,
 		messageFormat,
@@ -55,8 +55,8 @@ func logEndpointEnter(session *session, category string, subcategory string, mes
 func logEndpointRequest(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 	prepareLoggingFunc(
 		session,
-		EndpointRequest,
-		Info,
+		LogTypeEndpointRequest,
+		LogLevelInfo,
 		category,
 		subcategory,
 		messageFormat,
@@ -68,8 +68,8 @@ func logEndpointRequest(session *session, category string, subcategory string, m
 func logMethodEnter(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 	prepareLoggingFunc(
 		session,
-		MethodEnter,
-		Info,
+		LogTypeMethodEnter,
+		LogLevelInfo,
 		category,
 		subcategory,
 		messageFormat,
@@ -81,8 +81,8 @@ func logMethodEnter(session *session, category string, subcategory string, messa
 func logMethodParameter(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 	prepareLoggingFunc(
 		session,
-		MethodParameter,
-		Info,
+		LogTypeMethodParameter,
+		LogLevelInfo,
 		category,
 		subcategory,
 		messageFormat,
@@ -94,7 +94,7 @@ func logMethodParameter(session *session, category string, subcategory string, m
 func logMethodLogic(session *session, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 	prepareLoggingFunc(
 		session,
-		MethodLogic,
+		LogTypeMethodLogic,
 		logLevel,
 		category,
 		subcategory,
@@ -107,8 +107,8 @@ func logMethodLogic(session *session, logLevel LogLevel, category string, subcat
 func logWebcallStart(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 	prepareLoggingFunc(
 		session,
-		WebcallStart,
-		Info,
+		LogTypeWebcallStart,
+		LogLevelInfo,
 		category,
 		subcategory,
 		messageFormat,
@@ -120,8 +120,8 @@ func logWebcallStart(session *session, category string, subcategory string, mess
 func logWebcallRequest(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 	prepareLoggingFunc(
 		session,
-		WebcallRequest,
-		Info,
+		LogTypeWebcallRequest,
+		LogLevelInfo,
 		category,
 		subcategory,
 		messageFormat,
@@ -133,8 +133,8 @@ func logWebcallRequest(session *session, category string, subcategory string, me
 func logWebcallResponse(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 	prepareLoggingFunc(
 		session,
-		WebcallResponse,
-		Info,
+		LogTypeWebcallResponse,
+		LogLevelInfo,
 		category,
 		subcategory,
 		messageFormat,
@@ -146,8 +146,8 @@ func logWebcallResponse(session *session, category string, subcategory string, m
 func logWebcallFinish(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 	prepareLoggingFunc(
 		session,
-		WebcallFinish,
-		Info,
+		LogTypeWebcallFinish,
+		LogLevelInfo,
 		category,
 		subcategory,
 		messageFormat,
@@ -159,8 +159,8 @@ func logWebcallFinish(session *session, category string, subcategory string, mes
 func logMethodReturn(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 	prepareLoggingFunc(
 		session,
-		MethodReturn,
-		Info,
+		LogTypeMethodReturn,
+		LogLevelInfo,
 		category,
 		subcategory,
 		messageFormat,
@@ -172,8 +172,8 @@ func logMethodReturn(session *session, category string, subcategory string, mess
 func logMethodExit(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 	prepareLoggingFunc(
 		session,
-		MethodExit,
-		Info,
+		LogTypeMethodExit,
+		LogLevelInfo,
 		category,
 		subcategory,
 		messageFormat,
@@ -185,8 +185,8 @@ func logMethodExit(session *session, category string, subcategory string, messag
 func logEndpointResponse(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 	prepareLoggingFunc(
 		session,
-		EndpointResponse,
-		Info,
+		LogTypeEndpointResponse,
+		LogLevelInfo,
 		category,
 		subcategory,
 		messageFormat,
@@ -198,8 +198,8 @@ func logEndpointResponse(session *session, category string, subcategory string, 
 func logEndpointExit(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 	prepareLoggingFunc(
 		session,
-		EndpointExit,
-		Info,
+		LogTypeEndpointExit,
+		LogLevelInfo,
 		category,
 		subcategory,
 		messageFormat,

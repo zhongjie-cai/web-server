@@ -5,37 +5,37 @@ type LogLevel int
 
 // These are the enum definitions of log types and presets
 const (
-	Debug LogLevel = 0
-	Info  LogLevel = iota
-	Warn
-	Error
-	Fatal
+	LogLevelDebug LogLevel = 0
+	LogLevelInfo  LogLevel = iota
+	LogLevelWarn
+	LogLevelError
+	LogLevelFatal
 	maxLogLevel
 )
 
 // These are the string representations of log category and preset names
 const (
-	debugName string = "Debug"
-	infoName  string = "Info"
-	warnName  string = "Warn"
-	errorName string = "Error"
-	fatalName string = "Fatal"
+	debugLogLevelName string = "Debug"
+	infoLogLevelName  string = "Info"
+	warnLogLevelName  string = "Warn"
+	errorLogLevelName string = "Error"
+	fatalLogLevelName string = "Fatal"
 )
 
 var supportedLogLevels = map[LogLevel]string{
-	Debug: debugName,
-	Info:  infoName,
-	Warn:  warnName,
-	Error: errorName,
-	Fatal: fatalName,
+	LogLevelDebug: debugLogLevelName,
+	LogLevelInfo:  infoLogLevelName,
+	LogLevelWarn:  warnLogLevelName,
+	LogLevelError: errorLogLevelName,
+	LogLevelFatal: fatalLogLevelName,
 }
 
 var logLevelNameMapping = map[string]LogLevel{
-	debugName: Debug,
-	infoName:  Info,
-	warnName:  Warn,
-	errorName: Error,
-	fatalName: Fatal,
+	debugLogLevelName: LogLevelDebug,
+	infoLogLevelName:  LogLevelInfo,
+	warnLogLevelName:  LogLevelWarn,
+	errorLogLevelName: LogLevelError,
+	fatalLogLevelName: LogLevelFatal,
 }
 
 // FromString converts a LogLevel flag instance to its string representation
@@ -45,14 +45,14 @@ func (logLevel LogLevel) String() string {
 			return value
 		}
 	}
-	return debugName
+	return debugLogLevelName
 }
 
 // NewLogLevel converts a string representation of LogLevel flag to its strongly typed instance
 func NewLogLevel(value string) LogLevel {
 	var logLevel, found = logLevelNameMapping[value]
 	if !found {
-		return Debug
+		return LogLevelDebug
 	}
 	return logLevel
 }

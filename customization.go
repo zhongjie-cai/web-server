@@ -268,7 +268,7 @@ func (customization *DefaultCustomization) RecoverPanic(session Session, recover
 		recoverResult,
 	)
 	session.LogMethodLogic(
-		Error,
+		LogLevelError,
 		"RecoverPanic",
 		session.GetName(),
 		"Error: %+v\nCallstack: %v",
