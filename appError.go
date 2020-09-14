@@ -180,91 +180,91 @@ func (appError *appError) Wrap(innerErrors ...error) AppError {
 }
 
 // GetGeneralFailure creates a generic error based on GeneralFailure
-func GetGeneralFailure(innerErrors ...error) AppError {
+func GetGeneralFailure(errorMessage string, innerErrors ...error) AppError {
 	return newAppErrorFunc(
 		errorCodeGeneralFailure,
-		"A general error occurred during execution",
+		errorMessage,
 		innerErrors,
 	)
 }
 
 // GetUnauthorized creates an error related to Unauthorized
-func GetUnauthorized(innerErrors ...error) AppError {
+func GetUnauthorized(errorMessage string, innerErrors ...error) AppError {
 	return newAppErrorFunc(
 		errorCodeUnauthorized,
-		"Access denied due to authorization error",
+		errorMessage,
 		innerErrors,
 	)
 }
 
 // GetInvalidOperation creates an error related to InvalidOperation
-func GetInvalidOperation(innerErrors ...error) AppError {
+func GetInvalidOperation(errorMessage string, innerErrors ...error) AppError {
 	return newAppErrorFunc(
 		errorCodeInvalidOperation,
-		"Operation (method) not allowed",
+		errorMessage,
 		innerErrors,
 	)
 }
 
 // GetBadRequest creates an error related to BadRequest
-func GetBadRequest(innerErrors ...error) AppError {
+func GetBadRequest(errorMessage string, innerErrors ...error) AppError {
 	return newAppErrorFunc(
 		errorCodeBadRequest,
-		"Request URI or body is invalid",
+		errorMessage,
 		innerErrors,
 	)
 }
 
 // GetNotFound creates an error related to NotFound
-func GetNotFound(innerErrors ...error) AppError {
+func GetNotFound(errorMessage string, innerErrors ...error) AppError {
 	return newAppErrorFunc(
 		errorCodeNotFound,
-		"Requested resource is not found in the storage",
+		errorMessage,
 		innerErrors,
 	)
 }
 
 // GetCircuitBreak creates an error related to CircuitBreak
-func GetCircuitBreak(innerErrors ...error) AppError {
+func GetCircuitBreak(errorMessage string, innerErrors ...error) AppError {
 	return newAppErrorFunc(
 		errorCodeCircuitBreak,
-		"Operation refused due to internal circuit break on correlation ID",
+		errorMessage,
 		innerErrors,
 	)
 }
 
 // GetOperationLock creates an error related to OperationLock
-func GetOperationLock(innerErrors ...error) AppError {
+func GetOperationLock(errorMessage string, innerErrors ...error) AppError {
 	return newAppErrorFunc(
 		errorCodeOperationLock,
-		"Operation refused due to mutex lock on correlation ID or trip ID",
+		errorMessage,
 		innerErrors,
 	)
 }
 
 // GetAccessForbidden creates an error related to AccessForbidden
-func GetAccessForbidden(innerErrors ...error) AppError {
+func GetAccessForbidden(errorMessage string, innerErrors ...error) AppError {
 	return newAppErrorFunc(
 		errorCodeAccessForbidden,
-		"Operation failed due to access forbidden",
+		errorMessage,
 		innerErrors,
 	)
 }
 
 // GetDataCorruption creates an error related to DataCorruption
-func GetDataCorruption(innerErrors ...error) AppError {
+func GetDataCorruption(errorMessage string, innerErrors ...error) AppError {
 	return newAppErrorFunc(
 		errorCodeDataCorruption,
-		"Operation failed due to internal storage data corruption",
+		errorMessage,
 		innerErrors,
 	)
 }
 
 // GetNotImplemented creates an error related to NotImplemented
-func GetNotImplemented(innerErrors ...error) AppError {
+func GetNotImplemented(errorMessage string, innerErrors ...error) AppError {
 	return newAppErrorFunc(
 		errorCodeNotImplemented,
-		"Operation failed due to internal business logic not implemented",
+		errorMessage,
 		innerErrors,
 	)
 }

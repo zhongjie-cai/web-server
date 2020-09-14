@@ -858,6 +858,7 @@ func TestAppErrorWrap_HasInnerError(t *testing.T) {
 
 func TestGetGeneralFailure(t *testing.T) {
 	// arrange
+	var dummyErrorMessage = "some error message"
 	var dummyInnerError1 = errors.New("dummy inner error 1")
 	var dummyInnerError2 = errors.New("dummy inner error 2")
 	var dummyInnerError3 = errors.New("dummy inner error 3")
@@ -871,7 +872,7 @@ func TestGetGeneralFailure(t *testing.T) {
 	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeGeneralFailure, errorCode)
-		assert.Equal(t, "A general error occurred during execution", errorMessageor)
+		assert.Equal(t, dummyErrorMessage, errorMessageor)
 		assert.Equal(t, 3, len(innerErrors))
 		assert.Equal(t, dummyInnerError1, innerErrors[0])
 		assert.Equal(t, dummyInnerError2, innerErrors[1])
@@ -881,6 +882,7 @@ func TestGetGeneralFailure(t *testing.T) {
 
 	// SUT + act
 	var appError, ok = GetGeneralFailure(
+		dummyErrorMessage,
 		dummyInnerError1,
 		dummyInnerError2,
 		dummyInnerError3,
@@ -896,6 +898,7 @@ func TestGetGeneralFailure(t *testing.T) {
 
 func TestGetUnauthorized(t *testing.T) {
 	// arrange
+	var dummyErrorMessage = "some error message"
 	var dummyInnerError1 = errors.New("dummy inner error 1")
 	var dummyInnerError2 = errors.New("dummy inner error 2")
 	var dummyInnerError3 = errors.New("dummy inner error 3")
@@ -909,7 +912,7 @@ func TestGetUnauthorized(t *testing.T) {
 	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeUnauthorized, errorCode)
-		assert.Equal(t, "Access denied due to authorization error", errorMessageor)
+		assert.Equal(t, dummyErrorMessage, errorMessageor)
 		assert.Equal(t, 3, len(innerErrors))
 		assert.Equal(t, dummyInnerError1, innerErrors[0])
 		assert.Equal(t, dummyInnerError2, innerErrors[1])
@@ -919,6 +922,7 @@ func TestGetUnauthorized(t *testing.T) {
 
 	// SUT + act
 	var appError, ok = GetUnauthorized(
+		dummyErrorMessage,
 		dummyInnerError1,
 		dummyInnerError2,
 		dummyInnerError3,
@@ -934,6 +938,7 @@ func TestGetUnauthorized(t *testing.T) {
 
 func TestGetInvalidOperation(t *testing.T) {
 	// arrange
+	var dummyErrorMessage = "some error message"
 	var dummyInnerError1 = errors.New("dummy inner error 1")
 	var dummyInnerError2 = errors.New("dummy inner error 2")
 	var dummyInnerError3 = errors.New("dummy inner error 3")
@@ -947,7 +952,7 @@ func TestGetInvalidOperation(t *testing.T) {
 	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeInvalidOperation, errorCode)
-		assert.Equal(t, "Operation (method) not allowed", errorMessageor)
+		assert.Equal(t, dummyErrorMessage, errorMessageor)
 		assert.Equal(t, 3, len(innerErrors))
 		assert.Equal(t, dummyInnerError1, innerErrors[0])
 		assert.Equal(t, dummyInnerError2, innerErrors[1])
@@ -957,6 +962,7 @@ func TestGetInvalidOperation(t *testing.T) {
 
 	// SUT + act
 	var appError, ok = GetInvalidOperation(
+		dummyErrorMessage,
 		dummyInnerError1,
 		dummyInnerError2,
 		dummyInnerError3,
@@ -972,6 +978,7 @@ func TestGetInvalidOperation(t *testing.T) {
 
 func TestGetBadRequest(t *testing.T) {
 	// arrange
+	var dummyErrorMessage = "some error message"
 	var dummyInnerError1 = errors.New("dummy inner error 1")
 	var dummyInnerError2 = errors.New("dummy inner error 2")
 	var dummyInnerError3 = errors.New("dummy inner error 3")
@@ -985,7 +992,7 @@ func TestGetBadRequest(t *testing.T) {
 	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeBadRequest, errorCode)
-		assert.Equal(t, "Request URI or body is invalid", errorMessageor)
+		assert.Equal(t, dummyErrorMessage, errorMessageor)
 		assert.Equal(t, 3, len(innerErrors))
 		assert.Equal(t, dummyInnerError1, innerErrors[0])
 		assert.Equal(t, dummyInnerError2, innerErrors[1])
@@ -995,6 +1002,7 @@ func TestGetBadRequest(t *testing.T) {
 
 	// SUT + act
 	var appError, ok = GetBadRequest(
+		dummyErrorMessage,
 		dummyInnerError1,
 		dummyInnerError2,
 		dummyInnerError3,
@@ -1010,6 +1018,7 @@ func TestGetBadRequest(t *testing.T) {
 
 func TestGetNotFound(t *testing.T) {
 	// arrange
+	var dummyErrorMessage = "some error message"
 	var dummyInnerError1 = errors.New("dummy inner error 1")
 	var dummyInnerError2 = errors.New("dummy inner error 2")
 	var dummyInnerError3 = errors.New("dummy inner error 3")
@@ -1023,7 +1032,7 @@ func TestGetNotFound(t *testing.T) {
 	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeNotFound, errorCode)
-		assert.Equal(t, "Requested resource is not found in the storage", errorMessageor)
+		assert.Equal(t, dummyErrorMessage, errorMessageor)
 		assert.Equal(t, 3, len(innerErrors))
 		assert.Equal(t, dummyInnerError1, innerErrors[0])
 		assert.Equal(t, dummyInnerError2, innerErrors[1])
@@ -1033,6 +1042,7 @@ func TestGetNotFound(t *testing.T) {
 
 	// SUT + act
 	var appError, ok = GetNotFound(
+		dummyErrorMessage,
 		dummyInnerError1,
 		dummyInnerError2,
 		dummyInnerError3,
@@ -1048,6 +1058,7 @@ func TestGetNotFound(t *testing.T) {
 
 func TestGetCircuitBreak(t *testing.T) {
 	// arrange
+	var dummyErrorMessage = "some error message"
 	var dummyInnerError1 = errors.New("dummy inner error 1")
 	var dummyInnerError2 = errors.New("dummy inner error 2")
 	var dummyInnerError3 = errors.New("dummy inner error 3")
@@ -1061,7 +1072,7 @@ func TestGetCircuitBreak(t *testing.T) {
 	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeCircuitBreak, errorCode)
-		assert.Equal(t, "Operation refused due to internal circuit break on correlation ID", errorMessageor)
+		assert.Equal(t, dummyErrorMessage, errorMessageor)
 		assert.Equal(t, 3, len(innerErrors))
 		assert.Equal(t, dummyInnerError1, innerErrors[0])
 		assert.Equal(t, dummyInnerError2, innerErrors[1])
@@ -1071,6 +1082,7 @@ func TestGetCircuitBreak(t *testing.T) {
 
 	// SUT + act
 	var appError, ok = GetCircuitBreak(
+		dummyErrorMessage,
 		dummyInnerError1,
 		dummyInnerError2,
 		dummyInnerError3,
@@ -1086,6 +1098,7 @@ func TestGetCircuitBreak(t *testing.T) {
 
 func TestGetOperationLock(t *testing.T) {
 	// arrange
+	var dummyErrorMessage = "some error message"
 	var dummyInnerError1 = errors.New("dummy inner error 1")
 	var dummyInnerError2 = errors.New("dummy inner error 2")
 	var dummyInnerError3 = errors.New("dummy inner error 3")
@@ -1099,7 +1112,7 @@ func TestGetOperationLock(t *testing.T) {
 	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeOperationLock, errorCode)
-		assert.Equal(t, "Operation refused due to mutex lock on correlation ID or trip ID", errorMessageor)
+		assert.Equal(t, dummyErrorMessage, errorMessageor)
 		assert.Equal(t, 3, len(innerErrors))
 		assert.Equal(t, dummyInnerError1, innerErrors[0])
 		assert.Equal(t, dummyInnerError2, innerErrors[1])
@@ -1109,6 +1122,7 @@ func TestGetOperationLock(t *testing.T) {
 
 	// SUT + act
 	var appError, ok = GetOperationLock(
+		dummyErrorMessage,
 		dummyInnerError1,
 		dummyInnerError2,
 		dummyInnerError3,
@@ -1124,6 +1138,7 @@ func TestGetOperationLock(t *testing.T) {
 
 func TestGetAccessForbidden(t *testing.T) {
 	// arrange
+	var dummyErrorMessage = "some error message"
 	var dummyInnerError1 = errors.New("dummy inner error 1")
 	var dummyInnerError2 = errors.New("dummy inner error 2")
 	var dummyInnerError3 = errors.New("dummy inner error 3")
@@ -1137,7 +1152,7 @@ func TestGetAccessForbidden(t *testing.T) {
 	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeAccessForbidden, errorCode)
-		assert.Equal(t, "Operation failed due to access forbidden", errorMessageor)
+		assert.Equal(t, dummyErrorMessage, errorMessageor)
 		assert.Equal(t, 3, len(innerErrors))
 		assert.Equal(t, dummyInnerError1, innerErrors[0])
 		assert.Equal(t, dummyInnerError2, innerErrors[1])
@@ -1147,6 +1162,7 @@ func TestGetAccessForbidden(t *testing.T) {
 
 	// SUT + act
 	var appError, ok = GetAccessForbidden(
+		dummyErrorMessage,
 		dummyInnerError1,
 		dummyInnerError2,
 		dummyInnerError3,
@@ -1162,6 +1178,7 @@ func TestGetAccessForbidden(t *testing.T) {
 
 func TestGetDataCorruption(t *testing.T) {
 	// arrange
+	var dummyErrorMessage = "some error message"
 	var dummyInnerError1 = errors.New("dummy inner error 1")
 	var dummyInnerError2 = errors.New("dummy inner error 2")
 	var dummyInnerError3 = errors.New("dummy inner error 3")
@@ -1175,7 +1192,7 @@ func TestGetDataCorruption(t *testing.T) {
 	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeDataCorruption, errorCode)
-		assert.Equal(t, "Operation failed due to internal storage data corruption", errorMessageor)
+		assert.Equal(t, dummyErrorMessage, errorMessageor)
 		assert.Equal(t, 3, len(innerErrors))
 		assert.Equal(t, dummyInnerError1, innerErrors[0])
 		assert.Equal(t, dummyInnerError2, innerErrors[1])
@@ -1185,6 +1202,7 @@ func TestGetDataCorruption(t *testing.T) {
 
 	// SUT + act
 	var appError, ok = GetDataCorruption(
+		dummyErrorMessage,
 		dummyInnerError1,
 		dummyInnerError2,
 		dummyInnerError3,
@@ -1200,6 +1218,7 @@ func TestGetDataCorruption(t *testing.T) {
 
 func TestGetNotImplemented(t *testing.T) {
 	// arrange
+	var dummyErrorMessage = "some error message"
 	var dummyInnerError1 = errors.New("dummy inner error 1")
 	var dummyInnerError2 = errors.New("dummy inner error 2")
 	var dummyInnerError3 = errors.New("dummy inner error 3")
@@ -1213,7 +1232,7 @@ func TestGetNotImplemented(t *testing.T) {
 	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeNotImplemented, errorCode)
-		assert.Equal(t, "Operation failed due to internal business logic not implemented", errorMessageor)
+		assert.Equal(t, dummyErrorMessage, errorMessageor)
 		assert.Equal(t, 3, len(innerErrors))
 		assert.Equal(t, dummyInnerError1, innerErrors[0])
 		assert.Equal(t, dummyInnerError2, innerErrors[1])
@@ -1223,6 +1242,7 @@ func TestGetNotImplemented(t *testing.T) {
 
 	// SUT + act
 	var appError, ok = GetNotImplemented(
+		dummyErrorMessage,
 		dummyInnerError1,
 		dummyInnerError2,
 		dummyInnerError3,
