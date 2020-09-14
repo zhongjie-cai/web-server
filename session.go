@@ -144,14 +144,22 @@ func (session *session) GetResponseWriter() http.ResponseWriter {
 // GetRequestBody loads HTTP request body associated to session and unmarshals the content JSON to given data template
 func (session *session) GetRequestBody(dataTemplate interface{}) error {
 	if session == nil {
-		return errSessionNil
+		return newAppErrorFunc(
+			errorCodeGeneralFailure,
+			errorMessageSessionNil,
+			[]error{},
+		)
 	}
 	var httpRequest = session.GetRequest()
 	var requestBody = getRequestBodyFunc(
 		httpRequest,
 	)
 	if requestBody == "" {
-		return ErrRequestBodyEmpty
+		return newAppErrorFunc(
+			errorCodeBadRequest,
+			errorMessageRequestBodyEmpty,
+			[]error{},
+		)
 	}
 	logEndpointRequestFunc(
 		session,
@@ -171,7 +179,11 @@ func (session *session) GetRequestBody(dataTemplate interface{}) error {
 			"%+v",
 			unmarshalError,
 		)
-		return ErrRequestBodyInvalid
+		return newAppErrorFunc(
+			errorCodeBadRequest,
+			errorMessageRequestBodyInvalid,
+			[]error{unmarshalError},
+		)
 	}
 	return nil
 }
@@ -179,7 +191,11 @@ func (session *session) GetRequestBody(dataTemplate interface{}) error {
 // GetRequestParameter loads HTTP request parameter associated to session for given name and unmarshals the content to given data template
 func (session *session) GetRequestParameter(name string, dataTemplate interface{}) error {
 	if session == nil {
-		return errSessionNil
+		return newAppErrorFunc(
+			errorCodeGeneralFailure,
+			errorMessageSessionNil,
+			[]error{},
+		)
 	}
 	var httpRequest = session.GetRequest()
 	var parameters = muxVars(
@@ -187,7 +203,11 @@ func (session *session) GetRequestParameter(name string, dataTemplate interface{
 	)
 	var value, found = parameters[name]
 	if !found {
-		return ErrParameterNotFound
+		return newAppErrorFunc(
+			errorCodeBadRequest,
+			errorMessageParameterNotFound,
+			[]error{},
+		)
 	}
 	logEndpointRequestFunc(
 		session,
@@ -207,7 +227,11 @@ func (session *session) GetRequestParameter(name string, dataTemplate interface{
 			"%+v",
 			unmarshalError,
 		)
-		return ErrParameterInvalid
+		return newAppErrorFunc(
+			errorCodeBadRequest,
+			errorMessageParameterInvalid,
+			[]error{unmarshalError},
+		)
 	}
 	return nil
 }
@@ -227,14 +251,22 @@ func getAllQueries(session *session, name string) []string {
 // GetRequestQuery loads HTTP request single query string associated to session for given name and unmarshals the content to given data template
 func (session *session) GetRequestQuery(name string, index int, dataTemplate interface{}) error {
 	if session == nil {
-		return errSessionNil
+		return newAppErrorFunc(
+			errorCodeGeneralFailure,
+			errorMessageSessionNil,
+			[]error{},
+		)
 	}
 	var queries = getAllQueriesFunc(
 		session,
 		name,
 	)
 	if len(queries) <= index {
-		return ErrQueryNotFound
+		return newAppErrorFunc(
+			errorCodeBadRequest,
+			errorMessageQueryNotFound,
+			[]error{},
+		)
 	}
 	var value = queries[index]
 	logEndpointRequestFunc(
@@ -255,7 +287,11 @@ func (session *session) GetRequestQuery(name string, index int, dataTemplate int
 			"%+v",
 			unmarshalError,
 		)
-		return ErrQueryInvalid
+		return newAppErrorFunc(
+			errorCodeBadRequest,
+			errorMessageQueryInvalid,
+			[]error{unmarshalError},
+		)
 	}
 	return nil
 }
@@ -273,14 +309,22 @@ func getAllHeaders(session *session, name string) []string {
 // GetRequestHeader loads HTTP request single header string associated to session for given name and unmarshals the content to given data template
 func (session *session) GetRequestHeader(name string, index int, dataTemplate interface{}) error {
 	if session == nil {
-		return errSessionNil
+		return newAppErrorFunc(
+			errorCodeGeneralFailure,
+			errorMessageSessionNil,
+			[]error{},
+		)
 	}
 	var headers = getAllHeadersFunc(
 		session,
 		name,
 	)
 	if len(headers) <= index {
-		return ErrHeaderNotFound
+		return newAppErrorFunc(
+			errorCodeBadRequest,
+			errorMessageHeaderNotFound,
+			[]error{},
+		)
 	}
 	var value = headers[index]
 	logEndpointRequestFunc(
@@ -301,7 +345,11 @@ func (session *session) GetRequestHeader(name string, index int, dataTemplate in
 			"%+v",
 			unmarshalError,
 		)
-		return ErrHeaderInvalid
+		return newAppErrorFunc(
+			errorCodeBadRequest,
+			errorMessageHeaderInvalid,
+			[]error{unmarshalError},
+		)
 	}
 	return nil
 }

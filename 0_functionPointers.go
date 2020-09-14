@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -20,6 +21,19 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+)
+
+// func pointers for injection / testing: appError.go
+var (
+	fmtSprint              = fmt.Sprint
+	getErrorMessageFunc    = getErrorMessage
+	printInnerErrorsFunc   = printInnerErrors
+	errorsIs               = errors.Is
+	equalsErrorFunc        = equalsError
+	appErrorContainsFunc   = appErrorContains
+	innerErrorContainsFunc = innerErrorContains
+	cleanupInnerErrorsFunc = cleanupInnerErrors
+	newAppErrorFunc        = newAppError
 )
 
 // func pointers for injection / testing: application.go

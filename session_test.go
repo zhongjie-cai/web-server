@@ -237,9 +237,20 @@ func TestSessionGetResponseWriter_ValidResponseWriter(t *testing.T) {
 func TestSessionGetRequestBody_NilSession(t *testing.T) {
 	// arrange
 	var dummyDataTemplate int
+	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
 	createMock(t)
+
+	// expect
+	newAppErrorFuncExpected = 1
+	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+		newAppErrorFuncCalled++
+		assert.Equal(t, errorCodeGeneralFailure, errorCode)
+		assert.Equal(t, errorMessageSessionNil, errorMessageor)
+		assert.Empty(t, innerErrors)
+		return dummyAppError
+	}
 
 	// SUT
 	var dummySession *session
@@ -250,7 +261,7 @@ func TestSessionGetRequestBody_NilSession(t *testing.T) {
 	)
 
 	// assert
-	assert.Equal(t, errSessionNil, err)
+	assert.Equal(t, dummyAppError, err)
 	assert.Zero(t, dummyDataTemplate)
 
 	// verify
@@ -262,6 +273,7 @@ func TestSessionGetRequestBody_BodyEmpty(t *testing.T) {
 	var dummyDataTemplate int
 	var dummyHTTPRequest = &http.Request{}
 	var dummyRequestBody string
+	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
 	createMock(t)
@@ -278,6 +290,14 @@ func TestSessionGetRequestBody_BodyEmpty(t *testing.T) {
 		assert.Equal(t, dummyHTTPRequest, httpRequest)
 		return dummyRequestBody
 	}
+	newAppErrorFuncExpected = 1
+	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+		newAppErrorFuncCalled++
+		assert.Equal(t, errorCodeBadRequest, errorCode)
+		assert.Equal(t, errorMessageRequestBodyEmpty, errorMessageor)
+		assert.Empty(t, innerErrors)
+		return dummyAppError
+	}
 
 	// act
 	var err = dummySession.GetRequestBody(
@@ -285,7 +305,7 @@ func TestSessionGetRequestBody_BodyEmpty(t *testing.T) {
 	)
 
 	// assert
-	assert.Equal(t, ErrRequestBodyEmpty, err)
+	assert.Equal(t, dummyAppError, err)
 	assert.Zero(t, dummyDataTemplate)
 
 	// verify
@@ -299,6 +319,7 @@ func TestSessionGetRequestBody_BodyInvalid(t *testing.T) {
 	var dummyRequestBody = "some request body"
 	var dummyError = errors.New("some error")
 	var dummyResult = rand.Int()
+	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
 	createMock(t)
@@ -338,6 +359,15 @@ func TestSessionGetRequestBody_BodyInvalid(t *testing.T) {
 		*(dataTemplate.(*int)) = dummyResult
 		return dummyError
 	}
+	newAppErrorFuncExpected = 1
+	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+		newAppErrorFuncCalled++
+		assert.Equal(t, errorCodeBadRequest, errorCode)
+		assert.Equal(t, errorMessageRequestBodyInvalid, errorMessageor)
+		assert.Equal(t, 1, len(innerErrors))
+		assert.Equal(t, dummyError, innerErrors[0])
+		return dummyAppError
+	}
 
 	// act
 	var err = dummySession.GetRequestBody(
@@ -345,7 +375,7 @@ func TestSessionGetRequestBody_BodyInvalid(t *testing.T) {
 	)
 
 	// assert
-	assert.Equal(t, ErrRequestBodyInvalid, err)
+	assert.Equal(t, dummyAppError, err)
 	assert.Equal(t, dummyResult, dummyDataTemplate)
 
 	// verify
@@ -408,9 +438,20 @@ func TestSessionGetRequestParameter_NilSession(t *testing.T) {
 	// arrange
 	var dummyName = "some name"
 	var dummyDataTemplate int
+	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
 	createMock(t)
+
+	// expect
+	newAppErrorFuncExpected = 1
+	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+		newAppErrorFuncCalled++
+		assert.Equal(t, errorCodeGeneralFailure, errorCode)
+		assert.Equal(t, errorMessageSessionNil, errorMessageor)
+		assert.Empty(t, innerErrors)
+		return dummyAppError
+	}
 
 	// SUT
 	var dummySession *session
@@ -422,7 +463,7 @@ func TestSessionGetRequestParameter_NilSession(t *testing.T) {
 	)
 
 	// assert
-	assert.Equal(t, errSessionNil, err)
+	assert.Equal(t, dummyAppError, err)
 
 	// verify
 	verifyAll(t)
@@ -437,6 +478,7 @@ func TestSessionGetRequestParameter_ParameterNotFound(t *testing.T) {
 		"foo":  "bar",
 		"test": "123",
 	}
+	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
 	createMock(t)
@@ -453,6 +495,14 @@ func TestSessionGetRequestParameter_ParameterNotFound(t *testing.T) {
 		assert.Equal(t, dummyHTTPRequest, r)
 		return dummyParameters
 	}
+	newAppErrorFuncExpected = 1
+	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+		newAppErrorFuncCalled++
+		assert.Equal(t, errorCodeBadRequest, errorCode)
+		assert.Equal(t, errorMessageParameterNotFound, errorMessageor)
+		assert.Empty(t, innerErrors)
+		return dummyAppError
+	}
 
 	// act
 	var err = dummySession.GetRequestParameter(
@@ -461,7 +511,7 @@ func TestSessionGetRequestParameter_ParameterNotFound(t *testing.T) {
 	)
 
 	// assert
-	assert.Equal(t, ErrParameterNotFound, err)
+	assert.Equal(t, dummyAppError, err)
 
 	// verify
 	verifyAll(t)
@@ -480,6 +530,7 @@ func TestSessionGetRequestParameter_ParameterInvalid(t *testing.T) {
 	}
 	var dummyError = errors.New("some error")
 	var dummyResult = rand.Int()
+	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
 	createMock(t)
@@ -519,6 +570,15 @@ func TestSessionGetRequestParameter_ParameterInvalid(t *testing.T) {
 		*(dataTemplate.(*int)) = dummyResult
 		return dummyError
 	}
+	newAppErrorFuncExpected = 1
+	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+		newAppErrorFuncCalled++
+		assert.Equal(t, errorCodeBadRequest, errorCode)
+		assert.Equal(t, errorMessageParameterInvalid, errorMessageor)
+		assert.Equal(t, 1, len(innerErrors))
+		assert.Equal(t, dummyError, innerErrors[0])
+		return dummyAppError
+	}
 
 	// act
 	var err = dummySession.GetRequestParameter(
@@ -527,7 +587,7 @@ func TestSessionGetRequestParameter_ParameterInvalid(t *testing.T) {
 	)
 
 	// assert
-	assert.Equal(t, ErrParameterInvalid, err)
+	assert.Equal(t, dummyAppError, err)
 	assert.Equal(t, dummyResult, dummyDataTemplate)
 
 	// verify
@@ -680,9 +740,20 @@ func TestSessionGetRequestQuery_NilSession(t *testing.T) {
 	var dummyName = "some name"
 	var dummyIndex = rand.Intn(10)
 	var dummyDataTemplate int
+	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
 	createMock(t)
+
+	// expect
+	newAppErrorFuncExpected = 1
+	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+		newAppErrorFuncCalled++
+		assert.Equal(t, errorCodeGeneralFailure, errorCode)
+		assert.Equal(t, errorMessageSessionNil, errorMessageor)
+		assert.Empty(t, innerErrors)
+		return dummyAppError
+	}
 
 	// SUT
 	var dummySession *session
@@ -695,7 +766,7 @@ func TestSessionGetRequestQuery_NilSession(t *testing.T) {
 	)
 
 	// assert
-	assert.Equal(t, errSessionNil, err)
+	assert.Equal(t, dummyAppError, err)
 	assert.Zero(t, dummyDataTemplate)
 
 	// verify
@@ -713,6 +784,7 @@ func TestSessionGetRequestQuery_QueryNotFound(t *testing.T) {
 		"some query string 3",
 	}
 	var dummyIndex = rand.Intn(10) + len(dummyQueries)
+	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
 	createMock(t)
@@ -730,6 +802,14 @@ func TestSessionGetRequestQuery_QueryNotFound(t *testing.T) {
 		assert.Equal(t, dummyName, name)
 		return dummyQueries
 	}
+	newAppErrorFuncExpected = 1
+	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+		newAppErrorFuncCalled++
+		assert.Equal(t, errorCodeBadRequest, errorCode)
+		assert.Equal(t, errorMessageQueryNotFound, errorMessageor)
+		assert.Empty(t, innerErrors)
+		return dummyAppError
+	}
 
 	// act
 	var err = dummySession.GetRequestQuery(
@@ -739,7 +819,7 @@ func TestSessionGetRequestQuery_QueryNotFound(t *testing.T) {
 	)
 
 	// assert
-	assert.Equal(t, ErrQueryNotFound, err)
+	assert.Equal(t, dummyAppError, err)
 	assert.Zero(t, dummyDataTemplate)
 
 	// verify
@@ -759,6 +839,7 @@ func TestSessionGetRequestQuery_QueryInvalid(t *testing.T) {
 	var dummyIndex = rand.Intn(len(dummyQueries))
 	var dummyError = errors.New("some error")
 	var dummyResult = rand.Int()
+	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
 	createMock(t)
@@ -799,6 +880,15 @@ func TestSessionGetRequestQuery_QueryInvalid(t *testing.T) {
 		*(dataTemplate.(*int)) = dummyResult
 		return dummyError
 	}
+	newAppErrorFuncExpected = 1
+	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+		newAppErrorFuncCalled++
+		assert.Equal(t, errorCodeBadRequest, errorCode)
+		assert.Equal(t, errorMessageQueryInvalid, errorMessageor)
+		assert.Equal(t, 1, len(innerErrors))
+		assert.Equal(t, dummyError, innerErrors[0])
+		return dummyAppError
+	}
 
 	// act
 	var err = dummySession.GetRequestQuery(
@@ -808,7 +898,7 @@ func TestSessionGetRequestQuery_QueryInvalid(t *testing.T) {
 	)
 
 	// assert
-	assert.Equal(t, ErrQueryInvalid, err)
+	assert.Equal(t, dummyAppError, err)
 	assert.Equal(t, dummyResult, dummyDataTemplate)
 
 	// verify
@@ -961,9 +1051,20 @@ func TestSessionGetRequestHeader_NilSession(t *testing.T) {
 	var dummyName = "some name"
 	var dummyDataTemplate int
 	var dummyIndex = rand.Intn(10)
+	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
 	createMock(t)
+
+	// expect
+	newAppErrorFuncExpected = 1
+	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+		newAppErrorFuncCalled++
+		assert.Equal(t, errorCodeGeneralFailure, errorCode)
+		assert.Equal(t, errorMessageSessionNil, errorMessageor)
+		assert.Empty(t, innerErrors)
+		return dummyAppError
+	}
 
 	// SUT
 	var dummySession *session
@@ -976,7 +1077,7 @@ func TestSessionGetRequestHeader_NilSession(t *testing.T) {
 	)
 
 	// assert
-	assert.Equal(t, errSessionNil, err)
+	assert.Equal(t, dummyAppError, err)
 	assert.Zero(t, dummyDataTemplate)
 
 	// verify
@@ -994,6 +1095,7 @@ func TestSessionGetRequestHeader_HeaderNotFound(t *testing.T) {
 		"some header string 3",
 	}
 	var dummyIndex = rand.Intn(10) + len(dummyHeaders)
+	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
 	createMock(t)
@@ -1011,6 +1113,14 @@ func TestSessionGetRequestHeader_HeaderNotFound(t *testing.T) {
 		assert.Equal(t, dummyName, name)
 		return dummyHeaders
 	}
+	newAppErrorFuncExpected = 1
+	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+		newAppErrorFuncCalled++
+		assert.Equal(t, errorCodeBadRequest, errorCode)
+		assert.Equal(t, errorMessageHeaderNotFound, errorMessageor)
+		assert.Empty(t, innerErrors)
+		return dummyAppError
+	}
 
 	// act
 	var err = dummySession.GetRequestHeader(
@@ -1020,7 +1130,7 @@ func TestSessionGetRequestHeader_HeaderNotFound(t *testing.T) {
 	)
 
 	// assert
-	assert.Equal(t, ErrHeaderNotFound, err)
+	assert.Equal(t, dummyAppError, err)
 	assert.Zero(t, dummyDataTemplate)
 
 	// verify
@@ -1040,6 +1150,7 @@ func TestSessionGetRequestHeader_HeaderInvalid(t *testing.T) {
 	var dummyIndex = rand.Intn(len(dummyHeaders))
 	var dummyError = errors.New("some error")
 	var dummyResult = rand.Int()
+	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
 	createMock(t)
@@ -1080,6 +1191,15 @@ func TestSessionGetRequestHeader_HeaderInvalid(t *testing.T) {
 		*(dataTemplate.(*int)) = dummyResult
 		return dummyError
 	}
+	newAppErrorFuncExpected = 1
+	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+		newAppErrorFuncCalled++
+		assert.Equal(t, errorCodeBadRequest, errorCode)
+		assert.Equal(t, errorMessageHeaderInvalid, errorMessageor)
+		assert.Equal(t, 1, len(innerErrors))
+		assert.Equal(t, dummyError, innerErrors[0])
+		return dummyAppError
+	}
 
 	// act
 	var err = dummySession.GetRequestHeader(
@@ -1089,7 +1209,7 @@ func TestSessionGetRequestHeader_HeaderInvalid(t *testing.T) {
 	)
 
 	// assert
-	assert.Equal(t, ErrHeaderInvalid, err)
+	assert.Equal(t, dummyAppError, err)
 	assert.Equal(t, dummyResult, dummyDataTemplate)
 
 	// verify

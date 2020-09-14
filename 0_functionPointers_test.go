@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -30,6 +31,24 @@ import (
 )
 
 var (
+	fmtSprintExpected                       int
+	fmtSprintCalled                         int
+	getErrorMessageFuncExpected             int
+	getErrorMessageFuncCalled               int
+	printInnerErrorsFuncExpected            int
+	printInnerErrorsFuncCalled              int
+	errorsIsExpected                        int
+	errorsIsCalled                          int
+	equalsErrorFuncExpected                 int
+	equalsErrorFuncCalled                   int
+	appErrorContainsFuncExpected            int
+	appErrorContainsFuncCalled              int
+	innerErrorContainsFuncExpected          int
+	innerErrorContainsFuncCalled            int
+	cleanupInnerErrorsFuncExpected          int
+	cleanupInnerErrorsFuncCalled            int
+	newAppErrorFuncExpected                 int
+	newAppErrorFuncCalled                   int
 	isInterfaceValueNilFuncExpected         int
 	isInterfaceValueNilFuncCalled           int
 	uuidNewExpected                         int
@@ -263,6 +282,60 @@ var (
 )
 
 func createMock(t *testing.T) {
+	fmtSprintExpected = 0
+	fmtSprintCalled = 0
+	fmtSprint = func(a ...interface{}) string {
+		fmtSprintCalled++
+		return ""
+	}
+	getErrorMessageFuncExpected = 0
+	getErrorMessageFuncCalled = 0
+	getErrorMessageFunc = func(err error) string {
+		getErrorMessageFuncCalled++
+		return ""
+	}
+	printInnerErrorsFuncExpected = 0
+	printInnerErrorsFuncCalled = 0
+	printInnerErrorsFunc = func(innerErrors []*appError) string {
+		printInnerErrorsFuncCalled++
+		return ""
+	}
+	errorsIsExpected = 0
+	errorsIsCalled = 0
+	errorsIs = func(err, target error) bool {
+		errorsIsCalled++
+		return false
+	}
+	equalsErrorFuncExpected = 0
+	equalsErrorFuncCalled = 0
+	equalsErrorFunc = func(err, target error) bool {
+		equalsErrorFuncCalled++
+		return false
+	}
+	appErrorContainsFuncExpected = 0
+	appErrorContainsFuncCalled = 0
+	appErrorContainsFunc = func(appError AppError, err error) bool {
+		appErrorContainsFuncCalled++
+		return false
+	}
+	innerErrorContainsFuncExpected = 0
+	innerErrorContainsFuncCalled = 0
+	innerErrorContainsFunc = func(innerErrors []*appError, err error) bool {
+		innerErrorContainsFuncCalled++
+		return false
+	}
+	cleanupInnerErrorsFuncExpected = 0
+	cleanupInnerErrorsFuncCalled = 0
+	cleanupInnerErrorsFunc = func(innerErrors []error) []*appError {
+		cleanupInnerErrorsFuncCalled++
+		return nil
+	}
+	newAppErrorFuncExpected = 0
+	newAppErrorFuncCalled = 0
+	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+		newAppErrorFuncCalled++
+		return nil
+	}
 	isInterfaceValueNilFuncExpected = 0
 	isInterfaceValueNilFuncCalled = 0
 	isInterfaceValueNilFunc = func(i interface{}) bool {
@@ -921,6 +994,24 @@ func createMock(t *testing.T) {
 }
 
 func verifyAll(t *testing.T) {
+	fmtSprint = fmt.Sprint
+	assert.Equal(t, fmtSprintExpected, fmtSprintCalled, "Unexpected number of calls to fmtSprint")
+	getErrorMessageFunc = getErrorMessage
+	assert.Equal(t, getErrorMessageFuncExpected, getErrorMessageFuncCalled, "Unexpected number of calls to getErrorMessageFunc")
+	printInnerErrorsFunc = printInnerErrors
+	assert.Equal(t, printInnerErrorsFuncExpected, printInnerErrorsFuncCalled, "Unexpected number of calls to printInnerErrorsFunc")
+	errorsIs = errors.Is
+	assert.Equal(t, errorsIsExpected, errorsIsCalled, "Unexpected number of calls to errorsIs")
+	equalsErrorFunc = equalsError
+	assert.Equal(t, equalsErrorFuncExpected, equalsErrorFuncCalled, "Unexpected number of calls to equalsErrorFunc")
+	appErrorContainsFunc = appErrorContains
+	assert.Equal(t, appErrorContainsFuncExpected, appErrorContainsFuncCalled, "Unexpected number of calls to appErrorContainsFunc")
+	innerErrorContainsFunc = innerErrorContains
+	assert.Equal(t, innerErrorContainsFuncExpected, innerErrorContainsFuncCalled, "Unexpected number of calls to innerErrorContainsFunc")
+	cleanupInnerErrorsFunc = cleanupInnerErrors
+	assert.Equal(t, cleanupInnerErrorsFuncExpected, cleanupInnerErrorsFuncCalled, "Unexpected number of calls to cleanupInnerErrorsFunc")
+	newAppErrorFunc = newAppError
+	assert.Equal(t, newAppErrorFuncExpected, newAppErrorFuncCalled, "Unexpected number of calls to newAppErrorFunc")
 	isInterfaceValueNilFunc = isInterfaceValueNil
 	assert.Equal(t, isInterfaceValueNilFuncExpected, isInterfaceValueNilFuncCalled, "Unexpected number of calls to method isInterfaceValueNilFunc")
 	uuidNew = uuid.New
@@ -1178,6 +1269,40 @@ func (application *dummyApplication) StartAsync(*sync.WaitGroup) *sync.WaitGroup
 
 func (application *dummyApplication) Stop() {
 	assert.Fail(application.t, "Unexpected call to Stop")
+}
+
+type dummyAppError struct {
+	t *testing.T
+}
+
+func (dummyAppError *dummyAppError) Error() string {
+	assert.Fail(dummyAppError.t, "Unexpected call to method AppError.Error")
+	return ""
+}
+
+func (dummyAppError *dummyAppError) ErrorCode() string {
+	assert.Fail(dummyAppError.t, "Unexpected call to method AppError.ErrorCode")
+	return ""
+}
+
+func (dummyAppError *dummyAppError) HTTPStatusCode() int {
+	assert.Fail(dummyAppError.t, "Unexpected call to method AppError.HTTPStatusCode")
+	return 0
+}
+
+func (dummyAppError *dummyAppError) HTTPResponseMessage() string {
+	assert.Fail(dummyAppError.t, "Unexpected call to method AppError.HTTPResponseMessage")
+	return ""
+}
+
+func (dummyAppError *dummyAppError) Contains(err error) bool {
+	assert.Fail(dummyAppError.t, "Unexpected call to method AppError.Contains")
+	return false
+}
+
+func (dummyAppError *dummyAppError) Wrap(innerErrors ...error) AppError {
+	assert.Fail(dummyAppError.t, "Unexpected call to method AppError.Wrap")
+	return nil
 }
 
 type dummyCustomization struct {

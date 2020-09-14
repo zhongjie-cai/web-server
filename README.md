@@ -162,25 +162,25 @@ var responseWriter = session.GetResponseWriter()
 
 # Error Handling
 
-To simplify the error handling, one could utilize the built-in errors, which provides support to many basic types of errors that are mapped to corresponding HTTP status codes:
+To simplify the error handling, one could utilize the built-in error interface `AppError`, which provides support to many basic types of errors that are mapped to corresponding HTTP status codes:
 
-* ErrRequestBodyEmpty => BadRequest (400)
-* ErrRequestBodyInvalid => BadRequest (400)
-* ErrParameterNotFound => BadRequest (400)
-* ErrParameterInvalid => BadRequest (400)
-* ErrQueryNotFound => BadRequest (400)
-* ErrQueryInvalid => BadRequest (400)
-* ErrHeaderNotFound => BadRequest (400)
-* ErrHeaderInvalid => BadRequest (400)
-* ErrWebRequestNil => InternalServerError (500)
-* ErrResponseInvalid => InternalServerError (500)
-* ErrInvalidOperation => MethodNotAllowed (405)
-* ErrForbidden => Forbidden (403)
-* ErrNotImplemented => NotImplemented (501)
-* ErrBadRequest => BadRequest (400)
-* ErrResourceNotFound => NotFound (404)
-* ErrResourceLocked => Locked (423)
-* ErrResourceConflict => Conflict (409)
+* BadRequest       => BadRequest (400)
+* Unauthorized     => Unauthorized (401)
+* CircuitBreak     => Forbidden (403)
+* AccessForbidden  => Forbidden (403)
+* NotFound         => NotFound (404)
+* InvalidOperation => MethodNotAllowed (405)
+* DataCorruption   => Conflict (409)
+* OperationLock    => Locked (423)
+* GeneralFailure   => InternalServerError (500)
+* NotImplemented   => NotImplemented (501)
+
+If you bring in your own implementation for the error interface `AppHTTPError`, the web server engine could automatically utilise the corresponding methods to translate an `AppHTTPError` into HTTP status code and response message:
+
+```golang
+HTTPStatusCode() int
+HTTPResponseMessage() string
+```
 
 However, if specific operation is needed for response, one could always customize the error interpretation by customizing the `InterpretError` function:
 

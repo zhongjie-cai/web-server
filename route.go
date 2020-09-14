@@ -81,7 +81,11 @@ func walkRegisteredRoutes(
 			"Failure: %+v",
 			walkError,
 		)
-		return errRouteRegistration
+		return newAppErrorFunc(
+			errorCodeGeneralFailure,
+			errorMessageRouteRegistration,
+			[]error{walkError},
+		)
 	}
 	return nil
 }
@@ -118,7 +122,12 @@ func registerRoute(
 }
 
 func defaultActionFunc(session Session) (interface{}, error) {
-	return nil, errRouteNotImplemented
+	return nil,
+		newAppErrorFunc(
+			errorCodeNotImplemented,
+			"No corresponding action function configured; falling back to default",
+			[]error{},
+		)
 }
 
 func getEndpointByName(name string) string {
@@ -136,7 +145,13 @@ func getEndpointByName(name string) string {
 func getRouteInfo(httpRequest *http.Request, actionFuncMap map[string]ActionFunc) (string, ActionFunc, error) {
 	var route = muxCurrentRoute(httpRequest)
 	if route == nil {
-		return "", nil, errRouteNotFound
+		return "",
+			nil,
+			newAppErrorFunc(
+				errorCodeNotFound,
+				"No corresponding route configured for path",
+				[]error{},
+			)
 	}
 	var name = getNameFunc(route)
 	var endpoint = getEndpointByNameFunc(name)

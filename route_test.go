@@ -466,6 +466,7 @@ func TestWalkRegisteredRoutes_Error(t *testing.T) {
 	var dummySession = &session{id: uuid.New()}
 	var dummyRouter = &mux.Router{}
 	var dummyError = errors.New("some error")
+	var dummyAppError = &appError{Message: "some error message"}
 
 	// stub
 	dummyRouter.HandleFunc("/", func(http.ResponseWriter, *http.Request) {})
@@ -489,6 +490,15 @@ func TestWalkRegisteredRoutes_Error(t *testing.T) {
 		assert.Equal(t, 1, len(parameters))
 		assert.Equal(t, dummyError, parameters[0])
 	}
+	newAppErrorFuncExpected = 1
+	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+		newAppErrorFuncCalled++
+		assert.Equal(t, errorCodeGeneralFailure, errorCode)
+		assert.Equal(t, errorMessageRouteRegistration, errorMessageor)
+		assert.Equal(t, 1, len(innerErrors))
+		assert.Equal(t, dummyError, innerErrors[0])
+		return dummyAppError
+	}
 
 	// SUT + act
 	var err = walkRegisteredRoutes(
@@ -497,7 +507,7 @@ func TestWalkRegisteredRoutes_Error(t *testing.T) {
 	)
 
 	// assert
-	assert.Equal(t, errRouteRegistration, err)
+	assert.Equal(t, dummyAppError, err)
 
 	// verify
 	verifyAll(t)
@@ -616,9 +626,20 @@ func TestRegisterRoute(t *testing.T) {
 func TestDefaultActionFunc(t *testing.T) {
 	// arrange
 	var dummySession = &dummySession{t}
+	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
 	createMock(t)
+
+	// expect
+	newAppErrorFuncExpected = 1
+	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+		newAppErrorFuncCalled++
+		assert.Equal(t, errorCodeNotImplemented, errorCode)
+		assert.Equal(t, "No corresponding action function configured; falling back to default", errorMessageor)
+		assert.Empty(t, innerErrors)
+		return dummyAppError
+	}
 
 	// SUT + act
 	var result, err = defaultActionFunc(
@@ -627,7 +648,7 @@ func TestDefaultActionFunc(t *testing.T) {
 
 	// assert
 	assert.Nil(t, result)
-	assert.Equal(t, errRouteNotImplemented, err)
+	assert.Equal(t, dummyAppError, err)
 
 	// verify
 	verifyAll(t)
@@ -699,6 +720,7 @@ func TestGetRouteInfo_NilRoute(t *testing.T) {
 	}
 	var dummyActionFuncMap = map[string]ActionFunc{}
 	var dummyRoute *mux.Route
+	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
 	createMock(t)
@@ -710,6 +732,14 @@ func TestGetRouteInfo_NilRoute(t *testing.T) {
 		assert.Equal(t, dummyHTTPRequest, httpRequest)
 		return dummyRoute
 	}
+	newAppErrorFuncExpected = 1
+	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+		newAppErrorFuncCalled++
+		assert.Equal(t, errorCodeNotFound, errorCode)
+		assert.Equal(t, "No corresponding route configured for path", errorMessageor)
+		assert.Empty(t, innerErrors)
+		return dummyAppError
+	}
 
 	// SUT + act
 	var name, action, err = getRouteInfo(
@@ -720,7 +750,7 @@ func TestGetRouteInfo_NilRoute(t *testing.T) {
 	// assert
 	assert.Zero(t, name)
 	assert.Nil(t, action)
-	assert.Equal(t, errRouteNotFound, err)
+	assert.Equal(t, dummyAppError, err)
 
 	// verify
 	verifyAll(t)

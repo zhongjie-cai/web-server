@@ -11,10 +11,15 @@ import (
 
 // Customization holds all customization methods
 type Customization interface {
+	// BootstrapCustomization holds customization methods related to bootstrapping
 	BootstrapCustomization
+	// LoggingCustomization holds customization methods related to logging
 	LoggingCustomization
+	// HostingCustomization holds customization methods related to hosting
 	HostingCustomization
+	// HandlerCustomization holds customization methods related to handlers
 	HandlerCustomization
+	// WebRequestCustomization holds customization methods related to web requests
 	WebRequestCustomization
 }
 
@@ -200,58 +205,13 @@ func (customization *DefaultCustomization) InterpretSuccess(responseContent inte
 
 // InterpretError is to customize how application interpret an error into HTTP status code and corresponding status message
 func (customization *DefaultCustomization) InterpretError(err error) (int, string) {
-	var statusCode int
-	switch err {
-	case errSessionNil:
-		statusCode = http.StatusInternalServerError
-	case errRouteRegistration:
-		statusCode = http.StatusInternalServerError
-	case errRouteNotFound:
-		statusCode = http.StatusNotFound
-	case errHostServer:
-		statusCode = http.StatusInternalServerError
-	case ErrRequestBodyEmpty:
-		statusCode = http.StatusBadRequest
-	case ErrRequestBodyInvalid:
-		statusCode = http.StatusBadRequest
-	case ErrParameterNotFound:
-		statusCode = http.StatusBadRequest
-	case ErrParameterInvalid:
-		statusCode = http.StatusBadRequest
-	case ErrQueryNotFound:
-		statusCode = http.StatusBadRequest
-	case ErrQueryInvalid:
-		statusCode = http.StatusBadRequest
-	case ErrHeaderNotFound:
-		statusCode = http.StatusBadRequest
-	case ErrHeaderInvalid:
-		statusCode = http.StatusBadRequest
-	case ErrWebRequestNil:
-		statusCode = http.StatusInternalServerError
-	case ErrResponseInvalid:
-		statusCode = http.StatusInternalServerError
-	case ErrInvalidOperation:
-		statusCode = http.StatusMethodNotAllowed
-	case ErrForbidden:
-		statusCode = http.StatusForbidden
-	case ErrNotImplemented:
-		statusCode = http.StatusNotImplemented
-	case ErrBadRequest:
-		statusCode = http.StatusBadRequest
-	case ErrResourceNotFound:
-		statusCode = http.StatusNotFound
-	case ErrResourceLocked:
-		statusCode = http.StatusLocked
-	case ErrResourceConflict:
-		statusCode = http.StatusConflict
-	default:
-		statusCode = http.StatusInternalServerError
+	var typedError, isTyped = err.(AppHTTPError)
+	if !isTyped {
+		return http.StatusInternalServerError,
+			err.Error()
 	}
-	var statusMessage = fmtSprintf(
-		"%+v",
-		err,
-	)
-	return statusCode, statusMessage
+	return typedError.HTTPStatusCode(),
+		typedError.HTTPResponseMessage()
 }
 
 func getRecoverError(recoverResult interface{}) error {

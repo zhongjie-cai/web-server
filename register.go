@@ -204,7 +204,12 @@ func instantiateRouter(
 			"%+v",
 			routerError,
 		)
-		return router, errRouteRegistration
+		return router,
+			newAppErrorFunc(
+				errorCodeGeneralFailure,
+				errorMessageRouteRegistration,
+				[]error{routerError},
+			)
 	}
 	registerErrorHandlersFunc(
 		session.customization,

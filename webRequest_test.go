@@ -558,9 +558,20 @@ func (customization *dummyCustomizationWrapRequest) WrapRequest(session Session,
 func TestCreateHTTPRequest_NilWebRequest(t *testing.T) {
 	// arrange
 	var dummyWebRequest *webRequest
+	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
 	createMock(t)
+
+	// expect
+	newAppErrorFuncExpected = 1
+	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+		newAppErrorFuncCalled++
+		assert.Equal(t, errorCodeGeneralFailure, errorCode)
+		assert.Equal(t, errorMessageWebRequestNil, errorMessageor)
+		assert.Empty(t, innerErrors)
+		return dummyAppError
+	}
 
 	// SUT + act
 	var result, err = createHTTPRequest(
@@ -569,7 +580,7 @@ func TestCreateHTTPRequest_NilWebRequest(t *testing.T) {
 
 	// assert
 	assert.Nil(t, result)
-	assert.Equal(t, ErrWebRequestNil, err)
+	assert.Equal(t, dummyAppError, err)
 
 	// verify
 	verifyAll(t)
@@ -578,9 +589,20 @@ func TestCreateHTTPRequest_NilWebRequest(t *testing.T) {
 func TestCreateHTTPRequest_NilWebRequestSession(t *testing.T) {
 	// arrange
 	var dummyWebRequest = &webRequest{}
+	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
 	createMock(t)
+
+	// expect
+	newAppErrorFuncExpected = 1
+	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+		newAppErrorFuncCalled++
+		assert.Equal(t, errorCodeGeneralFailure, errorCode)
+		assert.Equal(t, errorMessageWebRequestNil, errorMessageor)
+		assert.Empty(t, innerErrors)
+		return dummyAppError
+	}
 
 	// SUT + act
 	var result, err = createHTTPRequest(
@@ -589,7 +611,7 @@ func TestCreateHTTPRequest_NilWebRequestSession(t *testing.T) {
 
 	// assert
 	assert.Nil(t, result)
-	assert.Equal(t, ErrWebRequestNil, err)
+	assert.Equal(t, dummyAppError, err)
 
 	// verify
 	verifyAll(t)
@@ -948,9 +970,20 @@ func TestLogSuccessResponse_ValidResponse(t *testing.T) {
 func TestDoRequestProcessing_NilWebRequest(t *testing.T) {
 	// arrange
 	var dummyWebRequest *webRequest
+	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
 	createMock(t)
+
+	// expect
+	newAppErrorFuncExpected = 1
+	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+		newAppErrorFuncCalled++
+		assert.Equal(t, errorCodeGeneralFailure, errorCode)
+		assert.Equal(t, errorMessageWebRequestNil, errorMessageor)
+		assert.Empty(t, innerErrors)
+		return dummyAppError
+	}
 
 	// SUT + act
 	var result, err = doRequestProcessing(
@@ -959,7 +992,7 @@ func TestDoRequestProcessing_NilWebRequest(t *testing.T) {
 
 	// assert
 	assert.Nil(t, result)
-	assert.Equal(t, ErrWebRequestNil, err)
+	assert.Equal(t, dummyAppError, err)
 
 	// verify
 	verifyAll(t)
@@ -968,9 +1001,20 @@ func TestDoRequestProcessing_NilWebRequest(t *testing.T) {
 func TestDoRequestProcessing_NilWebRequestSession(t *testing.T) {
 	// arrange
 	var dummyWebRequest = &webRequest{}
+	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
 	createMock(t)
+
+	// expect
+	newAppErrorFuncExpected = 1
+	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+		newAppErrorFuncCalled++
+		assert.Equal(t, errorCodeGeneralFailure, errorCode)
+		assert.Equal(t, errorMessageWebRequestNil, errorMessageor)
+		assert.Empty(t, innerErrors)
+		return dummyAppError
+	}
 
 	// SUT + act
 	var result, err = doRequestProcessing(
@@ -979,7 +1023,7 @@ func TestDoRequestProcessing_NilWebRequestSession(t *testing.T) {
 
 	// assert
 	assert.Nil(t, result)
-	assert.Equal(t, ErrWebRequestNil, err)
+	assert.Equal(t, dummyAppError, err)
 
 	// verify
 	verifyAll(t)
@@ -1167,18 +1211,31 @@ func TestDoRequestProcessing_ResponseSuccess(t *testing.T) {
 }
 
 func TestWebRequestProcessRaw_NilWebRequest(t *testing.T) {
+	// arrange
+	var dummyAppError = &appError{Message: "some error message"}
+
 	// SUT
 	var sut *webRequest
 
 	// mock
 	createMock(t)
 
+	// expect
+	newAppErrorFuncExpected = 1
+	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+		newAppErrorFuncCalled++
+		assert.Equal(t, errorCodeGeneralFailure, errorCode)
+		assert.Equal(t, errorMessageWebRequestNil, errorMessageor)
+		assert.Empty(t, innerErrors)
+		return dummyAppError
+	}
+
 	// act
 	var result, err = sut.ProcessRaw()
 
 	// assert
 	assert.Nil(t, result)
-	assert.Equal(t, ErrWebRequestNil, err)
+	assert.Equal(t, dummyAppError, err)
 
 	// verify
 	verifyAll(t)
@@ -1255,6 +1312,7 @@ func TestParseResponse_JSONError(t *testing.T) {
 	var dummyBytes = []byte("some bytes")
 	var dummyError = errors.New("some error")
 	var dummyDataTemplate string
+	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
 	createMock(t)
@@ -1282,6 +1340,15 @@ func TestParseResponse_JSONError(t *testing.T) {
 		assert.Equal(t, 1, len(parameters))
 		assert.Equal(t, dummyError, parameters[0])
 	}
+	newAppErrorFuncExpected = 1
+	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+		newAppErrorFuncCalled++
+		assert.Equal(t, errorCodeGeneralFailure, errorCode)
+		assert.Equal(t, errorMessageResponseInvalid, errorMessageor)
+		assert.Equal(t, 1, len(innerErrors))
+		assert.Equal(t, dummyError, innerErrors[0])
+		return dummyAppError
+	}
 
 	// SUT + act
 	var err = parseResponse(
@@ -1292,7 +1359,7 @@ func TestParseResponse_JSONError(t *testing.T) {
 
 	// assert
 	assert.Zero(t, dummyDataTemplate)
-	assert.Equal(t, ErrResponseInvalid, err)
+	assert.Equal(t, dummyAppError, err)
 
 	// verify
 	verifyAll(t)
@@ -1342,12 +1409,23 @@ func TestParseResponse_HappyPath(t *testing.T) {
 func TestWebRequestProcess_NilWebRequest(t *testing.T) {
 	// arrange
 	var dummyDataTemplate string
+	var dummyAppError = &appError{Message: "some error message"}
 
 	// SUT
 	var sut *webRequest
 
 	// mock
 	createMock(t)
+
+	// expect
+	newAppErrorFuncExpected = 1
+	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+		newAppErrorFuncCalled++
+		assert.Equal(t, errorCodeGeneralFailure, errorCode)
+		assert.Equal(t, errorMessageWebRequestNil, errorMessageor)
+		assert.Empty(t, innerErrors)
+		return dummyAppError
+	}
 
 	// act
 	var result, header, err = sut.Process(
@@ -1358,7 +1436,7 @@ func TestWebRequestProcess_NilWebRequest(t *testing.T) {
 	assert.Zero(t, dummyDataTemplate)
 	assert.Equal(t, http.StatusInternalServerError, result)
 	assert.Empty(t, header)
-	assert.Equal(t, ErrWebRequestNil, err)
+	assert.Equal(t, dummyAppError, err)
 
 	// verify
 	verifyAll(t)
@@ -1367,12 +1445,23 @@ func TestWebRequestProcess_NilWebRequest(t *testing.T) {
 func TestWebRequestProcess_NilWebRequestSession(t *testing.T) {
 	// arrange
 	var dummyDataTemplate string
+	var dummyAppError = &appError{Message: "some error message"}
 
 	// SUT
 	var sut = &webRequest{}
 
 	// mock
 	createMock(t)
+
+	// expect
+	newAppErrorFuncExpected = 1
+	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+		newAppErrorFuncCalled++
+		assert.Equal(t, errorCodeGeneralFailure, errorCode)
+		assert.Equal(t, errorMessageWebRequestNil, errorMessageor)
+		assert.Empty(t, innerErrors)
+		return dummyAppError
+	}
 
 	// act
 	var result, header, err = sut.Process(
@@ -1383,7 +1472,7 @@ func TestWebRequestProcess_NilWebRequestSession(t *testing.T) {
 	assert.Zero(t, dummyDataTemplate)
 	assert.Equal(t, http.StatusInternalServerError, result)
 	assert.Empty(t, header)
-	assert.Equal(t, ErrWebRequestNil, err)
+	assert.Equal(t, dummyAppError, err)
 
 	// verify
 	verifyAll(t)

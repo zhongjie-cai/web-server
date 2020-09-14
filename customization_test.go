@@ -410,60 +410,89 @@ func TestDefaultCustomization_InterpretSuccess_HappyPath(t *testing.T) {
 	verifyAll(t)
 }
 
-func TestDefaultCustomization_InterpretError(t *testing.T) {
+func TestDefaultCustomization_InterpretError_NormalError(t *testing.T) {
 	// arrange
-	var testData = map[error]int{
-		errSessionNil:            http.StatusInternalServerError,
-		errRouteRegistration:     http.StatusInternalServerError,
-		errRouteNotFound:         http.StatusNotFound,
-		errHostServer:            http.StatusInternalServerError,
-		ErrRequestBodyEmpty:      http.StatusBadRequest,
-		ErrRequestBodyInvalid:    http.StatusBadRequest,
-		ErrParameterNotFound:     http.StatusBadRequest,
-		ErrParameterInvalid:      http.StatusBadRequest,
-		ErrQueryNotFound:         http.StatusBadRequest,
-		ErrQueryInvalid:          http.StatusBadRequest,
-		ErrHeaderNotFound:        http.StatusBadRequest,
-		ErrHeaderInvalid:         http.StatusBadRequest,
-		ErrWebRequestNil:         http.StatusInternalServerError,
-		ErrResponseInvalid:       http.StatusInternalServerError,
-		ErrInvalidOperation:      http.StatusMethodNotAllowed,
-		ErrForbidden:             http.StatusForbidden,
-		ErrNotImplemented:        http.StatusNotImplemented,
-		ErrBadRequest:            http.StatusBadRequest,
-		ErrResourceNotFound:      http.StatusNotFound,
-		ErrResourceLocked:        http.StatusLocked,
-		ErrResourceConflict:      http.StatusConflict,
-		errors.New("some error"): http.StatusInternalServerError,
+	var dummyErrorMessage = "some error message"
+	var dummyError = errors.New(dummyErrorMessage)
+
+	// mock
+	createMock(t)
+
+	// SUT + act
+	var code, message = customizationDefault.InterpretError(
+		dummyError,
+	)
+
+	// assert
+	assert.Equal(t, http.StatusInternalServerError, code)
+	assert.Equal(t, dummyErrorMessage, message)
+
+	// verify
+	verifyAll(t)
+}
+
+type dummyAppErrorInterpretError struct {
+	dummyAppError
+	httpStatusCode      func() int
+	httpResponseMessage func() string
+}
+
+func (dummyAppErrorInterpretError *dummyAppErrorInterpretError) HTTPStatusCode() int {
+	if dummyAppErrorInterpretError.httpStatusCode != nil {
+		return dummyAppErrorInterpretError.httpStatusCode()
 	}
-	var dummyMessage = "some message"
+	assert.Fail(dummyAppErrorInterpretError.t, "Unexpected call to method AppError.HTTPStatusCode")
+	return 0
+}
 
-	for dummyError, dummyCode := range testData {
-		// mock
-		createMock(t)
-
-		// expect
-		fmtSprintfExpected = 1
-		fmtSprintf = func(format string, a ...interface{}) string {
-			fmtSprintfCalled++
-			assert.Equal(t, "%+v", format)
-			assert.Equal(t, 1, len(a))
-			assert.Equal(t, dummyError, a[0])
-			return dummyMessage
-		}
-
-		// SUT + act
-		var code, message = customizationDefault.InterpretError(
-			dummyError,
-		)
-
-		// assert
-		assert.Equal(t, dummyCode, code)
-		assert.Equal(t, dummyMessage, message)
-
-		// verify
-		verifyAll(t)
+func (dummyAppErrorInterpretError *dummyAppErrorInterpretError) HTTPResponseMessage() string {
+	if dummyAppErrorInterpretError.httpResponseMessage != nil {
+		return dummyAppErrorInterpretError.httpResponseMessage()
 	}
+	assert.Fail(dummyAppErrorInterpretError.t, "Unexpected call to method AppError.HTTPResponseMessage")
+	return ""
+}
+
+func TestDefaultCustomization_InterpretError_AppError(t *testing.T) {
+	// arrange
+	var dummyStatusCode = rand.Intn(600)
+	var dummyResponseMessage = "some response message"
+	var dummyAppErrorInterpretError = &dummyAppErrorInterpretError{
+		dummyAppError: dummyAppError{t: t},
+	}
+	var appErrorHTTPStatusCodeExpected int
+	var appErrorHTTPStatusCodeCalled int
+	var appErrorHTTPResponseMessageExpected int
+	var appErrorHTTPResponseMessageCalled int
+
+	// mock
+	createMock(t)
+
+	// expect
+	appErrorHTTPStatusCodeExpected = 1
+	dummyAppErrorInterpretError.httpStatusCode = func() int {
+		appErrorHTTPStatusCodeCalled++
+		return dummyStatusCode
+	}
+	appErrorHTTPResponseMessageExpected = 1
+	dummyAppErrorInterpretError.httpResponseMessage = func() string {
+		appErrorHTTPResponseMessageCalled++
+		return dummyResponseMessage
+	}
+
+	// SUT + act
+	var code, message = customizationDefault.InterpretError(
+		dummyAppErrorInterpretError,
+	)
+
+	// assert
+	assert.Equal(t, dummyStatusCode, code)
+	assert.Equal(t, dummyResponseMessage, message)
+
+	// verify
+	verifyAll(t)
+	assert.Equal(t, appErrorHTTPStatusCodeExpected, appErrorHTTPStatusCodeCalled, "Unexpected number of calls to appError.HTTPStatusCode")
+	assert.Equal(t, appErrorHTTPResponseMessageExpected, appErrorHTTPResponseMessageCalled, "Unexpected number of calls to appError.HTTPResponseMessage")
 }
 
 func TestGetRecoverError_Error(t *testing.T) {

@@ -699,6 +699,7 @@ func TestInstantiateRouter_RouterError(t *testing.T) {
 	}
 	var dummyRouter = &mux.Router{KeepContext: rand.Intn(100) > 50}
 	var dummyError = errors.New("some error")
+	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
 	createMock(t)
@@ -745,6 +746,15 @@ func TestInstantiateRouter_RouterError(t *testing.T) {
 		assert.Equal(t, 1, len(parameters))
 		assert.Equal(t, dummyError, parameters[0])
 	}
+	newAppErrorFuncExpected = 1
+	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+		newAppErrorFuncCalled++
+		assert.Equal(t, errorCodeGeneralFailure, errorCode)
+		assert.Equal(t, errorMessageRouteRegistration, errorMessageor)
+		assert.Equal(t, 1, len(innerErrors))
+		assert.Equal(t, dummyError, innerErrors[0])
+		return dummyAppError
+	}
 
 	// SUT + act
 	var result, err = instantiateRouter(
@@ -754,7 +764,7 @@ func TestInstantiateRouter_RouterError(t *testing.T) {
 
 	// assert
 	assert.Equal(t, dummyRouter, result)
-	assert.Equal(t, errRouteRegistration, err)
+	assert.Equal(t, dummyAppError, err)
 
 	// verify
 	verifyAll(t)

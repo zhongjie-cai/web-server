@@ -51,7 +51,11 @@ func hostServer(
 		"hostServer",
 		"Server terminated",
 	)
-	return errHostServer
+	return newAppErrorFunc(
+		errorCodeGeneralFailure,
+		errorMessageHostServer,
+		[]error{},
+	)
 }
 
 func createServer(

@@ -134,7 +134,12 @@ func (webRequest *webRequest) EnableRetry(connectivityRetryCount int, httpStatus
 func createHTTPRequest(webRequest *webRequest) (*http.Request, error) {
 	if webRequest == nil ||
 		webRequest.session == nil {
-		return nil, ErrWebRequestNil
+		return nil,
+			newAppErrorFunc(
+				errorCodeGeneralFailure,
+				errorMessageWebRequestNil,
+				[]error{},
+			)
 	}
 	var requestBody = stringsNewReader(
 		webRequest.payload,
@@ -235,7 +240,12 @@ func logSuccessResponse(session *session, response *http.Response, startTime tim
 func doRequestProcessing(webRequest *webRequest) (*http.Response, error) {
 	if webRequest == nil ||
 		webRequest.session == nil {
-		return nil, ErrWebRequestNil
+		return nil,
+			newAppErrorFunc(
+				errorCodeGeneralFailure,
+				errorMessageWebRequestNil,
+				[]error{},
+			)
 	}
 	var requestObject, requestError = createHTTPRequestFunc(
 		webRequest,
@@ -273,7 +283,12 @@ func doRequestProcessing(webRequest *webRequest) (*http.Response, error) {
 // ProcessRaw sends the webcall request over the wire, retrieves the response, and returns that response and error if applicable
 func (webRequest *webRequest) ProcessRaw() (responseObject *http.Response, responseError error) {
 	if webRequest == nil {
-		return nil, ErrWebRequestNil
+		return nil,
+			newAppErrorFunc(
+				errorCodeGeneralFailure,
+				errorMessageWebRequestNil,
+				[]error{},
+			)
 	}
 	return doRequestProcessingFunc(
 		webRequest,
@@ -299,7 +314,11 @@ func parseResponse(session *session, body io.ReadCloser, dataTemplate interface{
 			"%+v",
 			unmarshalError,
 		)
-		return ErrResponseInvalid
+		return newAppErrorFunc(
+			errorCodeGeneralFailure,
+			errorMessageResponseInvalid,
+			[]error{unmarshalError},
+		)
 	}
 	return nil
 }
@@ -308,7 +327,13 @@ func parseResponse(session *session, body io.ReadCloser, dataTemplate interface{
 func (webRequest *webRequest) Process(dataTemplate interface{}) (statusCode int, responseHeader http.Header, responseError error) {
 	if webRequest == nil ||
 		webRequest.session == nil {
-		return http.StatusInternalServerError, http.Header{}, ErrWebRequestNil
+		return http.StatusInternalServerError,
+			http.Header{},
+			newAppErrorFunc(
+				errorCodeGeneralFailure,
+				errorMessageWebRequestNil,
+				[]error{},
+			)
 	}
 	var responseObject *http.Response
 	responseObject, responseError = doRequestProcessingFunc(

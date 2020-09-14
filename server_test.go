@@ -59,6 +59,7 @@ func TestHostServer_RunServerFailure(t *testing.T) {
 	var dummyShutdownSignal = make(chan os.Signal, 1)
 	var dummyStarted = rand.Intn(100) > 50
 	var dummyRouter = &mux.Router{}
+	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
 	createMock(t)
@@ -96,6 +97,14 @@ func TestHostServer_RunServerFailure(t *testing.T) {
 		assert.Equal(t, &dummyStarted, started)
 		return false
 	}
+	newAppErrorFuncExpected = 1
+	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+		newAppErrorFuncCalled++
+		assert.Equal(t, errorCodeGeneralFailure, errorCode)
+		assert.Equal(t, errorMessageHostServer, errorMessageor)
+		assert.Empty(t, innerErrors)
+		return dummyAppError
+	}
 
 	// SUT + act
 	var err = hostServer(
@@ -106,7 +115,7 @@ func TestHostServer_RunServerFailure(t *testing.T) {
 	)
 
 	// assert
-	assert.Equal(t, errHostServer, err)
+	assert.Equal(t, dummyAppError, err)
 
 	// verify
 	verifyAll(t)
