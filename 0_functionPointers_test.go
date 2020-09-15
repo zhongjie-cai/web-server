@@ -332,7 +332,7 @@ func createMock(t *testing.T) {
 	}
 	newAppErrorFuncExpected = 0
 	newAppErrorFuncCalled = 0
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		return nil
 	}

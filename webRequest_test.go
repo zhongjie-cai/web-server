@@ -565,10 +565,10 @@ func TestCreateHTTPRequest_NilWebRequest(t *testing.T) {
 
 	// expect
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeGeneralFailure, errorCode)
-		assert.Equal(t, errorMessageWebRequestNil, errorMessageor)
+		assert.Equal(t, errorMessageWebRequestNil, errorMessage)
 		assert.Empty(t, innerErrors)
 		return dummyAppError
 	}
@@ -596,10 +596,10 @@ func TestCreateHTTPRequest_NilWebRequestSession(t *testing.T) {
 
 	// expect
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeGeneralFailure, errorCode)
-		assert.Equal(t, errorMessageWebRequestNil, errorMessageor)
+		assert.Equal(t, errorMessageWebRequestNil, errorMessage)
 		assert.Empty(t, innerErrors)
 		return dummyAppError
 	}
@@ -977,10 +977,10 @@ func TestDoRequestProcessing_NilWebRequest(t *testing.T) {
 
 	// expect
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeGeneralFailure, errorCode)
-		assert.Equal(t, errorMessageWebRequestNil, errorMessageor)
+		assert.Equal(t, errorMessageWebRequestNil, errorMessage)
 		assert.Empty(t, innerErrors)
 		return dummyAppError
 	}
@@ -1008,10 +1008,10 @@ func TestDoRequestProcessing_NilWebRequestSession(t *testing.T) {
 
 	// expect
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeGeneralFailure, errorCode)
-		assert.Equal(t, errorMessageWebRequestNil, errorMessageor)
+		assert.Equal(t, errorMessageWebRequestNil, errorMessage)
 		assert.Empty(t, innerErrors)
 		return dummyAppError
 	}
@@ -1222,10 +1222,10 @@ func TestWebRequestProcessRaw_NilWebRequest(t *testing.T) {
 
 	// expect
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeGeneralFailure, errorCode)
-		assert.Equal(t, errorMessageWebRequestNil, errorMessageor)
+		assert.Equal(t, errorMessageWebRequestNil, errorMessage)
 		assert.Empty(t, innerErrors)
 		return dummyAppError
 	}
@@ -1341,10 +1341,10 @@ func TestParseResponse_JSONError(t *testing.T) {
 		assert.Equal(t, dummyError, parameters[0])
 	}
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeGeneralFailure, errorCode)
-		assert.Equal(t, errorMessageResponseInvalid, errorMessageor)
+		assert.Equal(t, errorMessageResponseInvalid, errorMessage)
 		assert.Equal(t, 1, len(innerErrors))
 		assert.Equal(t, dummyError, innerErrors[0])
 		return dummyAppError
@@ -1419,10 +1419,10 @@ func TestWebRequestProcess_NilWebRequest(t *testing.T) {
 
 	// expect
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeGeneralFailure, errorCode)
-		assert.Equal(t, errorMessageWebRequestNil, errorMessageor)
+		assert.Equal(t, errorMessageWebRequestNil, errorMessage)
 		assert.Empty(t, innerErrors)
 		return dummyAppError
 	}
@@ -1455,10 +1455,10 @@ func TestWebRequestProcess_NilWebRequestSession(t *testing.T) {
 
 	// expect
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeGeneralFailure, errorCode)
-		assert.Equal(t, errorMessageWebRequestNil, errorMessageor)
+		assert.Equal(t, errorMessageWebRequestNil, errorMessage)
 		assert.Empty(t, innerErrors)
 		return dummyAppError
 	}

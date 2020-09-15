@@ -98,10 +98,10 @@ func TestHostServer_RunServerFailure(t *testing.T) {
 		return false
 	}
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeGeneralFailure, errorCode)
-		assert.Equal(t, errorMessageHostServer, errorMessageor)
+		assert.Equal(t, errorMessageHostServer, errorMessage)
 		assert.Empty(t, innerErrors)
 		return dummyAppError
 	}

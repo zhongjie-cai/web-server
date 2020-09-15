@@ -47,10 +47,10 @@ type appError struct {
 	InnerErrors []*appError `json:"innerErrors,omitempty"`
 }
 
-func newAppError(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+func newAppError(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 	return &appError{
 		Code:    errorCode,
-		Message: errorMessageor,
+		Message: errorMessage,
 		InnerErrors: cleanupInnerErrorsFunc(
 			innerErrors,
 		),
@@ -267,4 +267,17 @@ func GetNotImplemented(errorMessage string, innerErrors ...error) AppError {
 		errorMessage,
 		innerErrors,
 	)
+}
+
+// WrapError wraps the given error with all provided inner errors
+func WrapError(sourceError error, innerErrors ...error) AppError {
+	var typedError, isTyped = sourceError.(AppError)
+	if !isTyped {
+		return newAppErrorFunc(
+			errorCodeGeneralFailure,
+			sourceError.Error(),
+			innerErrors,
+		)
+	}
+	return typedError.Wrap(innerErrors...)
 }

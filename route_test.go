@@ -491,10 +491,10 @@ func TestWalkRegisteredRoutes_Error(t *testing.T) {
 		assert.Equal(t, dummyError, parameters[0])
 	}
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeGeneralFailure, errorCode)
-		assert.Equal(t, errorMessageRouteRegistration, errorMessageor)
+		assert.Equal(t, errorMessageRouteRegistration, errorMessage)
 		assert.Equal(t, 1, len(innerErrors))
 		assert.Equal(t, dummyError, innerErrors[0])
 		return dummyAppError
@@ -633,10 +633,10 @@ func TestDefaultActionFunc(t *testing.T) {
 
 	// expect
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeNotImplemented, errorCode)
-		assert.Equal(t, "No corresponding action function configured; falling back to default", errorMessageor)
+		assert.Equal(t, "No corresponding action function configured; falling back to default", errorMessage)
 		assert.Empty(t, innerErrors)
 		return dummyAppError
 	}
@@ -733,10 +733,10 @@ func TestGetRouteInfo_NilRoute(t *testing.T) {
 		return dummyRoute
 	}
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeNotFound, errorCode)
-		assert.Equal(t, "No corresponding route configured for path", errorMessageor)
+		assert.Equal(t, "No corresponding route configured for path", errorMessage)
 		assert.Empty(t, innerErrors)
 		return dummyAppError
 	}

@@ -869,10 +869,10 @@ func TestGetGeneralFailure(t *testing.T) {
 
 	// expect
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeGeneralFailure, errorCode)
-		assert.Equal(t, dummyErrorMessage, errorMessageor)
+		assert.Equal(t, dummyErrorMessage, errorMessage)
 		assert.Equal(t, 3, len(innerErrors))
 		assert.Equal(t, dummyInnerError1, innerErrors[0])
 		assert.Equal(t, dummyInnerError2, innerErrors[1])
@@ -909,10 +909,10 @@ func TestGetUnauthorized(t *testing.T) {
 
 	// expect
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeUnauthorized, errorCode)
-		assert.Equal(t, dummyErrorMessage, errorMessageor)
+		assert.Equal(t, dummyErrorMessage, errorMessage)
 		assert.Equal(t, 3, len(innerErrors))
 		assert.Equal(t, dummyInnerError1, innerErrors[0])
 		assert.Equal(t, dummyInnerError2, innerErrors[1])
@@ -949,10 +949,10 @@ func TestGetInvalidOperation(t *testing.T) {
 
 	// expect
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeInvalidOperation, errorCode)
-		assert.Equal(t, dummyErrorMessage, errorMessageor)
+		assert.Equal(t, dummyErrorMessage, errorMessage)
 		assert.Equal(t, 3, len(innerErrors))
 		assert.Equal(t, dummyInnerError1, innerErrors[0])
 		assert.Equal(t, dummyInnerError2, innerErrors[1])
@@ -989,10 +989,10 @@ func TestGetBadRequest(t *testing.T) {
 
 	// expect
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeBadRequest, errorCode)
-		assert.Equal(t, dummyErrorMessage, errorMessageor)
+		assert.Equal(t, dummyErrorMessage, errorMessage)
 		assert.Equal(t, 3, len(innerErrors))
 		assert.Equal(t, dummyInnerError1, innerErrors[0])
 		assert.Equal(t, dummyInnerError2, innerErrors[1])
@@ -1029,10 +1029,10 @@ func TestGetNotFound(t *testing.T) {
 
 	// expect
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeNotFound, errorCode)
-		assert.Equal(t, dummyErrorMessage, errorMessageor)
+		assert.Equal(t, dummyErrorMessage, errorMessage)
 		assert.Equal(t, 3, len(innerErrors))
 		assert.Equal(t, dummyInnerError1, innerErrors[0])
 		assert.Equal(t, dummyInnerError2, innerErrors[1])
@@ -1069,10 +1069,10 @@ func TestGetCircuitBreak(t *testing.T) {
 
 	// expect
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeCircuitBreak, errorCode)
-		assert.Equal(t, dummyErrorMessage, errorMessageor)
+		assert.Equal(t, dummyErrorMessage, errorMessage)
 		assert.Equal(t, 3, len(innerErrors))
 		assert.Equal(t, dummyInnerError1, innerErrors[0])
 		assert.Equal(t, dummyInnerError2, innerErrors[1])
@@ -1109,10 +1109,10 @@ func TestGetOperationLock(t *testing.T) {
 
 	// expect
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeOperationLock, errorCode)
-		assert.Equal(t, dummyErrorMessage, errorMessageor)
+		assert.Equal(t, dummyErrorMessage, errorMessage)
 		assert.Equal(t, 3, len(innerErrors))
 		assert.Equal(t, dummyInnerError1, innerErrors[0])
 		assert.Equal(t, dummyInnerError2, innerErrors[1])
@@ -1149,10 +1149,10 @@ func TestGetAccessForbidden(t *testing.T) {
 
 	// expect
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeAccessForbidden, errorCode)
-		assert.Equal(t, dummyErrorMessage, errorMessageor)
+		assert.Equal(t, dummyErrorMessage, errorMessage)
 		assert.Equal(t, 3, len(innerErrors))
 		assert.Equal(t, dummyInnerError1, innerErrors[0])
 		assert.Equal(t, dummyInnerError2, innerErrors[1])
@@ -1189,10 +1189,10 @@ func TestGetDataCorruption(t *testing.T) {
 
 	// expect
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeDataCorruption, errorCode)
-		assert.Equal(t, dummyErrorMessage, errorMessageor)
+		assert.Equal(t, dummyErrorMessage, errorMessage)
 		assert.Equal(t, 3, len(innerErrors))
 		assert.Equal(t, dummyInnerError1, innerErrors[0])
 		assert.Equal(t, dummyInnerError2, innerErrors[1])
@@ -1229,10 +1229,10 @@ func TestGetNotImplemented(t *testing.T) {
 
 	// expect
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeNotImplemented, errorCode)
-		assert.Equal(t, dummyErrorMessage, errorMessageor)
+		assert.Equal(t, dummyErrorMessage, errorMessage)
 		assert.Equal(t, 3, len(innerErrors))
 		assert.Equal(t, dummyInnerError1, innerErrors[0])
 		assert.Equal(t, dummyInnerError2, innerErrors[1])
@@ -1254,4 +1254,98 @@ func TestGetNotImplemented(t *testing.T) {
 
 	// verify
 	verifyAll(t)
+}
+
+func TestWrapError_NormalError(t *testing.T) {
+	// arrange
+	var dummySourceError = errors.New("some source error")
+	var dummyInnerError1 = errors.New("some inner error 1")
+	var dummyInnerError2 = errors.New("some inner error 2")
+	var dummyInnerError3 = errors.New("some inner error 3")
+	var dummyAppError = &appError{Message: "some app error"}
+
+	// mock
+	createMock(t)
+
+	// expect
+	newAppErrorFuncExpected = 1
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
+		newAppErrorFuncCalled++
+		assert.Equal(t, errorCodeGeneralFailure, errorCode)
+		assert.Equal(t, dummySourceError.Error(), errorMessage)
+		assert.Equal(t, 3, len(innerErrors))
+		assert.Equal(t, dummyInnerError1, innerErrors[0])
+		assert.Equal(t, dummyInnerError2, innerErrors[1])
+		assert.Equal(t, dummyInnerError3, innerErrors[2])
+		return dummyAppError
+	}
+
+	// SUT + act
+	var err = WrapError(
+		dummySourceError,
+		dummyInnerError1,
+		dummyInnerError2,
+		dummyInnerError3,
+	)
+
+	// assert
+	assert.Equal(t, dummyAppError, err)
+
+	// verify
+	verifyAll(t)
+}
+
+type dummyAppErrorWrapError struct {
+	dummyAppError
+	wrap func(innerErrors ...error) AppError
+}
+
+func (dummyAppErrorWrapError *dummyAppErrorWrapError) Wrap(innerErrors ...error) AppError {
+	if dummyAppErrorWrapError.wrap != nil {
+		return dummyAppErrorWrapError.wrap(innerErrors...)
+	}
+	assert.Fail(dummyAppErrorWrapError.t, "Unexpected call to method AppError.Wrap")
+	return nil
+}
+
+func TestWrapError_AppError(t *testing.T) {
+	// arrange
+	var dummySourceError = &dummyAppErrorWrapError{
+		dummyAppError: dummyAppError{t: t},
+	}
+	var dummyInnerError1 = errors.New("some inner error 1")
+	var dummyInnerError2 = errors.New("some inner error 2")
+	var dummyInnerError3 = errors.New("some inner error 3")
+	var dummyAppError = &appError{Message: "some app error"}
+	var appErrorWrapExpected int
+	var appErrorWrapCalled int
+
+	// mock
+	createMock(t)
+
+	// expect
+	appErrorWrapExpected = 1
+	dummySourceError.wrap = func(innerErrors ...error) AppError {
+		appErrorWrapCalled++
+		assert.Equal(t, 3, len(innerErrors))
+		assert.Equal(t, dummyInnerError1, innerErrors[0])
+		assert.Equal(t, dummyInnerError2, innerErrors[1])
+		assert.Equal(t, dummyInnerError3, innerErrors[2])
+		return dummyAppError
+	}
+
+	// SUT + act
+	var err = WrapError(
+		dummySourceError,
+		dummyInnerError1,
+		dummyInnerError2,
+		dummyInnerError3,
+	)
+
+	// assert
+	assert.Equal(t, dummyAppError, err)
+
+	// verify
+	verifyAll(t)
+	assert.Equal(t, appErrorWrapExpected, appErrorWrapCalled, "Unexpected number of calls to method AppError.Wrap")
 }

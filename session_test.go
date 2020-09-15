@@ -244,10 +244,10 @@ func TestSessionGetRequestBody_NilSession(t *testing.T) {
 
 	// expect
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeGeneralFailure, errorCode)
-		assert.Equal(t, errorMessageSessionNil, errorMessageor)
+		assert.Equal(t, errorMessageSessionNil, errorMessage)
 		assert.Empty(t, innerErrors)
 		return dummyAppError
 	}
@@ -291,10 +291,10 @@ func TestSessionGetRequestBody_BodyEmpty(t *testing.T) {
 		return dummyRequestBody
 	}
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeBadRequest, errorCode)
-		assert.Equal(t, errorMessageRequestBodyEmpty, errorMessageor)
+		assert.Equal(t, errorMessageRequestBodyEmpty, errorMessage)
 		assert.Empty(t, innerErrors)
 		return dummyAppError
 	}
@@ -360,10 +360,10 @@ func TestSessionGetRequestBody_BodyInvalid(t *testing.T) {
 		return dummyError
 	}
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeBadRequest, errorCode)
-		assert.Equal(t, errorMessageRequestBodyInvalid, errorMessageor)
+		assert.Equal(t, errorMessageRequestBodyInvalid, errorMessage)
 		assert.Equal(t, 1, len(innerErrors))
 		assert.Equal(t, dummyError, innerErrors[0])
 		return dummyAppError
@@ -445,10 +445,10 @@ func TestSessionGetRequestParameter_NilSession(t *testing.T) {
 
 	// expect
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeGeneralFailure, errorCode)
-		assert.Equal(t, errorMessageSessionNil, errorMessageor)
+		assert.Equal(t, errorMessageSessionNil, errorMessage)
 		assert.Empty(t, innerErrors)
 		return dummyAppError
 	}
@@ -496,10 +496,10 @@ func TestSessionGetRequestParameter_ParameterNotFound(t *testing.T) {
 		return dummyParameters
 	}
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeBadRequest, errorCode)
-		assert.Equal(t, errorMessageParameterNotFound, errorMessageor)
+		assert.Equal(t, errorMessageParameterNotFound, errorMessage)
 		assert.Empty(t, innerErrors)
 		return dummyAppError
 	}
@@ -571,10 +571,10 @@ func TestSessionGetRequestParameter_ParameterInvalid(t *testing.T) {
 		return dummyError
 	}
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeBadRequest, errorCode)
-		assert.Equal(t, errorMessageParameterInvalid, errorMessageor)
+		assert.Equal(t, errorMessageParameterInvalid, errorMessage)
 		assert.Equal(t, 1, len(innerErrors))
 		assert.Equal(t, dummyError, innerErrors[0])
 		return dummyAppError
@@ -747,10 +747,10 @@ func TestSessionGetRequestQuery_NilSession(t *testing.T) {
 
 	// expect
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeGeneralFailure, errorCode)
-		assert.Equal(t, errorMessageSessionNil, errorMessageor)
+		assert.Equal(t, errorMessageSessionNil, errorMessage)
 		assert.Empty(t, innerErrors)
 		return dummyAppError
 	}
@@ -803,10 +803,10 @@ func TestSessionGetRequestQuery_QueryNotFound(t *testing.T) {
 		return dummyQueries
 	}
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeBadRequest, errorCode)
-		assert.Equal(t, errorMessageQueryNotFound, errorMessageor)
+		assert.Equal(t, errorMessageQueryNotFound, errorMessage)
 		assert.Empty(t, innerErrors)
 		return dummyAppError
 	}
@@ -881,10 +881,10 @@ func TestSessionGetRequestQuery_QueryInvalid(t *testing.T) {
 		return dummyError
 	}
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeBadRequest, errorCode)
-		assert.Equal(t, errorMessageQueryInvalid, errorMessageor)
+		assert.Equal(t, errorMessageQueryInvalid, errorMessage)
 		assert.Equal(t, 1, len(innerErrors))
 		assert.Equal(t, dummyError, innerErrors[0])
 		return dummyAppError
@@ -1058,10 +1058,10 @@ func TestSessionGetRequestHeader_NilSession(t *testing.T) {
 
 	// expect
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeGeneralFailure, errorCode)
-		assert.Equal(t, errorMessageSessionNil, errorMessageor)
+		assert.Equal(t, errorMessageSessionNil, errorMessage)
 		assert.Empty(t, innerErrors)
 		return dummyAppError
 	}
@@ -1114,10 +1114,10 @@ func TestSessionGetRequestHeader_HeaderNotFound(t *testing.T) {
 		return dummyHeaders
 	}
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeBadRequest, errorCode)
-		assert.Equal(t, errorMessageHeaderNotFound, errorMessageor)
+		assert.Equal(t, errorMessageHeaderNotFound, errorMessage)
 		assert.Empty(t, innerErrors)
 		return dummyAppError
 	}
@@ -1192,10 +1192,10 @@ func TestSessionGetRequestHeader_HeaderInvalid(t *testing.T) {
 		return dummyError
 	}
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeBadRequest, errorCode)
-		assert.Equal(t, errorMessageHeaderInvalid, errorMessageor)
+		assert.Equal(t, errorMessageHeaderInvalid, errorMessage)
 		assert.Equal(t, 1, len(innerErrors))
 		assert.Equal(t, dummyError, innerErrors[0])
 		return dummyAppError

@@ -747,10 +747,10 @@ func TestInstantiateRouter_RouterError(t *testing.T) {
 		assert.Equal(t, dummyError, parameters[0])
 	}
 	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessageor string, innerErrors []error) *appError {
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		newAppErrorFuncCalled++
 		assert.Equal(t, errorCodeGeneralFailure, errorCode)
-		assert.Equal(t, errorMessageRouteRegistration, errorMessageor)
+		assert.Equal(t, errorMessageRouteRegistration, errorMessage)
 		assert.Equal(t, 1, len(innerErrors))
 		assert.Equal(t, dummyError, innerErrors[0])
 		return dummyAppError
