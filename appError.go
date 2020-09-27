@@ -1,6 +1,6 @@
 package webserver
 
-// AppError is the error wrapper interface for all WebServiceTemplate service generated errors
+// AppError is the error wrapper interface for all web service generated errors
 type AppError interface {
 	// AppBaseError is the error extending interface that is compatible with Golang error type
 	AppBaseError

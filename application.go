@@ -51,6 +51,15 @@ func NewApplication(
 ) Application {
 	applicationLock.Lock()
 	defer applicationLock.Unlock()
+	var _, found = applicationMap[port]
+	if found {
+		panic(
+			fmtErrorf(
+				"An existing application was already registered with given port: %v",
+				port,
+			),
+		)
+	}
 	if isInterfaceValueNilFunc(customization) {
 		customization = customizationDefault
 	}

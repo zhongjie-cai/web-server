@@ -36,6 +36,44 @@ func TestNilApplication(t *testing.T) {
 	verifyAll(t)
 }
 
+func TestNewApplication_PortUsed(t *testing.T) {
+	// arrange
+	var dummyName = "some name"
+	var dummyPort = rand.Intn(65536)
+	var dummyVersion = "some version"
+	var dummyCustomization Customization
+	var dummyError = errors.New("some error")
+
+	// stub
+	applicationMap[dummyPort] = &application{}
+
+	// mock
+	createMock(t)
+
+	// expect
+	fmtErrorfExpected = 1
+	fmtErrorf = func(format string, a ...interface{}) error {
+		fmtErrorfCalled++
+		assert.Equal(t, "An existing application was already registered with given port: %v", format)
+		assert.Equal(t, 1, len(a))
+		assert.Equal(t, dummyPort, a[0])
+		return dummyError
+	}
+
+	// assert
+	assert.PanicsWithValue(t, dummyError, func() {
+		NewApplication(
+			dummyName,
+			dummyPort,
+			dummyVersion,
+			dummyCustomization,
+		)
+	})
+
+	// verify
+	verifyAll(t)
+}
+
 func TestNewApplication_NilCustomization(t *testing.T) {
 	// arrange
 	var dummyName = "some name"
