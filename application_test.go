@@ -282,7 +282,7 @@ func TestGetApplication_ValidFound(t *testing.T) {
 	verifyAll(t)
 }
 
-func TestStart(t *testing.T) {
+func TestApplication_Start(t *testing.T) {
 	// arrange
 	var dummyApplication = &application{
 		name: "some name",
@@ -305,7 +305,7 @@ func TestStart(t *testing.T) {
 	verifyAll(t)
 }
 
-func TestStartAsync_NilWaitGroup(t *testing.T) {
+func TestApplication_StartAsync_NilWaitGroup(t *testing.T) {
 	// arrange
 	var dummyApplication = &application{
 		name: "some name",
@@ -334,7 +334,7 @@ func TestStartAsync_NilWaitGroup(t *testing.T) {
 	verifyAll(t)
 }
 
-func TestStartAsync_GivenWaitGroup(t *testing.T) {
+func TestApplication_StartAsync_GivenWaitGroup(t *testing.T) {
 	// arrange
 	var dummyApplication = &application{
 		name: "some name",
@@ -365,7 +365,30 @@ func TestStartAsync_GivenWaitGroup(t *testing.T) {
 	verifyAll(t)
 }
 
-func TestStop_NotStarted(t *testing.T) {
+func TestApplication_Session(t *testing.T) {
+	// arrange
+	var dummySession = &session{
+		id: uuid.New(),
+	}
+	var dummyApplication = &application{
+		name:    "some name",
+		session: dummySession,
+	}
+
+	// mock
+	createMock(t)
+
+	// SUT + act
+	var session = dummyApplication.Session()
+
+	// assert
+	assert.Equal(t, dummySession, session)
+
+	// verify
+	verifyAll(t)
+}
+
+func TestApplication_Stop_NotStarted(t *testing.T) {
 	// arrange
 	var dummyApplication = &application{
 		name:    "some name",
@@ -382,7 +405,7 @@ func TestStop_NotStarted(t *testing.T) {
 	verifyAll(t)
 }
 
-func TestStop_HasStarted(t *testing.T) {
+func TestApplication_Stop_HasStarted(t *testing.T) {
 	// arrange
 	var dummyShutdownSignal = make(chan os.Signal, 1)
 	var dummyApplication = &application{

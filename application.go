@@ -11,6 +11,8 @@ type Application interface {
 	Start()
 	// StartAsync starts the web server hosting in a new Goroutine (thread); if a sync wait group is provided, the wait group would be used for async management, otherwise a new wait group would be created and returned
 	StartAsync(*sync.WaitGroup) *sync.WaitGroup
+	// Session retrieves the application-level session instance for logging or any other necessary operations
+	Session() Session
 	// Stop interrupts the web server hosting, causing the web server to gracefully shutdown; a synchronous Start would then return, or an asynchronous StartSync would mark its wait group done and then return
 	Stop()
 }
@@ -117,6 +119,10 @@ func (app *application) StartAsync(waitGroup *sync.WaitGroup) *sync.WaitGroup {
 		)
 	}()
 	return waitGroup
+}
+
+func (app *application) Session() Session {
+	return app.session
 }
 
 func (app *application) Stop() {
