@@ -67,10 +67,10 @@ type HostingCustomization interface {
 
 // HandlerCustomization holds customization methods related to handlers
 type HandlerCustomization interface {
-	// PreAction is to customize the pre-actiontion used before each route action takes place, e.g. authorization, etc.
+	// PreAction is to customize the pre-action used before each route action takes place, e.g. authorization, etc.
 	PreAction(session Session) error
 
-	// PostAction is to customize the post-actiontion used after each route action takes place, e.g. finalization, etc.
+	// PostAction is to customize the post-action used after each route action takes place, e.g. finalization, etc.
 	PostAction(session Session) error
 
 	// InterpretSuccess is to customize how application interpret a response content into HTTP status code and corresponding response body
@@ -181,12 +181,12 @@ func (customization *DefaultCustomization) InstrumentRouter(router *mux.Router) 
 	return router
 }
 
-// PreAction is to customize the pre-actiontion used before each route action takes place, e.g. authorization, etc.
+// PreAction is to customize the pre-action used before each route action takes place, e.g. authorization, etc.
 func (customization *DefaultCustomization) PreAction(session Session) error {
 	return nil
 }
 
-// PostAction is to customize the post-actiontion used after each route action takes place, e.g. finalization, etc.
+// PostAction is to customize the post-action used after each route action takes place, e.g. finalization, etc.
 func (customization *DefaultCustomization) PostAction(session Session) error {
 	return nil
 }
