@@ -407,7 +407,7 @@ func TestApplication_Stop_NotStarted(t *testing.T) {
 
 func TestApplication_Stop_HasStarted(t *testing.T) {
 	// arrange
-	var dummyShutdownSignal = make(chan os.Signal, 1)
+	var dummyShutdownSignal = make(chan os.Signal)
 	var dummyApplication = &application{
 		name:           "some name",
 		shutdownSignal: dummyShutdownSignal,
@@ -903,7 +903,7 @@ func TestBeginApplication_HostError(t *testing.T) {
 	var dummyPort = rand.Intn(65536)
 	var dummySession = &session{id: uuid.New()}
 	var dummyCustomization = &dummyCustomization{t: t}
-	var dummyShutdownSignal = make(chan os.Signal, 1)
+	var dummyShutdownSignal = make(chan os.Signal)
 	var dummyStarted = rand.Intn(100) > 50
 	var dummyApplication = &application{
 		name:           dummyName,
@@ -963,7 +963,7 @@ func TestBeginApplication_HostSuccess(t *testing.T) {
 	var dummyPort = rand.Intn(65536)
 	var dummySession = &session{id: uuid.New()}
 	var dummyCustomization = &dummyCustomization{t: t}
-	var dummyShutdownSignal = make(chan os.Signal, 1)
+	var dummyShutdownSignal = make(chan os.Signal)
 	var dummyStarted = rand.Intn(100) > 50
 	var dummyApplication = &application{
 		name:           dummyName,

@@ -29,7 +29,7 @@ var (
 		},
 		customization:  customizationDefault,
 		actionFuncMap:  map[string]ActionFunc{},
-		shutdownSignal: make(chan os.Signal, 1),
+		shutdownSignal: make(chan os.Signal),
 	}
 )
 
@@ -79,7 +79,7 @@ func NewApplication(
 		},
 		customization,
 		map[string]ActionFunc{},
-		make(chan os.Signal, 1),
+		make(chan os.Signal),
 		false,
 	}
 	applicationMap[port] = application

@@ -20,7 +20,7 @@ func TestHostServer_ErrorRegisterRoutes(t *testing.T) {
 	// arrange
 	var dummyPort = rand.Intn(65536)
 	var dummySession = &session{id: uuid.New()}
-	var dummyShutdownSignal = make(chan os.Signal, 1)
+	var dummyShutdownSignal = make(chan os.Signal)
 	var dummyStarted = rand.Intn(100) > 50
 	var dummyRouter = &mux.Router{}
 	var dummyError = errors.New("some error")
@@ -56,7 +56,7 @@ func TestHostServer_RunServerFailure(t *testing.T) {
 	// arrange
 	var dummyPort = rand.Intn(65536)
 	var dummySession = &session{id: uuid.New()}
-	var dummyShutdownSignal = make(chan os.Signal, 1)
+	var dummyShutdownSignal = make(chan os.Signal)
 	var dummyStarted = rand.Intn(100) > 50
 	var dummyRouter = &mux.Router{}
 	var dummyAppError = &appError{Message: "some error message"}
@@ -125,7 +125,7 @@ func TestHostServer_RunServerSuccess(t *testing.T) {
 	// arrange
 	var dummyPort = rand.Intn(65536)
 	var dummySession = &session{id: uuid.New()}
-	var dummyShutdownSignal = make(chan os.Signal, 1)
+	var dummyShutdownSignal = make(chan os.Signal)
 	var dummyStarted = rand.Intn(100) > 50
 	var dummyRouter = &mux.Router{}
 
@@ -594,7 +594,7 @@ func TestRunServer_HappyPath(t *testing.T) {
 		customization: dummyCustomizationRunServer,
 	}
 	var dummyRouter = &mux.Router{}
-	var dummyShutdownSignal = make(chan os.Signal, 1)
+	var dummyShutdownSignal = make(chan os.Signal)
 	var dummyStarted = false
 	var customizationGraceShutdownWaitTimeExpected int
 	var customizationGraceShutdownWaitTimeCalled int
@@ -710,13 +710,13 @@ func TestRunServer_HappyPath(t *testing.T) {
 
 func TestHaltServer(t *testing.T) {
 	// arrange
-	var shutdownSignal = make(chan os.Signal, 1)
+	var shutdownSignal = make(chan os.Signal)
 
 	// mock
 	createMock(t)
 
 	// SUT
-	haltServer(shutdownSignal)
+	go haltServer(shutdownSignal)
 
 	// act
 	var result, ok = <-shutdownSignal
