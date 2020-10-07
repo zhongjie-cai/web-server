@@ -18,9 +18,9 @@ func TestNewAppError(t *testing.T) {
 		errors.New("some inner error message 3"),
 	}
 	var dummyCleanedUpErrors = []*appError{
-		&appError{Message: "some inner error message 1"},
-		&appError{Message: "some inner error message 2"},
-		&appError{Message: "some inner error message 3"},
+		{Message: "some inner error message 1"},
+		{Message: "some inner error message 2"},
+		{Message: "some inner error message 3"},
 	}
 
 	// mock
@@ -172,9 +172,9 @@ func TestAppError_Error(t *testing.T) {
 	var dummyCode = errorCode("some error code")
 	var dummyMessage = "some error message"
 	var dummyInnerErrors = []*appError{
-		&appError{Message: "some inner error 1"},
-		&appError{Message: "some inner error 2"},
-		&appError{Message: "some inner error 3"},
+		{Message: "some inner error 1"},
+		{Message: "some inner error 2"},
+		{Message: "some inner error 3"},
 	}
 	var dummyAppError = &appError{
 		dummyCode,
@@ -276,9 +276,9 @@ func TestAppError_HTTPResponseMessage(t *testing.T) {
 	var dummyCode = errorCode("some error code")
 	var dummyMessage = "some error message"
 	var dummyInnerErrors = []*appError{
-		&appError{Message: "some inner error 1"},
-		&appError{Message: "some inner error 2"},
-		&appError{Message: "some inner error 3"},
+		{Message: "some inner error 1"},
+		{Message: "some inner error 2"},
+		{Message: "some inner error 3"},
 	}
 	var dummyAppError = &appError{
 		dummyCode,
@@ -582,9 +582,9 @@ func TestAppError_Contains_ErrorEqual(t *testing.T) {
 func TestAppError_Contains_InnerErrorEqual(t *testing.T) {
 	// arrange
 	var dummyInnerErrors = []*appError{
-		&appError{Message: "some inner error 1"},
-		&appError{Message: "some inner error 2"},
-		&appError{Message: "some inner error 3"},
+		{Message: "some inner error 1"},
+		{Message: "some inner error 2"},
+		{Message: "some inner error 3"},
 	}
 	var dummyappError = &appError{
 		Code:        errorCode("some error code"),
@@ -732,7 +732,7 @@ func TestAppErrorWrap_NoInnerError(t *testing.T) {
 		Code:    errorCodeGeneralFailure,
 		Message: dummyInnerErrorMessage,
 		InnerErrors: []*appError{
-			&appError{Message: dummyInnerMostErrorMessage},
+			{Message: dummyInnerMostErrorMessage},
 		},
 	}
 	var dummyInnerError3 = &appError{
@@ -793,7 +793,7 @@ func TestAppErrorWrap_HasInnerError(t *testing.T) {
 		Code:    errorCodeGeneralFailure,
 		Message: dummyInnerErrorMessage,
 		InnerErrors: []*appError{
-			&appError{Message: dummyInnerMostErrorMessage},
+			{Message: dummyInnerMostErrorMessage},
 		},
 	}
 	var dummyInnerError3 = &appError{
@@ -815,9 +815,9 @@ func TestAppErrorWrap_HasInnerError(t *testing.T) {
 		dummyNewInnerError3,
 	}
 	var dummyCleanedInnerErrors = []*appError{
-		&appError{Message: dummyNewInnerError1.Error()},
-		&appError{Message: dummyNewInnerError2.Error()},
-		&appError{Message: dummyNewInnerError3.Error()},
+		{Message: dummyNewInnerError1.Error()},
+		{Message: dummyNewInnerError2.Error()},
+		{Message: dummyNewInnerError3.Error()},
 	}
 
 	// mock
