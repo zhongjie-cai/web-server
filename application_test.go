@@ -6,7 +6,6 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
-	"sync"
 	"testing"
 	"time"
 
@@ -305,66 +304,6 @@ func TestApplication_Start(t *testing.T) {
 	verifyAll(t)
 }
 
-func TestApplication_StartAsync_NilWaitGroup(t *testing.T) {
-	// arrange
-	var dummyApplication = &application{
-		name: "some name",
-	}
-
-	// mock
-	createMock(t)
-
-	// expect
-	startApplicationFuncExpected = 1
-	startApplicationFunc = func(app *application) {
-		startApplicationFuncCalled++
-		assert.Equal(t, dummyApplication, app)
-	}
-
-	// SUT + act
-	var result = dummyApplication.StartAsync(nil)
-
-	// assert
-	assert.NotNil(t, result)
-
-	// wait
-	result.Wait()
-
-	// verify
-	verifyAll(t)
-}
-
-func TestApplication_StartAsync_GivenWaitGroup(t *testing.T) {
-	// arrange
-	var dummyApplication = &application{
-		name: "some name",
-	}
-	var dummyWaitGroup = &sync.WaitGroup{}
-
-	// mock
-	createMock(t)
-
-	// expect
-	startApplicationFuncExpected = 1
-	startApplicationFunc = func(app *application) {
-		startApplicationFuncCalled++
-		assert.Equal(t, dummyApplication, app)
-	}
-
-	// SUT + act
-	var result = dummyApplication.StartAsync(dummyWaitGroup)
-
-	// assert
-	assert.NotNil(t, result)
-	assert.Equal(t, dummyWaitGroup, result)
-
-	// wait
-	result.Wait()
-
-	// verify
-	verifyAll(t)
-}
-
 func TestApplication_Session(t *testing.T) {
 	// arrange
 	var dummySession = &session{
@@ -383,6 +322,26 @@ func TestApplication_Session(t *testing.T) {
 
 	// assert
 	assert.Equal(t, dummySession, session)
+
+	// verify
+	verifyAll(t)
+}
+
+func TestApplication_IsRunning(t *testing.T) {
+	// arrange
+	var dummyApplication = &application{
+		name:    "some name",
+		started: rand.Intn(100) > 50,
+	}
+
+	// mock
+	createMock(t)
+
+	// SUT + act
+	var result = dummyApplication.IsRunning()
+
+	// assert
+	assert.Equal(t, dummyApplication.started, result)
 
 	// verify
 	verifyAll(t)

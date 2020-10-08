@@ -1262,9 +1262,14 @@ func (application *dummyApplication) Start() {
 	assert.Fail(application.t, "Unexpected call to Start")
 }
 
-func (application *dummyApplication) StartAsync(*sync.WaitGroup) *sync.WaitGroup {
-	assert.Fail(application.t, "Unexpected call to StartAsync")
+func (application *dummyApplication) Session() Session {
+	assert.Fail(application.t, "Unexpected call to Session")
 	return nil
+}
+
+func (application *dummyApplication) IsRunning() bool {
+	assert.Fail(application.t, "Unexpected call to IsRunning")
+	return false
 }
 
 func (application *dummyApplication) Stop() {

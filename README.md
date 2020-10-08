@@ -36,8 +36,7 @@ func main() {
 		&myCustomization{},
 	)
 	defer application.Stop()
-	var waitGroup = application.StartAsync(nil)
-	waitGroup.Wait()
+	application.Start()
 }
 
 // myCustomization inherits from the default customization so you can skip setting up all customization methods
@@ -87,7 +86,7 @@ func getHealth(
 ) (interface{}, error) {
 	var appVersion = "some application version"
 	session.LogMethodLogic(
-		webserver.Warn,
+		webserver.LogLevelWarn,
 		"Health",
 		"Summary",
 		"AppVersion = %v",

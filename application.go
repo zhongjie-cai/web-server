@@ -9,10 +9,10 @@ import (
 type Application interface {
 	// Start starts the web server hosting in the current running thread, causing the thread to be blocked until a Stop is called or an interrupt signal is received
 	Start()
-	// StartAsync starts the web server hosting in a new Goroutine (thread); if a sync wait group is provided, the wait group would be used for async management, otherwise a new wait group would be created and returned
-	StartAsync(*sync.WaitGroup) *sync.WaitGroup
 	// Session retrieves the application-level session instance for logging or any other necessary operations
 	Session() Session
+	// IsRunning returns true if the server has been successfully started and is currently running
+	IsRunning() bool
 	// Stop interrupts the web server hosting, causing the web server to gracefully shutdown; a synchronous Start would then return, or an asynchronous StartSync would mark its wait group done and then return
 	Stop()
 }
@@ -105,24 +105,12 @@ func (app *application) Start() {
 	)
 }
 
-func (app *application) StartAsync(waitGroup *sync.WaitGroup) *sync.WaitGroup {
-	if waitGroup == nil {
-		waitGroup = &sync.WaitGroup{}
-	}
-	waitGroup.Add(1)
-	go func() {
-		if waitGroup != nil {
-			defer waitGroup.Done()
-		}
-		startApplicationFunc(
-			app,
-		)
-	}()
-	return waitGroup
-}
-
 func (app *application) Session() Session {
 	return app.session
+}
+
+func (app *application) IsRunning() bool {
+	return app.started
 }
 
 func (app *application) Stop() {
