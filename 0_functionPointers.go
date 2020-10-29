@@ -196,7 +196,7 @@ var (
 	timeNow = time.Now
 )
 
-// func pointers for injection / testing: webReqiest.go
+// func pointers for injection / testing: webRequest.go
 var (
 	clientDoFunc            = clientDo
 	timeSleep               = time.Sleep
