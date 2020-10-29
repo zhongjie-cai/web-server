@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/textproto"
+	"net/url"
 	"os"
 	"os/signal"
 	"reflect"
@@ -253,6 +254,10 @@ var (
 	timeSleepCalled                         int
 	getHTTPTransportFuncExpected            int
 	getHTTPTransportFuncCalled              int
+	urlQueryEscapeExpected                  int
+	urlQueryEscapeCalled                    int
+	generateRequestURLFuncExpected          int
+	generateRequestURLFuncCalled            int
 	stringsNewReaderExpected                int
 	stringsNewReaderCalled                  int
 	httpNewRequestExpected                  int
@@ -919,6 +924,18 @@ func createMock(t *testing.T) {
 		getHTTPTransportFuncCalled++
 		return nil
 	}
+	urlQueryEscapeExpected = 0
+	urlQueryEscapeCalled = 0
+	urlQueryEscape = func(s string) string {
+		urlQueryEscapeCalled++
+		return ""
+	}
+	generateRequestURLFuncExpected = 0
+	generateRequestURLFuncCalled = 0
+	generateRequestURLFunc = func(baseURL string, query map[string][]string) string {
+		generateRequestURLFuncCalled++
+		return ""
+	}
 	stringsNewReaderExpected = 0
 	stringsNewReaderCalled = 0
 	stringsNewReader = func(s string) *strings.Reader {
@@ -1216,6 +1233,10 @@ func verifyAll(t *testing.T) {
 	assert.Equal(t, timeSleepExpected, timeSleepCalled, "Unexpected number of calls to method timeSleep")
 	getHTTPTransportFunc = getHTTPTransport
 	assert.Equal(t, getHTTPTransportFuncExpected, getHTTPTransportFuncCalled, "Unexpected number of calls to method getHTTPTransportFunc")
+	urlQueryEscape = url.QueryEscape
+	assert.Equal(t, urlQueryEscapeExpected, urlQueryEscapeCalled, "Unexpected number of calls to method urlQueryEscape")
+	generateRequestURLFunc = generateRequestURL
+	assert.Equal(t, generateRequestURLFuncExpected, generateRequestURLFuncCalled, "Unexpected number of calls to method generateRequestURLFunc")
 	stringsNewReader = strings.NewReader
 	assert.Equal(t, stringsNewReaderExpected, stringsNewReaderCalled, "Unexpected number of calls to method stringsNewReader")
 	httpNewRequest = http.NewRequest
@@ -1512,7 +1533,7 @@ func (session *dummySession) LogMethodExit() {
 	assert.Fail(session.t, "Unexpected call to LogMethodExit")
 }
 
-func (session *dummySession) CreateWebcallRequest(method string, url string, payload string, header map[string]string, sendClientCert bool) WebRequest {
+func (session *dummySession) CreateWebcallRequest(method string, url string, payload string, sendClientCert bool) WebRequest {
 	assert.Fail(session.t, "Unexpected call to CreateWebcallRequest")
 	return nil
 }

@@ -104,6 +104,10 @@ func initializeHTTPClients(
 
 // WebRequest is an interface for easy operating on webcall requests and responses
 type WebRequest interface {
+	// AddQuery adds a query to the request URL for sending through HTTP
+	AddQuery(name string, value string)
+	// AddHeader adds a header to the request Header for sending through HTTP
+	AddHeader(name string, value string)
 	// EnableRetry sets up automatic retry upon error of specific HTTP status codes; each entry maps an HTTP status code to how many times retry should happen if code matches
 	EnableRetry(connectivityRetryCount int, httpStatusRetryCount map[int]int, retryDuration time.Duration)
 	// Process sends the webcall request over the wire, retrieves and serialize the response to dataTemplate, and provides status code, header and error if applicable
@@ -117,11 +121,38 @@ type webRequest struct {
 	method         string
 	url            string
 	payload        string
-	header         map[string]string
+	query          map[string][]string
+	header         map[string][]string
 	connRetry      int
 	httpRetry      map[int]int
 	sendClientCert bool
 	retryDelay     time.Duration
+}
+
+// AddQuery adds a query to the request URL for sending through HTTP
+func (webRequest *webRequest) AddQuery(name string, value string) {
+	if webRequest.query == nil {
+		webRequest.query = make(map[string][]string)
+	}
+	var queryValues = webRequest.query[name]
+	queryValues = append(
+		queryValues,
+		value,
+	)
+	webRequest.query[name] = queryValues
+}
+
+// AddHeader adds a header to the request Header for sending through HTTP
+func (webRequest *webRequest) AddHeader(name string, value string) {
+	if webRequest.header == nil {
+		webRequest.header = make(map[string][]string)
+	}
+	var headerValues = webRequest.header[name]
+	headerValues = append(
+		headerValues,
+		value,
+	)
+	webRequest.header[name] = headerValues
 }
 
 // EnableRetry sets up automatic retry upon error of specific HTTP status codes; each entry maps an HTTP status code to how many times retry should happen if code matches; 0 stands for error not mapped to an HTTP status code, e.g. webcall or connectivity issue
@@ -129,6 +160,45 @@ func (webRequest *webRequest) EnableRetry(connectivityRetryCount int, httpStatus
 	webRequest.connRetry = connectivityRetryCount
 	webRequest.httpRetry = httpStatusRetryCount
 	webRequest.retryDelay = retryDelay
+}
+
+func generateRequestURL(
+	baseURL string,
+	query map[string][]string,
+) string {
+	if len(query) == 0 {
+		return baseURL
+	}
+	var queryStrings []string
+	for name, values := range query {
+		if name == "" {
+			continue
+		}
+		for _, value := range values {
+			queryStrings = append(
+				queryStrings,
+				fmtSprintf(
+					"%v=%v",
+					name,
+					value,
+				),
+			)
+		}
+	}
+	if len(queryStrings) == 0 {
+		return baseURL
+	}
+	var joinedQuery = stringsJoin(
+		queryStrings,
+		"&",
+	)
+	return fmtSprintf(
+		"%v?%v",
+		baseURL,
+		urlQueryEscape(
+			joinedQuery,
+		),
+	)
 }
 
 func createHTTPRequest(webRequest *webRequest) (*http.Request, error) {
@@ -141,12 +211,16 @@ func createHTTPRequest(webRequest *webRequest) (*http.Request, error) {
 				[]error{},
 			)
 	}
+	var requestURL = generateRequestURLFunc(
+		webRequest.url,
+		webRequest.query,
+	)
 	var requestBody = stringsNewReader(
 		webRequest.payload,
 	)
 	var requestObject, requestError = httpNewRequest(
 		webRequest.method,
-		webRequest.url,
+		requestURL,
 		requestBody,
 	)
 	if requestError != nil {
@@ -155,8 +229,8 @@ func createHTTPRequest(webRequest *webRequest) (*http.Request, error) {
 	logWebcallStartFunc(
 		webRequest.session,
 		webRequest.method,
-		"",
 		webRequest.url,
+		requestURL,
 	)
 	logWebcallRequestFunc(
 		webRequest.session,
@@ -165,8 +239,10 @@ func createHTTPRequest(webRequest *webRequest) (*http.Request, error) {
 		webRequest.payload,
 	)
 	requestObject.Header = make(http.Header)
-	for name, value := range webRequest.header {
-		requestObject.Header.Add(name, value)
+	for name, values := range webRequest.header {
+		for _, value := range values {
+			requestObject.Header.Add(name, value)
+		}
 	}
 	logWebcallRequestFunc(
 		webRequest.session,

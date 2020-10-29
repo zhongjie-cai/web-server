@@ -2006,10 +2006,6 @@ func TestSessionCreateWebcallRequest(t *testing.T) {
 	var dummyMethod = "some method"
 	var dummyURL = "some URL"
 	var dummyPayload = "some payload"
-	var dummyHeader = map[string]string{
-		"foo":  "bar",
-		"test": "123",
-	}
 	var dummySendClientCert = rand.Intn(100) < 50
 
 	// mock
@@ -2025,7 +2021,6 @@ func TestSessionCreateWebcallRequest(t *testing.T) {
 		dummyMethod,
 		dummyURL,
 		dummyPayload,
-		dummyHeader,
 		dummySendClientCert,
 	)
 	var webrequest, ok = result.(*webRequest)
@@ -2036,7 +2031,10 @@ func TestSessionCreateWebcallRequest(t *testing.T) {
 	assert.Equal(t, dummyMethod, webrequest.method)
 	assert.Equal(t, dummyURL, webrequest.url)
 	assert.Equal(t, dummyPayload, webrequest.payload)
-	assert.Equal(t, dummyHeader, webrequest.header)
+	assert.NotNil(t, webrequest.header)
+	assert.Empty(t, webrequest.header)
+	assert.NotNil(t, webrequest.query)
+	assert.Empty(t, webrequest.query)
 	assert.Zero(t, webrequest.connRetry)
 	assert.Nil(t, webrequest.httpRetry)
 	assert.Equal(t, dummySendClientCert, webrequest.sendClientCert)

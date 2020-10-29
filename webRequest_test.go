@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"math/rand"
@@ -511,6 +512,88 @@ func TestInitializeHTTPClients(t *testing.T) {
 	verifyAll(t)
 }
 
+func TestWebREquestAddQuery_HappyPath(t *testing.T) {
+	// arrange
+	var dummyName = "some name"
+	var dummyValue1 = "some value 1"
+	var dummyValue2 = "some value 2"
+	var dummyValue3 = "some value 3"
+
+	// mock
+	createMock(t)
+
+	// SUT
+	var sut = &webRequest{}
+
+	// act
+	sut.AddQuery(
+		dummyName,
+		dummyValue1,
+	)
+	sut.AddQuery(
+		dummyName,
+		dummyValue2,
+	)
+	sut.AddQuery(
+		dummyName,
+		dummyValue3,
+	)
+
+	// assert
+	assert.NotNil(t, sut.query)
+	assert.Equal(t, 1, len(sut.query))
+	var values, found = sut.query[dummyName]
+	assert.True(t, found)
+	assert.Equal(t, 3, len(values))
+	assert.Equal(t, dummyValue1, values[0])
+	assert.Equal(t, dummyValue2, values[1])
+	assert.Equal(t, dummyValue3, values[2])
+
+	// verify
+	verifyAll(t)
+}
+
+func TestWebREquestAddHeader_HappyPath(t *testing.T) {
+	// arrange
+	var dummyName = "some name"
+	var dummyValue1 = "some value 1"
+	var dummyValue2 = "some value 2"
+	var dummyValue3 = "some value 3"
+
+	// mock
+	createMock(t)
+
+	// SUT
+	var sut = &webRequest{}
+
+	// act
+	sut.AddHeader(
+		dummyName,
+		dummyValue1,
+	)
+	sut.AddHeader(
+		dummyName,
+		dummyValue2,
+	)
+	sut.AddHeader(
+		dummyName,
+		dummyValue3,
+	)
+
+	// assert
+	assert.NotNil(t, sut.header)
+	assert.Equal(t, 1, len(sut.header))
+	var values, found = sut.header[dummyName]
+	assert.True(t, found)
+	assert.Equal(t, 3, len(values))
+	assert.Equal(t, dummyValue1, values[0])
+	assert.Equal(t, dummyValue2, values[1])
+	assert.Equal(t, dummyValue3, values[2])
+
+	// verify
+	verifyAll(t)
+}
+
 func TestWebRequestEnableRetry(t *testing.T) {
 	// arrange
 	var dummyConnRetry = rand.Int()
@@ -537,6 +620,164 @@ func TestWebRequestEnableRetry(t *testing.T) {
 	assert.Equal(t, dummyConnRetry, sut.connRetry)
 	assert.Equal(t, dummyHTTPRetry, sut.httpRetry)
 	assert.Equal(t, dummyRetryDelay, sut.retryDelay)
+
+	// verify
+	verifyAll(t)
+}
+
+func TestGenerateRequestURL_NilQuery(t *testing.T) {
+	// arrange
+	var dummyBaseURL = "some base URL"
+	var dummyQuery map[string][]string = nil
+
+	// mock
+	createMock(t)
+
+	// SUT + act
+	var result = generateRequestURL(
+		dummyBaseURL,
+		dummyQuery,
+	)
+
+	// assert
+	assert.Equal(t, dummyBaseURL, result)
+
+	// verify
+	verifyAll(t)
+}
+
+func TestGenerateRequestURL_EmptyQuery(t *testing.T) {
+	// arrange
+	var dummyBaseURL = "some base URL"
+	var dummyQuery = map[string][]string{}
+
+	// mock
+	createMock(t)
+
+	// SUT + act
+	var result = generateRequestURL(
+		dummyBaseURL,
+		dummyQuery,
+	)
+
+	// assert
+	assert.Equal(t, dummyBaseURL, result)
+
+	// verify
+	verifyAll(t)
+}
+
+func TestGenerateRequestURL_EmptyQueryName(t *testing.T) {
+	// arrange
+	var dummyBaseURL = "some base URL"
+	var dummyQuery = map[string][]string{
+		"": []string{"empty 1", "empty 2"},
+	}
+
+	// mock
+	createMock(t)
+
+	// SUT + act
+	var result = generateRequestURL(
+		dummyBaseURL,
+		dummyQuery,
+	)
+
+	// assert
+	assert.Equal(t, dummyBaseURL, result)
+
+	// verify
+	verifyAll(t)
+}
+
+func TestGenerateRequestURL_EmptyQueryValues(t *testing.T) {
+	// arrange
+	var dummyBaseURL = "some base URL"
+	var dummyQuery = map[string][]string{
+		"":          []string{"empty 1", "empty 2"},
+		"some name": []string{},
+	}
+
+	// mock
+	createMock(t)
+
+	// SUT + act
+	var result = generateRequestURL(
+		dummyBaseURL,
+		dummyQuery,
+	)
+
+	// assert
+	assert.Equal(t, dummyBaseURL, result)
+
+	// verify
+	verifyAll(t)
+}
+
+func TestGenerateRequestURL_HappyPath(t *testing.T) {
+	// arrange
+	var dummyBaseURL = "some base URL"
+	var dummyNames = []string{
+		"some name 1",
+		"some name 2",
+		"some name 3",
+	}
+	var dummyValues = [][]string{
+		[]string{"some value 1-1", "some value 1-2", "some value 1-3"},
+		[]string{"some value 2-1", "some value 2-2", "some value 2-3"},
+		[]string{"some value 3-1", "some value 3-2", "some value 3-3"},
+	}
+	var dummyQuery = map[string][]string{
+		"":          []string{"empty 1", "empty 2"},
+		"some name": []string{},
+	}
+	var dummyQueryStrings = []string{}
+	var dummyJoinedQuery = "some joined query"
+	var dummyEscapedQuery = "some escaped query"
+	var dummyResult = dummyBaseURL + "?" + dummyEscapedQuery
+
+	// stub
+	for i := 0; i < len(dummyNames); i++ {
+		dummyQuery[dummyNames[i]] = dummyValues[i]
+		for j := 0; j < len(dummyValues[i]); j++ {
+			dummyQueryStrings = append(
+				dummyQueryStrings,
+				dummyNames[i]+"="+dummyValues[i][j],
+			)
+		}
+	}
+
+	// mock
+	createMock(t)
+
+	// expect
+	fmtSprintfExpected = 10
+	fmtSprintf = func(format string, a ...interface{}) string {
+		fmtSprintfCalled++
+		return fmt.Sprintf(format, a...)
+	}
+	stringsJoinExpected = 1
+	stringsJoin = func(a []string, sep string) string {
+		stringsJoinCalled++
+		assert.ElementsMatch(t, dummyQueryStrings, a)
+		assert.Equal(t, "&", sep)
+		return dummyJoinedQuery
+	}
+	urlQueryEscapeExpected = 1
+	urlQueryEscape = func(s string) string {
+		urlQueryEscapeCalled++
+		assert.Equal(t, dummyJoinedQuery, s)
+		return dummyEscapedQuery
+	}
+
+	// SUT + act
+	var result = generateRequestURL(
+		dummyBaseURL,
+		dummyQuery,
+	)
+
+	// assert
+	assert.Equal(t, dummyResult, result)
 
 	// verify
 	verifyAll(t)
@@ -623,9 +864,13 @@ func TestCreateHTTPRequest_RequestError(t *testing.T) {
 	var dummyMethod = "some method"
 	var dummyURL = "some URL"
 	var dummyPayload = "some payload"
-	var dummyHeader = map[string]string{
-		"foo":  "bar",
-		"test": "123",
+	var dummyHeader = map[string][]string{
+		"foo":  {"bar"},
+		"test": {"123", "456"},
+	}
+	var dummyQuery = map[string][]string{
+		"me":   {"god"},
+		"what": {"xyz", "abc"},
 	}
 	var dummyConnRetry = rand.Int()
 	var dummyHTTPRetry = map[int]int{
@@ -639,12 +884,14 @@ func TestCreateHTTPRequest_RequestError(t *testing.T) {
 		dummyMethod,
 		dummyURL,
 		dummyPayload,
+		dummyQuery,
 		dummyHeader,
 		dummyConnRetry,
 		dummyHTTPRetry,
 		dummySendClientCert,
 		dummyRetryDelay,
 	}
+	var dummyRequestURL = "some request url"
 	var dummyRequest *http.Request
 	var dummyError = errors.New("some error message")
 
@@ -652,6 +899,13 @@ func TestCreateHTTPRequest_RequestError(t *testing.T) {
 	createMock(t)
 
 	// expect
+	generateRequestURLFuncExpected = 1
+	generateRequestURLFunc = func(baseURL string, query map[string][]string) string {
+		generateRequestURLFuncCalled++
+		assert.Equal(t, dummyURL, baseURL)
+		assert.Equal(t, dummyQuery, query)
+		return dummyRequestURL
+	}
 	stringsNewReaderExpected = 1
 	stringsNewReader = func(s string) *strings.Reader {
 		stringsNewReaderCalled++
@@ -661,7 +915,7 @@ func TestCreateHTTPRequest_RequestError(t *testing.T) {
 	httpNewRequest = func(method, url string, body io.Reader) (*http.Request, error) {
 		httpNewRequestCalled++
 		assert.Equal(t, dummyMethod, method)
-		assert.Equal(t, dummyURL, url)
+		assert.Equal(t, dummyRequestURL, url)
 		assert.NotNil(t, body)
 		return dummyRequest, dummyError
 	}
@@ -690,9 +944,13 @@ func TestCreateHTTPRequest_Success(t *testing.T) {
 	var dummyMethod = "some method"
 	var dummyURL = "some URL"
 	var dummyPayload = "some payload"
-	var dummyHeader = map[string]string{
-		"foo":  "bar",
-		"test": "123",
+	var dummyHeader = map[string][]string{
+		"foo":  {"bar"},
+		"test": {"123", "456"},
+	}
+	var dummyQuery = map[string][]string{
+		"me":   {"god"},
+		"what": {"xyz", "abc"},
 	}
 	var dummyConnRetry = rand.Int()
 	var dummyHTTPRetry = map[int]int{
@@ -706,12 +964,14 @@ func TestCreateHTTPRequest_Success(t *testing.T) {
 		dummyMethod,
 		dummyURL,
 		dummyPayload,
+		dummyQuery,
 		dummyHeader,
 		dummyConnRetry,
 		dummyHTTPRetry,
 		dummySendClientCert,
 		dummyRetryDelay,
 	}
+	var dummyRequestURL = "some request url"
 	var dummyRequest = &http.Request{
 		RequestURI: "abc",
 	}
@@ -726,6 +986,13 @@ func TestCreateHTTPRequest_Success(t *testing.T) {
 	createMock(t)
 
 	// expect
+	generateRequestURLFuncExpected = 1
+	generateRequestURLFunc = func(baseURL string, query map[string][]string) string {
+		generateRequestURLFuncCalled++
+		assert.Equal(t, dummyURL, baseURL)
+		assert.Equal(t, dummyQuery, query)
+		return dummyRequestURL
+	}
 	stringsNewReaderExpected = 1
 	stringsNewReader = func(s string) *strings.Reader {
 		stringsNewReaderCalled++
@@ -735,7 +1002,7 @@ func TestCreateHTTPRequest_Success(t *testing.T) {
 	httpNewRequest = func(method, url string, body io.Reader) (*http.Request, error) {
 		httpNewRequestCalled++
 		assert.Equal(t, dummyMethod, method)
-		assert.Equal(t, dummyURL, url)
+		assert.Equal(t, dummyRequestURL, url)
 		assert.NotNil(t, body)
 		return dummyRequest, nil
 	}
@@ -744,8 +1011,8 @@ func TestCreateHTTPRequest_Success(t *testing.T) {
 		logWebcallStartFuncCalled++
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyMethod, category)
-		assert.Equal(t, dummyURL, messageFormat)
-		assert.Zero(t, subcategory)
+		assert.Equal(t, dummyURL, subcategory)
+		assert.Equal(t, dummyRequestURL, messageFormat)
 		assert.Empty(t, parameters)
 	}
 	logWebcallRequestFuncExpected = 2

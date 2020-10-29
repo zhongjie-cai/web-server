@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/textproto"
+	"net/url"
 	"os/signal"
 	"reflect"
 	"regexp"
@@ -200,6 +201,8 @@ var (
 	clientDoFunc            = clientDo
 	timeSleep               = time.Sleep
 	getHTTPTransportFunc    = getHTTPTransport
+	urlQueryEscape          = url.QueryEscape
+	generateRequestURLFunc  = generateRequestURL
 	stringsNewReader        = strings.NewReader
 	httpNewRequest          = http.NewRequest
 	logWebcallStartFunc     = logWebcallStart
