@@ -1,6 +1,6 @@
 # web-server
 
-[![Build Status](https://travis-ci.org/zhongjie-cai/web-server.svg?branch=master)](https://travis-ci.org/zhongjie-cai/web-server)
+[![Build Status](https://travis-ci.com/zhongjie-cai/web-server.svg?branch=master)](https://travis-ci.com/zhongjie-cai/web-server)
 [![GoDoc](https://godoc.org/github.com/golang/gddo?status.svg)](http://godoc.org/github.com/zhongjie-cai/web-server)
 [![Go Report Card](https://goreportcard.com/badge/github.com/zhongjie-cai/web-server)](https://goreportcard.com/report/github.com/zhongjie-cai/web-server)
 [![Coverage](http://gocover.io/_badge/github.com/zhongjie-cai/web-server)](http://gocover.io/github.com/zhongjie-cai/web-server)
