@@ -278,6 +278,23 @@ func TestDefaultCustomization_InstrumentRouter(t *testing.T) {
 	verifyAll(t)
 }
 
+func TestDefaultCustomization_WrapHandler(t *testing.T) {
+	// arrange
+	var dummyRouter = &mux.Router{KeepContext: rand.Intn(100) > 50}
+
+	// mock
+	createMock(t)
+
+	// SUT + act
+	var result = customizationDefault.WrapHandler(dummyRouter)
+
+	// assert
+	assert.Equal(t, dummyRouter, result)
+
+	// verify
+	verifyAll(t)
+}
+
 func TestDefaultCustomization_PreAction(t *testing.T) {
 	// arrange
 	var dummySession Session

@@ -91,7 +91,9 @@ func createServer(
 	return &http.Server{
 		Addr:      address,
 		TLSConfig: tlsConfig,
-		Handler:   router,
+		Handler: session.customization.WrapHandler(
+			router,
+		),
 	}, https
 }
 

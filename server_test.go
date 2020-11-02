@@ -183,8 +183,9 @@ func TestHostServer_RunServerSuccess(t *testing.T) {
 
 type dummyCustomizationCreateServer struct {
 	dummyCustomization
-	serverCert func() *tls.Certificate
-	caCertPool func() *x509.CertPool
+	serverCert  func() *tls.Certificate
+	caCertPool  func() *x509.CertPool
+	wrapHandler func(http.Handler) http.Handler
 }
 
 func (customization *dummyCustomizationCreateServer) ServerCert() *tls.Certificate {
@@ -203,6 +204,14 @@ func (customization *dummyCustomizationCreateServer) CaCertPool() *x509.CertPool
 	return nil
 }
 
+func (customization *dummyCustomizationCreateServer) WrapHandler(handler http.Handler) http.Handler {
+	if customization.wrapHandler != nil {
+		return customization.wrapHandler(handler)
+	}
+	assert.Fail(customization.t, "Unexpected call to WrapHandler")
+	return nil
+}
+
 func TestCreateServer_NoServerCert(t *testing.T) {
 	// arrange
 	var dummyPort = rand.Intn(65536)
@@ -218,6 +227,8 @@ func TestCreateServer_NoServerCert(t *testing.T) {
 	var customizationServerCertCalled int
 	var customizationCaCertPoolExpected int
 	var customizationCaCertPoolCalled int
+	var customizationWrapHandlerExpected int
+	var customizationWrapHandlerCalled int
 	var dummyServerCert *tls.Certificate
 	var dummyAddress = "some address"
 
@@ -237,6 +248,12 @@ func TestCreateServer_NoServerCert(t *testing.T) {
 		assert.Equal(t, 1, len(a))
 		assert.Equal(t, dummyPort, a[0])
 		return dummyAddress
+	}
+	customizationWrapHandlerExpected = 1
+	dummyCustomizationCreateServer.wrapHandler = func(handler http.Handler) http.Handler {
+		customizationWrapHandlerCalled++
+		assert.Equal(t, dummyRouter, handler)
+		return dummyRouter
 	}
 
 	// SUT + act
@@ -265,6 +282,7 @@ func TestCreateServer_NoServerCert(t *testing.T) {
 	verifyAll(t)
 	assert.Equal(t, customizationServerCertExpected, customizationServerCertCalled, "Unexpected number of calls to customization.ServerCert")
 	assert.Equal(t, customizationCaCertPoolExpected, customizationCaCertPoolCalled, "Unexpected number of calls to customization.CaCertPool")
+	assert.Equal(t, customizationWrapHandlerExpected, customizationWrapHandlerCalled, "Unexpected number of calls to customization.WrapHandler")
 }
 
 func TestCreateServer_WithServerCert_NoCaCertPool(t *testing.T) {
@@ -282,6 +300,8 @@ func TestCreateServer_WithServerCert_NoCaCertPool(t *testing.T) {
 	var customizationServerCertCalled int
 	var customizationCaCertPoolExpected int
 	var customizationCaCertPoolCalled int
+	var customizationWrapHandlerExpected int
+	var customizationWrapHandlerCalled int
 	var dummyServerCert = &tls.Certificate{}
 	var dummyCaCertPool *x509.CertPool
 	var dummyAddress = "some address"
@@ -307,6 +327,12 @@ func TestCreateServer_WithServerCert_NoCaCertPool(t *testing.T) {
 		assert.Equal(t, 1, len(a))
 		assert.Equal(t, dummyPort, a[0])
 		return dummyAddress
+	}
+	customizationWrapHandlerExpected = 1
+	dummyCustomizationCreateServer.wrapHandler = func(handler http.Handler) http.Handler {
+		customizationWrapHandlerCalled++
+		assert.Equal(t, dummyRouter, handler)
+		return dummyRouter
 	}
 
 	// SUT + act
@@ -336,6 +362,7 @@ func TestCreateServer_WithServerCert_NoCaCertPool(t *testing.T) {
 	verifyAll(t)
 	assert.Equal(t, customizationServerCertExpected, customizationServerCertCalled, "Unexpected number of calls to customization.ServerCert")
 	assert.Equal(t, customizationCaCertPoolExpected, customizationCaCertPoolCalled, "Unexpected number of calls to customization.CaCertPool")
+	assert.Equal(t, customizationWrapHandlerExpected, customizationWrapHandlerCalled, "Unexpected number of calls to customization.WrapHandler")
 }
 
 func TestCreateServer_WithServerCert_WithCaCertPool(t *testing.T) {
@@ -353,6 +380,8 @@ func TestCreateServer_WithServerCert_WithCaCertPool(t *testing.T) {
 	var customizationServerCertCalled int
 	var customizationCaCertPoolExpected int
 	var customizationCaCertPoolCalled int
+	var customizationWrapHandlerExpected int
+	var customizationWrapHandlerCalled int
 	var dummyServerCert = &tls.Certificate{}
 	var dummyCaCertPool = &x509.CertPool{}
 	var dummyAddress = "some address"
@@ -378,6 +407,12 @@ func TestCreateServer_WithServerCert_WithCaCertPool(t *testing.T) {
 		assert.Equal(t, 1, len(a))
 		assert.Equal(t, dummyPort, a[0])
 		return dummyAddress
+	}
+	customizationWrapHandlerExpected = 1
+	dummyCustomizationCreateServer.wrapHandler = func(handler http.Handler) http.Handler {
+		customizationWrapHandlerCalled++
+		assert.Equal(t, dummyRouter, handler)
+		return dummyRouter
 	}
 
 	// SUT + act
@@ -407,6 +442,7 @@ func TestCreateServer_WithServerCert_WithCaCertPool(t *testing.T) {
 	verifyAll(t)
 	assert.Equal(t, customizationServerCertExpected, customizationServerCertCalled, "Unexpected number of calls to customization.ServerCert")
 	assert.Equal(t, customizationCaCertPoolExpected, customizationCaCertPoolCalled, "Unexpected number of calls to customization.CaCertPool")
+	assert.Equal(t, customizationWrapHandlerExpected, customizationWrapHandlerCalled, "Unexpected number of calls to customization.WrapHandler")
 }
 
 func TestListenAndServe_HTTPS(t *testing.T) {

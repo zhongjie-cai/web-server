@@ -63,6 +63,9 @@ type HostingCustomization interface {
 
 	// InstrumentRouter is to customize the instrumentation on top of a fully configured router; usually useful for 3rd party monitoring tools such as new relic, etc.
 	InstrumentRouter(router *mux.Router) *mux.Router
+
+	// WrapHandler is to customize the overall wrapping of http.Handler before the server is configured
+	WrapHandler(handler http.Handler) http.Handler
 }
 
 // HandlerCustomization holds customization methods related to handlers
@@ -179,6 +182,11 @@ func (customization *DefaultCustomization) Middlewares() []MiddlewareFunc {
 // InstrumentRouter is to customize the instrumentation on top of a fully configured router; usually useful for 3rd party monitoring tools such as new relic, etc.
 func (customization *DefaultCustomization) InstrumentRouter(router *mux.Router) *mux.Router {
 	return router
+}
+
+// WrapHandler is to customize the overall wrapping of http.Handler before the server is configured
+func (customization *DefaultCustomization) WrapHandler(handler http.Handler) http.Handler {
+	return handler
 }
 
 // PreAction is to customize the pre-action used before each route action takes place, e.g. authorization, etc.

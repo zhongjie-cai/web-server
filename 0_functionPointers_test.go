@@ -1389,6 +1389,11 @@ func (customization *dummyCustomization) InstrumentRouter(router *mux.Router) *m
 	return nil
 }
 
+func (customization *dummyCustomization) WrapHandler(handler http.Handler) http.Handler {
+	assert.Fail(customization.t, "Unexpected call to WrapHandler")
+	return nil
+}
+
 func (customization *dummyCustomization) PreAction(session Session) error {
 	assert.Fail(customization.t, "Unexpected call to PreAction")
 	return nil
