@@ -12,7 +12,6 @@ Original source: https://github.com/zhongjie-cai/web-server
 Library dependencies (must be present in vendor folder or in Go path):
 * [UUID](https://github.com/google/uuid): `go get -u github.com/google/uuid`
 * [MUX](https://github.com/gorilla/mux): `go get -u github.com/gorilla/mux`
-* [CORS](https://github.com/rs/cors): `go get -u github.com/rs/cors`
 * [Testify](https://github.com/stretchr/testify): `go get -u github.com/stretchr/testify` (For tests only)
 
 A sample application is shown below:
