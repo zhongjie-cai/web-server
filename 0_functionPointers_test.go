@@ -256,6 +256,8 @@ var (
 	getHTTPTransportFuncCalled              int
 	urlQueryEscapeExpected                  int
 	urlQueryEscapeCalled                    int
+	createQueryStringFuncExpected           int
+	createQueryStringFuncCalled             int
 	generateRequestURLFuncExpected          int
 	generateRequestURLFuncCalled            int
 	stringsNewReaderExpected                int
@@ -930,6 +932,12 @@ func createMock(t *testing.T) {
 		urlQueryEscapeCalled++
 		return ""
 	}
+	createQueryStringFuncExpected = 0
+	createQueryStringFuncCalled = 0
+	createQueryStringFunc = func(query map[string][]string) string {
+		createQueryStringFuncCalled++
+		return ""
+	}
 	generateRequestURLFuncExpected = 0
 	generateRequestURLFuncCalled = 0
 	generateRequestURLFunc = func(baseURL string, query map[string][]string) string {
@@ -1235,6 +1243,8 @@ func verifyAll(t *testing.T) {
 	assert.Equal(t, getHTTPTransportFuncExpected, getHTTPTransportFuncCalled, "Unexpected number of calls to method getHTTPTransportFunc")
 	urlQueryEscape = url.QueryEscape
 	assert.Equal(t, urlQueryEscapeExpected, urlQueryEscapeCalled, "Unexpected number of calls to method urlQueryEscape")
+	createQueryStringFunc = createQueryString
+	assert.Equal(t, createQueryStringFuncExpected, createQueryStringFuncCalled, "Unexpected number of calls to method createQueryStringFunc")
 	generateRequestURLFunc = generateRequestURL
 	assert.Equal(t, generateRequestURLFuncExpected, generateRequestURLFuncCalled, "Unexpected number of calls to method generateRequestURLFunc")
 	stringsNewReader = strings.NewReader

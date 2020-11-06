@@ -202,6 +202,7 @@ var (
 	timeSleep               = time.Sleep
 	getHTTPTransportFunc    = getHTTPTransport
 	urlQueryEscape          = url.QueryEscape
+	createQueryStringFunc   = createQueryString
 	generateRequestURLFunc  = generateRequestURL
 	stringsNewReader        = strings.NewReader
 	httpNewRequest          = http.NewRequest

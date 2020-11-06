@@ -162,13 +162,9 @@ func (webRequest *webRequest) EnableRetry(connectivityRetryCount int, httpStatus
 	webRequest.retryDelay = retryDelay
 }
 
-func generateRequestURL(
-	baseURL string,
+func createQueryString(
 	query map[string][]string,
 ) string {
-	if len(query) == 0 {
-		return baseURL
-	}
 	var queryStrings []string
 	for name, values := range query {
 		if name == "" {
@@ -179,25 +175,35 @@ func generateRequestURL(
 				queryStrings,
 				fmtSprintf(
 					"%v=%v",
-					name,
-					value,
+					urlQueryEscape(name),
+					urlQueryEscape(value),
 				),
 			)
 		}
 	}
-	if len(queryStrings) == 0 {
-		return baseURL
-	}
-	var joinedQuery = stringsJoin(
+	return stringsJoin(
 		queryStrings,
 		"&",
 	)
+}
+
+func generateRequestURL(
+	baseURL string,
+	query map[string][]string,
+) string {
+	if len(query) == 0 {
+		return baseURL
+	}
+	var queryString = createQueryStringFunc(
+		query,
+	)
+	if queryString == "" {
+		return baseURL
+	}
 	return fmtSprintf(
 		"%v?%v",
 		baseURL,
-		urlQueryEscape(
-			joinedQuery,
-		),
+		queryString,
 	)
 }
 

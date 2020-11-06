@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"testing"
@@ -625,6 +626,191 @@ func TestWebRequestEnableRetry(t *testing.T) {
 	verifyAll(t)
 }
 
+func TestCreateQueryString_NilQuery(t *testing.T) {
+	// arrange
+	var dummyQuery map[string][]string
+	var dummyResult = "some result"
+
+	// mock
+	createMock(t)
+
+	// expect
+	stringsJoinExpected = 1
+	stringsJoin = func(a []string, sep string) string {
+		stringsJoinCalled++
+		assert.Empty(t, a)
+		assert.Equal(t, "&", sep)
+		return dummyResult
+	}
+
+	// SUT + act
+	var result = createQueryString(
+		dummyQuery,
+	)
+
+	// assert
+	assert.Equal(t, dummyResult, result)
+
+	// verify
+	verifyAll(t)
+}
+
+func TestCreateQueryString_EmptyQuery(t *testing.T) {
+	// arrange
+	var dummyQuery = map[string][]string{}
+	var dummyResult = "some result"
+
+	// mock
+	createMock(t)
+
+	// expect
+	stringsJoinExpected = 1
+	stringsJoin = func(a []string, sep string) string {
+		stringsJoinCalled++
+		assert.Empty(t, a)
+		assert.Equal(t, "&", sep)
+		return dummyResult
+	}
+
+	// SUT + act
+	var result = createQueryString(
+		dummyQuery,
+	)
+
+	// assert
+	assert.Equal(t, dummyResult, result)
+
+	// verify
+	verifyAll(t)
+}
+
+func TestCreateQueryString_EmptyQueryName(t *testing.T) {
+	// arrange
+	var dummyQuery = map[string][]string{
+		"": []string{"empty 1", "empty 2"},
+	}
+	var dummyResult = "some result"
+
+	// mock
+	createMock(t)
+
+	// expect
+	stringsJoinExpected = 1
+	stringsJoin = func(a []string, sep string) string {
+		stringsJoinCalled++
+		assert.Empty(t, a)
+		assert.Equal(t, "&", sep)
+		return dummyResult
+	}
+
+	// SUT + act
+	var result = createQueryString(
+		dummyQuery,
+	)
+
+	// assert
+	assert.Equal(t, dummyResult, result)
+
+	// verify
+	verifyAll(t)
+}
+
+func TestCreateQueryString_EmptyQueryValues(t *testing.T) {
+	// arrange
+	var dummyQuery = map[string][]string{
+		"":          []string{"empty 1", "empty 2"},
+		"some name": []string{},
+	}
+	var dummyResult = "some result"
+
+	// mock
+	createMock(t)
+
+	// expect
+	stringsJoinExpected = 1
+	stringsJoin = func(a []string, sep string) string {
+		stringsJoinCalled++
+		assert.Empty(t, a)
+		assert.Equal(t, "&", sep)
+		return dummyResult
+	}
+
+	// SUT + act
+	var result = createQueryString(
+		dummyQuery,
+	)
+
+	// assert
+	assert.Equal(t, dummyResult, result)
+
+	// verify
+	verifyAll(t)
+}
+
+func TestCreateQueryString_HappyPath(t *testing.T) {
+	// arrange
+	var dummyNames = []string{
+		"some name 1",
+		"some name 2",
+		"some name 3",
+	}
+	var dummyValues = [][]string{
+		[]string{"some value 1-1", "some value 1-2", "some value 1-3"},
+		[]string{"some value 2-1", "some value 2-2", "some value 2-3"},
+		[]string{"some value 3-1", "some value 3-2", "some value 3-3"},
+	}
+	var dummyQuery = map[string][]string{
+		"":          []string{"empty 1", "empty 2"},
+		"some name": []string{},
+	}
+	var dummyQueryStrings = []string{}
+	var dummyResult = "some joined query"
+
+	// stub
+	for i := 0; i < len(dummyNames); i++ {
+		dummyQuery[dummyNames[i]] = dummyValues[i]
+		for j := 0; j < len(dummyValues[i]); j++ {
+			dummyQueryStrings = append(
+				dummyQueryStrings,
+				url.QueryEscape(dummyNames[i])+"="+url.QueryEscape(dummyValues[i][j]),
+			)
+		}
+	}
+
+	// mock
+	createMock(t)
+
+	// expect
+	urlQueryEscapeExpected = 18
+	urlQueryEscape = func(s string) string {
+		urlQueryEscapeCalled++
+		return url.QueryEscape(s)
+	}
+	fmtSprintfExpected = 9
+	fmtSprintf = func(format string, a ...interface{}) string {
+		fmtSprintfCalled++
+		return fmt.Sprintf(format, a...)
+	}
+	stringsJoinExpected = 1
+	stringsJoin = func(a []string, sep string) string {
+		stringsJoinCalled++
+		assert.ElementsMatch(t, dummyQueryStrings, a)
+		assert.Equal(t, "&", sep)
+		return dummyResult
+	}
+
+	// SUT + act
+	var result = createQueryString(
+		dummyQuery,
+	)
+
+	// assert
+	assert.Equal(t, dummyResult, result)
+
+	// verify
+	verifyAll(t)
+}
+
 func TestGenerateRequestURL_NilQuery(t *testing.T) {
 	// arrange
 	var dummyBaseURL = "some base URL"
@@ -649,125 +835,60 @@ func TestGenerateRequestURL_NilQuery(t *testing.T) {
 func TestGenerateRequestURL_EmptyQuery(t *testing.T) {
 	// arrange
 	var dummyBaseURL = "some base URL"
-	var dummyQuery = map[string][]string{}
-
-	// mock
-	createMock(t)
-
-	// SUT + act
-	var result = generateRequestURL(
-		dummyBaseURL,
-		dummyQuery,
-	)
-
-	// assert
-	assert.Equal(t, dummyBaseURL, result)
-
-	// verify
-	verifyAll(t)
-}
-
-func TestGenerateRequestURL_EmptyQueryName(t *testing.T) {
-	// arrange
-	var dummyBaseURL = "some base URL"
 	var dummyQuery = map[string][]string{
-		"": []string{"empty 1", "empty 2"},
+		"foo":  []string{"bar 1", "bar 2"},
+		"test": []string{"123", "456", "789"},
 	}
-
-	// mock
-	createMock(t)
-
-	// SUT + act
-	var result = generateRequestURL(
-		dummyBaseURL,
-		dummyQuery,
-	)
-
-	// assert
-	assert.Equal(t, dummyBaseURL, result)
-
-	// verify
-	verifyAll(t)
-}
-
-func TestGenerateRequestURL_EmptyQueryValues(t *testing.T) {
-	// arrange
-	var dummyBaseURL = "some base URL"
-	var dummyQuery = map[string][]string{
-		"":          []string{"empty 1", "empty 2"},
-		"some name": []string{},
-	}
-
-	// mock
-	createMock(t)
-
-	// SUT + act
-	var result = generateRequestURL(
-		dummyBaseURL,
-		dummyQuery,
-	)
-
-	// assert
-	assert.Equal(t, dummyBaseURL, result)
-
-	// verify
-	verifyAll(t)
-}
-
-func TestGenerateRequestURL_HappyPath(t *testing.T) {
-	// arrange
-	var dummyBaseURL = "some base URL"
-	var dummyNames = []string{
-		"some name 1",
-		"some name 2",
-		"some name 3",
-	}
-	var dummyValues = [][]string{
-		[]string{"some value 1-1", "some value 1-2", "some value 1-3"},
-		[]string{"some value 2-1", "some value 2-2", "some value 2-3"},
-		[]string{"some value 3-1", "some value 3-2", "some value 3-3"},
-	}
-	var dummyQuery = map[string][]string{
-		"":          []string{"empty 1", "empty 2"},
-		"some name": []string{},
-	}
-	var dummyQueryStrings = []string{}
-	var dummyJoinedQuery = "some joined query"
-	var dummyEscapedQuery = "some escaped query"
-	var dummyResult = dummyBaseURL + "?" + dummyEscapedQuery
-
-	// stub
-	for i := 0; i < len(dummyNames); i++ {
-		dummyQuery[dummyNames[i]] = dummyValues[i]
-		for j := 0; j < len(dummyValues[i]); j++ {
-			dummyQueryStrings = append(
-				dummyQueryStrings,
-				dummyNames[i]+"="+dummyValues[i][j],
-			)
-		}
-	}
+	var dummyQueryString string
 
 	// mock
 	createMock(t)
 
 	// expect
-	fmtSprintfExpected = 10
+	createQueryStringFuncExpected = 1
+	createQueryStringFunc = func(query map[string][]string) string {
+		createQueryStringFuncCalled++
+		assert.Equal(t, dummyQuery, query)
+		return dummyQueryString
+	}
+
+	// SUT + act
+	var result = generateRequestURL(
+		dummyBaseURL,
+		dummyQuery,
+	)
+
+	// assert
+	assert.Equal(t, dummyBaseURL, result)
+
+	// verify
+	verifyAll(t)
+}
+
+func TestGenerateRequestURL_Success(t *testing.T) {
+	// arrange
+	var dummyBaseURL = "some base URL"
+	var dummyQuery = map[string][]string{
+		"foo":  []string{"bar 1", "bar 2"},
+		"test": []string{"123", "456", "789"},
+	}
+	var dummyQueryString = "some query string"
+	var dummyResult = dummyBaseURL + "?" + dummyQueryString
+
+	// mock
+	createMock(t)
+
+	// expect
+	createQueryStringFuncExpected = 1
+	createQueryStringFunc = func(query map[string][]string) string {
+		createQueryStringFuncCalled++
+		assert.Equal(t, dummyQuery, query)
+		return dummyQueryString
+	}
+	fmtSprintfExpected = 1
 	fmtSprintf = func(format string, a ...interface{}) string {
 		fmtSprintfCalled++
 		return fmt.Sprintf(format, a...)
-	}
-	stringsJoinExpected = 1
-	stringsJoin = func(a []string, sep string) string {
-		stringsJoinCalled++
-		assert.ElementsMatch(t, dummyQueryStrings, a)
-		assert.Equal(t, "&", sep)
-		return dummyJoinedQuery
-	}
-	urlQueryEscapeExpected = 1
-	urlQueryEscape = func(s string) string {
-		urlQueryEscapeCalled++
-		assert.Equal(t, dummyJoinedQuery, s)
-		return dummyEscapedQuery
 	}
 
 	// SUT + act
