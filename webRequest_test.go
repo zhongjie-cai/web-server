@@ -1538,6 +1538,38 @@ func TestWebRequestProcessRaw_HappyPath(t *testing.T) {
 	verifyAll(t)
 }
 
+func TestParseResponse_NilPointer(t *testing.T) {
+	// arrange
+	var dummySession = &session{id: uuid.New()}
+	var dummyBody = ioutil.NopCloser(bytes.NewBufferString("some body"))
+	var dummyDataTemplate string
+
+	// mock
+	createMock(t)
+
+	// expect
+	isInterfaceValueNilFuncExpected = 1
+	isInterfaceValueNilFunc = func(i interface{}) bool {
+		isInterfaceValueNilFuncCalled++
+		assert.Equal(t, &dummyDataTemplate, i)
+		return true
+	}
+
+	// SUT + act
+	var err = parseResponse(
+		dummySession,
+		dummyBody,
+		&dummyDataTemplate,
+	)
+
+	// assert
+	assert.Zero(t, dummyDataTemplate)
+	assert.NoError(t, err)
+
+	// verify
+	verifyAll(t)
+}
+
 func TestParseResponse_ReadError(t *testing.T) {
 	// arrange
 	var dummySession = &session{id: uuid.New()}
@@ -1550,6 +1582,12 @@ func TestParseResponse_ReadError(t *testing.T) {
 	createMock(t)
 
 	// expect
+	isInterfaceValueNilFuncExpected = 1
+	isInterfaceValueNilFunc = func(i interface{}) bool {
+		isInterfaceValueNilFuncCalled++
+		assert.Equal(t, &dummyDataTemplate, i)
+		return false
+	}
 	ioutilReadAllExpected = 1
 	ioutilReadAll = func(r io.Reader) ([]byte, error) {
 		ioutilReadAllCalled++
@@ -1585,6 +1623,12 @@ func TestParseResponse_JSONError(t *testing.T) {
 	createMock(t)
 
 	// expect
+	isInterfaceValueNilFuncExpected = 1
+	isInterfaceValueNilFunc = func(i interface{}) bool {
+		isInterfaceValueNilFuncCalled++
+		assert.Equal(t, &dummyDataTemplate, i)
+		return false
+	}
 	ioutilReadAllExpected = 1
 	ioutilReadAll = func(r io.Reader) ([]byte, error) {
 		ioutilReadAllCalled++
@@ -1644,6 +1688,12 @@ func TestParseResponse_HappyPath(t *testing.T) {
 	createMock(t)
 
 	// expect
+	isInterfaceValueNilFuncExpected = 1
+	isInterfaceValueNilFunc = func(i interface{}) bool {
+		isInterfaceValueNilFuncCalled++
+		assert.Equal(t, &dummyDataTemplate, i)
+		return false
+	}
 	ioutilReadAllExpected = 1
 	ioutilReadAll = func(r io.Reader) ([]byte, error) {
 		ioutilReadAllCalled++

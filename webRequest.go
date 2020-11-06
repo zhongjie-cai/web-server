@@ -372,6 +372,9 @@ func (webRequest *webRequest) ProcessRaw() (responseObject *http.Response, respo
 }
 
 func parseResponse(session *session, body io.ReadCloser, dataTemplate interface{}) error {
+	if isInterfaceValueNilFunc(dataTemplate) {
+		return nil
+	}
 	var bodyBytes, bodyError = ioutilReadAll(
 		body,
 	)
