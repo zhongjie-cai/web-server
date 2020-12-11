@@ -9,7 +9,6 @@ type LogType int
 
 // These are the enum definitions of log types and presets
 const (
-	LogTypeAppRoot       LogType = 0
 	LogTypeEndpointEnter LogType = 1 << iota
 	LogTypeEndpointRequest
 	LogTypeMethodEnter
@@ -38,11 +37,12 @@ const (
 	LogTypeGeneralLogging LogType = LogTypeBasicLogging | LogTypeGeneralTracing | LogTypeGeneralDebugging
 	LogTypeVerboseLogging LogType = LogTypeGeneralLogging | LogTypeVerboseTracing | LogTypeVerboseDebugging
 	LogTypeFullLogging    LogType = LogTypeVerboseLogging | LogTypeFullTracing | LogTypeFullDebugging
+
+	LogTypeAppRoot LogType = 0
 )
 
 // These are the string representations of log category and preset names
 const (
-	appRootLogTypeName         string = "AppRoot"
 	apiEnterLogTypeName        string = "EndpointEnter"
 	apiRequestLogTypeName      string = "EndpointRequest"
 	methodEnterLogTypeName     string = "MethodEnter"
@@ -71,6 +71,8 @@ const (
 	generalLoggingLogTypeName string = "GeneralLogging"
 	verboseLoggingLogTypeName string = "VerboseLogging"
 	fullLoggingLogTypeName    string = "FullLogging"
+
+	appRootLogTypeName string = "AppRoot"
 )
 
 var supportedLogTypes = map[LogType]string{
@@ -90,7 +92,6 @@ var supportedLogTypes = map[LogType]string{
 }
 
 var logTypeNameMapping = map[string]LogType{
-	appRootLogTypeName:          LogTypeAppRoot,
 	apiEnterLogTypeName:         LogTypeEndpointEnter,
 	apiRequestLogTypeName:       LogTypeEndpointRequest,
 	methodEnterLogTypeName:      LogTypeMethodEnter,
@@ -116,6 +117,7 @@ var logTypeNameMapping = map[string]LogType{
 	generalLoggingLogTypeName:   LogTypeGeneralLogging,
 	verboseLoggingLogTypeName:   LogTypeVerboseLogging,
 	fullLoggingLogTypeName:      LogTypeFullLogging,
+	appRootLogTypeName:          LogTypeAppRoot,
 }
 
 // FromString converts a LogType flag instance to its string representation

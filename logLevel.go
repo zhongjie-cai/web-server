@@ -5,8 +5,8 @@ type LogLevel int
 
 // These are the enum definitions of log types and presets
 const (
-	LogLevelDebug LogLevel = 0
-	LogLevelInfo  LogLevel = iota
+	LogLevelDebug LogLevel = iota
+	LogLevelInfo
 	LogLevelWarn
 	LogLevelError
 	LogLevelFatal
