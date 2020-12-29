@@ -705,7 +705,7 @@ func createMock(t *testing.T) {
 	}
 	skipResponseHandlingFuncExpected = 0
 	skipResponseHandlingFuncCalled = 0
-	skipResponseHandlingFunc = func(responseObject interface{}, responseError error) bool {
+	shouldSkipHandlingFunc = func(responseObject interface{}, responseError error) bool {
 		skipResponseHandlingFuncCalled++
 		return false
 	}
@@ -1171,8 +1171,8 @@ func verifyAll(t *testing.T) {
 	assert.Equal(t, ioutilNopCloserExpected, ioutilNopCloserCalled, "Unexpected number of calls to ioutilNopCloser")
 	bytesNewBuffer = bytes.NewBuffer
 	assert.Equal(t, bytesNewBufferExpected, bytesNewBufferCalled, "Unexpected number of calls to bytesNewBuffer")
-	skipResponseHandlingFunc = skipResponseHandling
-	assert.Equal(t, skipResponseHandlingFuncExpected, skipResponseHandlingFuncCalled, "Unexpected number of calls to skipResponseHandlingFunc")
+	shouldSkipHandlingFunc = shouldSkipHandling
+	assert.Equal(t, skipResponseHandlingFuncExpected, skipResponseHandlingFuncCalled, "Unexpected number of calls to shouldSkipHandlingFunc")
 	constructResponseFunc = constructResponse
 	assert.Equal(t, constructResponseFuncExpected, constructResponseFuncCalled, "Unexpected number of calls to method constructResponseFunc")
 	logEndpointResponseFunc = logEndpointResponse

@@ -11,18 +11,31 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSkipResponseHandling_HasError(t *testing.T) {
+func TestSkipResponseHandling(t *testing.T) {
+	// mock
+	createMock(t)
+
+	// SUT + act
+	var result, err = SkipResponseHandling()
+
+	// assert
+	assert.IsType(t, skipResponseHandlingDummy{}, result)
+	assert.NoError(t, err)
+
+	// verify
+	verifyAll(t)
+}
+
+func TestShouldSkipHandling_HasError(t *testing.T) {
 	// arrange
-	var dummyResponseObject SkipResponseHandling
+	var dummyResponseObject skipResponseHandlingDummy
 	var dummyResponseError = errors.New("some error")
 
 	// mock
 	createMock(t)
 
-	// expect
-
 	// SUT + act
-	var result = skipResponseHandling(
+	var result = shouldSkipHandling(
 		dummyResponseObject,
 		dummyResponseError,
 	)
@@ -34,9 +47,9 @@ func TestSkipResponseHandling_HasError(t *testing.T) {
 	verifyAll(t)
 }
 
-func TestSkipResponseHandling_ShouldSkip(t *testing.T) {
+func TestShouldSkipHandling_Yes(t *testing.T) {
 	// arrange
-	var dummyResponseObject SkipResponseHandling
+	var dummyResponseObject skipResponseHandlingDummy
 	var dummyResponseError error
 
 	// mock
@@ -51,7 +64,7 @@ func TestSkipResponseHandling_ShouldSkip(t *testing.T) {
 	}
 
 	// SUT + act
-	var result = skipResponseHandling(
+	var result = shouldSkipHandling(
 		dummyResponseObject,
 		dummyResponseError,
 	)
@@ -63,7 +76,7 @@ func TestSkipResponseHandling_ShouldSkip(t *testing.T) {
 	verifyAll(t)
 }
 
-func TestSkipResponseHandling_ShouldNotSkip(t *testing.T) {
+func TestShouldSkipHandling_No(t *testing.T) {
 	// arrange
 	var dummyResponseObject = rand.Int()
 	var dummyResponseError error
@@ -80,7 +93,7 @@ func TestSkipResponseHandling_ShouldNotSkip(t *testing.T) {
 	}
 
 	// SUT + act
-	var result = skipResponseHandling(
+	var result = shouldSkipHandling(
 		dummyResponseObject,
 		dummyResponseError,
 	)
@@ -250,7 +263,7 @@ func TestWriteResponse_SkipHandling(t *testing.T) {
 
 	// expect
 	skipResponseHandlingFuncExpected = 1
-	skipResponseHandlingFunc = func(responseObject interface{}, responseError error) bool {
+	shouldSkipHandlingFunc = func(responseObject interface{}, responseError error) bool {
 		skipResponseHandlingFuncCalled++
 		assert.Equal(t, dummyResponseObject, responseObject)
 		assert.Equal(t, dummyResponseError, responseError)
@@ -304,7 +317,7 @@ func TestWriteResponse_HappyPath(t *testing.T) {
 
 	// expect
 	skipResponseHandlingFuncExpected = 1
-	skipResponseHandlingFunc = func(responseObject interface{}, responseError error) bool {
+	shouldSkipHandlingFunc = func(responseObject interface{}, responseError error) bool {
 		skipResponseHandlingFuncCalled++
 		assert.Equal(t, dummyResponseObject, responseObject)
 		assert.Equal(t, dummyResponseError, responseError)

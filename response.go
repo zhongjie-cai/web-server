@@ -7,12 +7,16 @@ const (
 	ContentTypeJSON = "application/json; charset=utf-8"
 )
 
-// SkipResponseHandling indicates that the response can be skipped for any handling due to manual handling from
-type SkipResponseHandling struct{}
+type skipResponseHandlingDummy struct{}
 
-var typeOfSkipResponseHandling = reflect.TypeOf(SkipResponseHandling{})
+var typeOfSkipResponseHandling = reflect.TypeOf(skipResponseHandlingDummy{})
 
-func skipResponseHandling(
+// SkipResponseHandling indicates to the library to skip operating on the HTTP response writer
+func SkipResponseHandling() (interface{}, error) {
+	return skipResponseHandlingDummy{}, nil
+}
+
+func shouldSkipHandling(
 	responseObject interface{},
 	responseError error,
 ) bool {
@@ -44,7 +48,7 @@ func writeResponse(
 	responseObject interface{},
 	responseError error,
 ) {
-	if skipResponseHandlingFunc(
+	if shouldSkipHandlingFunc(
 		responseObject,
 		responseError,
 	) {

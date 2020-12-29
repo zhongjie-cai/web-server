@@ -164,6 +164,12 @@ However, if specific operation is needed for response, one could always retrieve
 var responseWriter = session.GetResponseWriter()
 ```
 
+After your customized operations on the response writer, use the following as return type in the handler function to enforce the library to skip any unnecessary handling of the HTTP response writer:
+
+```golang
+return webserver.SkipResponseHandling()
+```
+
 # Error Handling
 
 To simplify the error handling, one could utilize the built-in error interface `AppError`, which provides support to many basic types of errors that are mapped to corresponding HTTP status codes:
