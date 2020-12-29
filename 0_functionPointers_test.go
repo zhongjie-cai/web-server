@@ -176,6 +176,8 @@ var (
 	ioutilNopCloserCalled                   int
 	bytesNewBufferExpected                  int
 	bytesNewBufferCalled                    int
+	skipResponseHandlingFuncExpected        int
+	skipResponseHandlingFuncCalled          int
 	constructResponseFuncExpected           int
 	constructResponseFuncCalled             int
 	logEndpointResponseFuncExpected         int
@@ -701,6 +703,12 @@ func createMock(t *testing.T) {
 		bytesNewBufferCalled++
 		return nil
 	}
+	skipResponseHandlingFuncExpected = 0
+	skipResponseHandlingFuncCalled = 0
+	skipResponseHandlingFunc = func(responseObject interface{}, responseError error) bool {
+		skipResponseHandlingFuncCalled++
+		return false
+	}
 	constructResponseFuncExpected = 0
 	constructResponseFuncCalled = 0
 	constructResponseFunc = func(session *session, responseObject interface{}, responseError error) (int, string) {
@@ -1163,6 +1171,8 @@ func verifyAll(t *testing.T) {
 	assert.Equal(t, ioutilNopCloserExpected, ioutilNopCloserCalled, "Unexpected number of calls to ioutilNopCloser")
 	bytesNewBuffer = bytes.NewBuffer
 	assert.Equal(t, bytesNewBufferExpected, bytesNewBufferCalled, "Unexpected number of calls to bytesNewBuffer")
+	skipResponseHandlingFunc = skipResponseHandling
+	assert.Equal(t, skipResponseHandlingFuncExpected, skipResponseHandlingFuncCalled, "Unexpected number of calls to skipResponseHandlingFunc")
 	constructResponseFunc = constructResponse
 	assert.Equal(t, constructResponseFuncExpected, constructResponseFuncCalled, "Unexpected number of calls to method constructResponseFunc")
 	logEndpointResponseFunc = logEndpointResponse

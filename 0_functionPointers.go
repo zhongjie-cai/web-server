@@ -142,10 +142,11 @@ var (
 
 // func pointers for injection / testing: response.go
 var (
-	constructResponseFunc   = constructResponse
-	logEndpointResponseFunc = logEndpointResponse
-	httpStatusText          = http.StatusText
-	strconvItoa             = strconv.Itoa
+	skipResponseHandlingFunc = skipResponseHandling
+	constructResponseFunc    = constructResponse
+	logEndpointResponseFunc  = logEndpointResponse
+	httpStatusText           = http.StatusText
+	strconvItoa              = strconv.Itoa
 )
 
 // func pointers for injection / testing: route.go

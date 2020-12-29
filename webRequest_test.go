@@ -687,7 +687,7 @@ func TestCreateQueryString_EmptyQuery(t *testing.T) {
 func TestCreateQueryString_EmptyQueryName(t *testing.T) {
 	// arrange
 	var dummyQuery = map[string][]string{
-		"": []string{"empty 1", "empty 2"},
+		"": {"empty 1", "empty 2"},
 	}
 	var dummyResult = "some result"
 
@@ -718,8 +718,8 @@ func TestCreateQueryString_EmptyQueryName(t *testing.T) {
 func TestCreateQueryString_EmptyQueryValues(t *testing.T) {
 	// arrange
 	var dummyQuery = map[string][]string{
-		"":          []string{"empty 1", "empty 2"},
-		"some name": []string{},
+		"":          {"empty 1", "empty 2"},
+		"some name": {},
 	}
 	var dummyResult = "some result"
 
@@ -755,13 +755,13 @@ func TestCreateQueryString_HappyPath(t *testing.T) {
 		"some name 3",
 	}
 	var dummyValues = [][]string{
-		[]string{"some value 1-1", "some value 1-2", "some value 1-3"},
-		[]string{"some value 2-1", "some value 2-2", "some value 2-3"},
-		[]string{"some value 3-1", "some value 3-2", "some value 3-3"},
+		{"some value 1-1", "some value 1-2", "some value 1-3"},
+		{"some value 2-1", "some value 2-2", "some value 2-3"},
+		{"some value 3-1", "some value 3-2", "some value 3-3"},
 	}
 	var dummyQuery = map[string][]string{
-		"":          []string{"empty 1", "empty 2"},
-		"some name": []string{},
+		"":          {"empty 1", "empty 2"},
+		"some name": {},
 	}
 	var dummyQueryStrings = []string{}
 	var dummyResult = "some joined query"
@@ -836,8 +836,8 @@ func TestGenerateRequestURL_EmptyQuery(t *testing.T) {
 	// arrange
 	var dummyBaseURL = "some base URL"
 	var dummyQuery = map[string][]string{
-		"foo":  []string{"bar 1", "bar 2"},
-		"test": []string{"123", "456", "789"},
+		"foo":  {"bar 1", "bar 2"},
+		"test": {"123", "456", "789"},
 	}
 	var dummyQueryString string
 
@@ -869,8 +869,8 @@ func TestGenerateRequestURL_Success(t *testing.T) {
 	// arrange
 	var dummyBaseURL = "some base URL"
 	var dummyQuery = map[string][]string{
-		"foo":  []string{"bar 1", "bar 2"},
-		"test": []string{"123", "456", "789"},
+		"foo":  {"bar 1", "bar 2"},
+		"test": {"123", "456", "789"},
 	}
 	var dummyQueryString = "some query string"
 	var dummyResult = dummyBaseURL + "?" + dummyQueryString

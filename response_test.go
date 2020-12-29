@@ -4,11 +4,93 @@ import (
 	"errors"
 	"math/rand"
 	"net/http"
+	"reflect"
 	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestSkipResponseHandling_HasError(t *testing.T) {
+	// arrange
+	var dummyResponseObject SkipResponseHandling
+	var dummyResponseError = errors.New("some error")
+
+	// mock
+	createMock(t)
+
+	// expect
+
+	// SUT + act
+	var result = skipResponseHandling(
+		dummyResponseObject,
+		dummyResponseError,
+	)
+
+	// assert
+	assert.False(t, result)
+
+	// verify
+	verifyAll(t)
+}
+
+func TestSkipResponseHandling_ShouldSkip(t *testing.T) {
+	// arrange
+	var dummyResponseObject SkipResponseHandling
+	var dummyResponseError error
+
+	// mock
+	createMock(t)
+
+	// expect
+	reflectTypeOfExpected = 1
+	reflectTypeOf = func(i interface{}) reflect.Type {
+		reflectTypeOfCalled++
+		assert.Equal(t, dummyResponseObject, i)
+		return reflect.TypeOf(i)
+	}
+
+	// SUT + act
+	var result = skipResponseHandling(
+		dummyResponseObject,
+		dummyResponseError,
+	)
+
+	// assert
+	assert.True(t, result)
+
+	// verify
+	verifyAll(t)
+}
+
+func TestSkipResponseHandling_ShouldNotSkip(t *testing.T) {
+	// arrange
+	var dummyResponseObject = rand.Int()
+	var dummyResponseError error
+
+	// mock
+	createMock(t)
+
+	// expect
+	reflectTypeOfExpected = 1
+	reflectTypeOf = func(i interface{}) reflect.Type {
+		reflectTypeOfCalled++
+		assert.Equal(t, dummyResponseObject, i)
+		return reflect.TypeOf(i)
+	}
+
+	// SUT + act
+	var result = skipResponseHandling(
+		dummyResponseObject,
+		dummyResponseError,
+	)
+
+	// assert
+	assert.False(t, result)
+
+	// verify
+	verifyAll(t)
+}
 
 type dummyCustomizationConstructResponse struct {
 	dummyCustomization
@@ -152,7 +234,50 @@ func (drw *dummyResponseWriterWriteResponse) WriteHeader(statusCode int) {
 	assert.Fail(drw.t, "Unexpected number of calls to WriteHeader")
 }
 
-func TestWriteResponse(t *testing.T) {
+func TestWriteResponse_SkipHandling(t *testing.T) {
+	// arrange
+	var dummyResponseWriterWriteResponse = &dummyResponseWriterWriteResponse{
+		dummyResponseWriter: dummyResponseWriter{t: t},
+	}
+	var dummySession = &session{
+		responseWriter: dummyResponseWriterWriteResponse,
+	}
+	var dummyResponseObject = rand.Int()
+	var dummyResponseError = errors.New("some response error")
+
+	// mock
+	createMock(t)
+
+	// expect
+	skipResponseHandlingFuncExpected = 1
+	skipResponseHandlingFunc = func(responseObject interface{}, responseError error) bool {
+		skipResponseHandlingFuncCalled++
+		assert.Equal(t, dummyResponseObject, responseObject)
+		assert.Equal(t, dummyResponseError, responseError)
+		return true
+	}
+	logEndpointResponseFuncExpected = 1
+	logEndpointResponseFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+		logEndpointResponseFuncCalled++
+		assert.Equal(t, dummySession, session)
+		assert.Equal(t, "None", category)
+		assert.Equal(t, "-1", subcategory)
+		assert.Equal(t, "Skipped response handling", messageFormat)
+		assert.Empty(t, parameters)
+	}
+
+	// SUT + act
+	writeResponse(
+		dummySession,
+		dummyResponseObject,
+		dummyResponseError,
+	)
+
+	// verify
+	verifyAll(t)
+}
+
+func TestWriteResponse_HappyPath(t *testing.T) {
 	// arrange
 	var dummyResponseWriterWriteResponse = &dummyResponseWriterWriteResponse{
 		dummyResponseWriter: dummyResponseWriter{t: t},
@@ -178,6 +303,13 @@ func TestWriteResponse(t *testing.T) {
 	createMock(t)
 
 	// expect
+	skipResponseHandlingFuncExpected = 1
+	skipResponseHandlingFunc = func(responseObject interface{}, responseError error) bool {
+		skipResponseHandlingFuncCalled++
+		assert.Equal(t, dummyResponseObject, responseObject)
+		assert.Equal(t, dummyResponseError, responseError)
+		return false
+	}
 	constructResponseFuncExpected = 1
 	constructResponseFunc = func(session *session, responseObject interface{}, responseError error) (int, string) {
 		constructResponseFuncCalled++

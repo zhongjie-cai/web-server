@@ -1,9 +1,27 @@
 package webserver
 
+import "reflect"
+
 // These are the constants used by the HTTP modules
 const (
 	ContentTypeJSON = "application/json; charset=utf-8"
 )
+
+// SkipResponseHandling indicates that the response can be skipped for any handling due to manual handling from
+type SkipResponseHandling struct{}
+
+var typeOfSkipResponseHandling = reflect.TypeOf(SkipResponseHandling{})
+
+func skipResponseHandling(
+	responseObject interface{},
+	responseError error,
+) bool {
+	if responseError != nil {
+		return false
+	}
+	var responseType = reflectTypeOf(responseObject)
+	return responseType == typeOfSkipResponseHandling
+}
 
 func constructResponse(
 	session *session,
@@ -26,6 +44,18 @@ func writeResponse(
 	responseObject interface{},
 	responseError error,
 ) {
+	if skipResponseHandlingFunc(
+		responseObject,
+		responseError,
+	) {
+		logEndpointResponseFunc(
+			session,
+			"None",
+			"-1",
+			"Skipped response handling",
+		)
+		return
+	}
 	var statusCode, responseMessage = constructResponseFunc(
 		session,
 		responseObject,
