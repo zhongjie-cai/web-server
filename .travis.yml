@@ -6,6 +6,3 @@ matrix:
     - go: tip
   allow_failures:
     - go: tip
-
-env:
-  - GO111MODULE=off
