@@ -297,6 +297,28 @@ var statusCode, responseHeader, responseError = webcallRequest.Process(
 ...
 ```
 
+If the response from external web services is anticipated to be different according to HTTP status code, use the following declaration and processing logic to intelligently receive and deserialize the response body to anticipated data template structure:
+
+```golang
+...
+
+var responseOn200 responseOn200Struct
+var responseOn400 responseOn400Struct
+var responseOn500 responseOn500Struct
+var statusCode, responseHeader, responseError = webcallRequest.Process(
+	map[int]interface{}{
+		http.StatusOK:                  &responseOn200,
+		http.StatusBadRequest:          &responseOn400,
+		http.StatusForbidden:           &responseOn400,
+		http.StatusInternalServerError: &responseOn500,
+	},
+)
+
+...
+```
+
+You can reuse a same struct for multiple HTTP status codes, as long as the structures in JSON format are compatible. If there is no receiver entry defined in data template map for a particular HTTP status code, the corresponding response body is ignored for deserialization when that HTTP status code is received.
+
 Webcall requests would send out client certificate for mTLS communications if the following customization is in place.
 
 ```golang
@@ -317,7 +339,7 @@ func (customization *myCustomization) RoundTripper(originalTransport http.RoundT
 }
 ```
 
-# HTTP Request (http.Request)
+## HTTP Request (http.Request)
 
 This is to enable the 3rd party monitoring libraries, e.g. new relic, to wrap individual HTTP request for better handling of web requests.
 
@@ -327,7 +349,7 @@ func (customization *myCustomization) WrapRequest(session Session, httpRequest *
 }
 ```
 
-# Webcall Timeout
+## Webcall Timeout
 
 This is to provide the default HTTP request timeouts for HTTP Client over all webcall communications.
 

@@ -524,7 +524,37 @@ func TestTtryUnmarshalPrimitiveTypes_OtherTypes(t *testing.T) {
 	verifyAll(t)
 }
 
-func TestTryUnmarshal_Primitype(t *testing.T) {
+func TestTryUnmarshal_NilDataTemplate(t *testing.T) {
+	// arrange
+	var dummyValue = "some value"
+	var dummyDataTemplate interface{}
+
+	// mock
+	createMock(t)
+
+	// expect
+	isInterfaceValueNilFuncExpected = 1
+	isInterfaceValueNilFunc = func(i interface{}) bool {
+		isInterfaceValueNilFuncCalled++
+		assert.Equal(t, &dummyDataTemplate, i)
+		return true
+	}
+
+	// SUT + act
+	var err = tryUnmarshal(
+		dummyValue,
+		&dummyDataTemplate,
+	)
+
+	// assert
+	assert.NoError(t, err)
+	assert.Nil(t, dummyDataTemplate)
+
+	// verify
+	verifyAll(t)
+}
+
+func TestTryUnmarshal_PrimitiveType(t *testing.T) {
 	// arrange
 	var dummyValue = "some value"
 	var dummyDataTemplate string
@@ -534,6 +564,12 @@ func TestTryUnmarshal_Primitype(t *testing.T) {
 	createMock(t)
 
 	// expect
+	isInterfaceValueNilFuncExpected = 1
+	isInterfaceValueNilFunc = func(i interface{}) bool {
+		isInterfaceValueNilFuncCalled++
+		assert.Equal(t, &dummyDataTemplate, i)
+		return false
+	}
 	tryUnmarshalPrimitiveTypesFuncExpected = 1
 	tryUnmarshalPrimitiveTypesFunc = func(value string, dataTemplate interface{}) bool {
 		tryUnmarshalPrimitiveTypesFuncCalled++
@@ -566,6 +602,12 @@ func TestTryUnmarshal_NoQuoteJSONSuccess_Primitive(t *testing.T) {
 	createMock(t)
 
 	// expect
+	isInterfaceValueNilFuncExpected = 1
+	isInterfaceValueNilFunc = func(i interface{}) bool {
+		isInterfaceValueNilFuncCalled++
+		assert.Equal(t, &dummyDataTemplate, i)
+		return false
+	}
 	tryUnmarshalPrimitiveTypesFuncExpected = 1
 	tryUnmarshalPrimitiveTypesFunc = func(value string, dataTemplate interface{}) bool {
 		tryUnmarshalPrimitiveTypesFuncCalled++
@@ -605,6 +647,12 @@ func TestTryUnmarshal_NoQuoteJSONSuccess_Struct(t *testing.T) {
 	createMock(t)
 
 	// expect
+	isInterfaceValueNilFuncExpected = 1
+	isInterfaceValueNilFunc = func(i interface{}) bool {
+		isInterfaceValueNilFuncCalled++
+		assert.Equal(t, &dummyDataTemplate, i)
+		return false
+	}
 	tryUnmarshalPrimitiveTypesFuncExpected = 1
 	tryUnmarshalPrimitiveTypesFunc = func(value string, dataTemplate interface{}) bool {
 		tryUnmarshalPrimitiveTypesFuncCalled++
@@ -642,6 +690,12 @@ func TestTryUnmarshal_WithQuoteJSONSuccess(t *testing.T) {
 	createMock(t)
 
 	// expect
+	isInterfaceValueNilFuncExpected = 1
+	isInterfaceValueNilFunc = func(i interface{}) bool {
+		isInterfaceValueNilFuncCalled++
+		assert.Equal(t, &dummyDataTemplate, i)
+		return false
+	}
 	tryUnmarshalPrimitiveTypesFuncExpected = 1
 	tryUnmarshalPrimitiveTypesFunc = func(value string, dataTemplate interface{}) bool {
 		tryUnmarshalPrimitiveTypesFuncCalled++
@@ -683,6 +737,12 @@ func TestTryUnmarshal_Failure(t *testing.T) {
 	createMock(t)
 
 	// expect
+	isInterfaceValueNilFuncExpected = 1
+	isInterfaceValueNilFunc = func(i interface{}) bool {
+		isInterfaceValueNilFuncCalled++
+		assert.Equal(t, &dummyDataTemplate, i)
+		return false
+	}
 	tryUnmarshalPrimitiveTypesFuncExpected = 1
 	tryUnmarshalPrimitiveTypesFunc = func(value string, dataTemplate interface{}) bool {
 		tryUnmarshalPrimitiveTypesFuncCalled++

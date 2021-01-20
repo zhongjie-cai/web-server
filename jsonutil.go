@@ -77,6 +77,9 @@ func tryUnmarshalPrimitiveTypes(value string, dataTemplate interface{}) bool {
 
 // tryUnmarshal tries to unmarshal given value to dataTemplate
 func tryUnmarshal(value string, dataTemplate interface{}) error {
+	if isInterfaceValueNilFunc(dataTemplate) {
+		return nil
+	}
 	if tryUnmarshalPrimitiveTypesFunc(
 		value,
 		dataTemplate,

@@ -1659,38 +1659,6 @@ func TestWebRequestProcessRaw_HappyPath(t *testing.T) {
 	verifyAll(t)
 }
 
-func TestParseResponse_NilPointer(t *testing.T) {
-	// arrange
-	var dummySession = &session{id: uuid.New()}
-	var dummyBody = ioutil.NopCloser(bytes.NewBufferString("some body"))
-	var dummyDataTemplate string
-
-	// mock
-	createMock(t)
-
-	// expect
-	isInterfaceValueNilFuncExpected = 1
-	isInterfaceValueNilFunc = func(i interface{}) bool {
-		isInterfaceValueNilFuncCalled++
-		assert.Equal(t, &dummyDataTemplate, i)
-		return true
-	}
-
-	// SUT + act
-	var err = parseResponse(
-		dummySession,
-		dummyBody,
-		&dummyDataTemplate,
-	)
-
-	// assert
-	assert.Zero(t, dummyDataTemplate)
-	assert.NoError(t, err)
-
-	// verify
-	verifyAll(t)
-}
-
 func TestParseResponse_ReadError(t *testing.T) {
 	// arrange
 	var dummySession = &session{id: uuid.New()}
@@ -1703,12 +1671,6 @@ func TestParseResponse_ReadError(t *testing.T) {
 	createMock(t)
 
 	// expect
-	isInterfaceValueNilFuncExpected = 1
-	isInterfaceValueNilFunc = func(i interface{}) bool {
-		isInterfaceValueNilFuncCalled++
-		assert.Equal(t, &dummyDataTemplate, i)
-		return false
-	}
 	ioutilReadAllExpected = 1
 	ioutilReadAll = func(r io.Reader) ([]byte, error) {
 		ioutilReadAllCalled++
@@ -1744,12 +1706,6 @@ func TestParseResponse_JSONError(t *testing.T) {
 	createMock(t)
 
 	// expect
-	isInterfaceValueNilFuncExpected = 1
-	isInterfaceValueNilFunc = func(i interface{}) bool {
-		isInterfaceValueNilFuncCalled++
-		assert.Equal(t, &dummyDataTemplate, i)
-		return false
-	}
 	ioutilReadAllExpected = 1
 	ioutilReadAll = func(r io.Reader) ([]byte, error) {
 		ioutilReadAllCalled++
@@ -1809,12 +1765,6 @@ func TestParseResponse_HappyPath(t *testing.T) {
 	createMock(t)
 
 	// expect
-	isInterfaceValueNilFuncExpected = 1
-	isInterfaceValueNilFunc = func(i interface{}) bool {
-		isInterfaceValueNilFuncCalled++
-		assert.Equal(t, &dummyDataTemplate, i)
-		return false
-	}
 	ioutilReadAllExpected = 1
 	ioutilReadAll = func(r io.Reader) ([]byte, error) {
 		ioutilReadAllCalled++
@@ -2085,6 +2035,260 @@ func TestWebRequestProcess_Success_ValidObject(t *testing.T) {
 
 	// assert
 	assert.Equal(t, dummyData, dummyDataTemplate)
+	assert.Equal(t, dummyStatusCode, result)
+	assert.Equal(t, http.Header(dummyHeader), header)
+	assert.Equal(t, dummyParseError, err)
+
+	// verify
+	verifyAll(t)
+}
+
+func TestWebRequestProcessAny_NilWebRequest(t *testing.T) {
+	// arrange
+	var dummyDataTemplateMap map[int]interface{}
+	var dummyAppError = &appError{Message: "some error message"}
+
+	// SUT
+	var sut *webRequest
+
+	// mock
+	createMock(t)
+
+	// expect
+	newAppErrorFuncExpected = 1
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
+		newAppErrorFuncCalled++
+		assert.Equal(t, errorCodeGeneralFailure, errorCode)
+		assert.Equal(t, errorMessageWebRequestNil, errorMessage)
+		assert.Empty(t, innerErrors)
+		return dummyAppError
+	}
+
+	// act
+	var result, header, err = sut.ProcessAny(
+		dummyDataTemplateMap,
+	)
+
+	// assert
+	assert.Empty(t, dummyDataTemplateMap)
+	assert.Equal(t, http.StatusInternalServerError, result)
+	assert.Empty(t, header)
+	assert.Equal(t, dummyAppError, err)
+
+	// verify
+	verifyAll(t)
+}
+
+func TestWebRequestProcessAny_NilWebRequestSession(t *testing.T) {
+	// arrange
+	var dummyDataTemplateMap map[int]interface{}
+	var dummyAppError = &appError{Message: "some error message"}
+
+	// SUT
+	var sut = &webRequest{}
+
+	// mock
+	createMock(t)
+
+	// expect
+	newAppErrorFuncExpected = 1
+	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
+		newAppErrorFuncCalled++
+		assert.Equal(t, errorCodeGeneralFailure, errorCode)
+		assert.Equal(t, errorMessageWebRequestNil, errorMessage)
+		assert.Empty(t, innerErrors)
+		return dummyAppError
+	}
+
+	// act
+	var result, header, err = sut.ProcessAny(
+		dummyDataTemplateMap,
+	)
+
+	// assert
+	assert.Empty(t, dummyDataTemplateMap)
+	assert.Equal(t, http.StatusInternalServerError, result)
+	assert.Empty(t, header)
+	assert.Equal(t, dummyAppError, err)
+
+	// verify
+	verifyAll(t)
+}
+
+func TestWebRequestProcessAny_Error_NilObject(t *testing.T) {
+	// arrange
+	var dummyResponseObject *http.Response
+	var dummyResponseError = errors.New("some error")
+	var dummyDataTemplateMap map[int]interface{}
+
+	// SUT
+	var sut = &webRequest{
+		session: &session{id: uuid.New()},
+	}
+
+	// mock
+	createMock(t)
+
+	// expect
+	doRequestProcessingFuncExpected = 1
+	doRequestProcessingFunc = func(webRequest *webRequest) (*http.Response, error) {
+		doRequestProcessingFuncCalled++
+		assert.Equal(t, sut, webRequest)
+		return dummyResponseObject, dummyResponseError
+	}
+
+	// act
+	var result, header, err = sut.ProcessAny(
+		dummyDataTemplateMap,
+	)
+
+	// assert
+	assert.Empty(t, dummyDataTemplateMap)
+	assert.Equal(t, http.StatusInternalServerError, result)
+	assert.Empty(t, header)
+	assert.Equal(t, dummyResponseError, err)
+
+	// verify
+	verifyAll(t)
+}
+
+func TestWebRequestProcessAny_Error_ValidObject(t *testing.T) {
+	// arrange
+	var dummyStatusCode = rand.Int()
+	var dummyHeader = map[string][]string{
+		"foo":  {"bar"},
+		"test": {"123", "456", "789"},
+	}
+	var dummyResponseObject = &http.Response{
+		StatusCode: dummyStatusCode,
+		Header:     dummyHeader,
+	}
+	var dummyResponseError = errors.New("some error")
+	var dummyDataTemplateMap map[int]interface{}
+
+	// SUT
+	var sut = &webRequest{
+		session: &session{id: uuid.New()},
+	}
+
+	// mock
+	createMock(t)
+
+	// expect
+	doRequestProcessingFuncExpected = 1
+	doRequestProcessingFunc = func(webRequest *webRequest) (*http.Response, error) {
+		doRequestProcessingFuncCalled++
+		assert.Equal(t, sut, webRequest)
+		return dummyResponseObject, dummyResponseError
+	}
+
+	// act
+	var result, header, err = sut.ProcessAny(
+		dummyDataTemplateMap,
+	)
+
+	// assert
+	assert.Empty(t, dummyDataTemplateMap)
+	assert.Equal(t, dummyStatusCode, result)
+	assert.Equal(t, http.Header(dummyHeader), header)
+	assert.Equal(t, dummyResponseError, err)
+
+	// verify
+	verifyAll(t)
+}
+
+func TestWebRequestProcessAny_Success_NilObject(t *testing.T) {
+	// arrange
+	var dummyResponseObject *http.Response
+	var dummyResponseError error
+	var dummyDataTemplateMap map[int]interface{}
+
+	// SUT
+	var sut = &webRequest{
+		session: &session{id: uuid.New()},
+	}
+
+	// mock
+	createMock(t)
+
+	// expect
+	doRequestProcessingFuncExpected = 1
+	doRequestProcessingFunc = func(webRequest *webRequest) (*http.Response, error) {
+		doRequestProcessingFuncCalled++
+		assert.Equal(t, sut, webRequest)
+		return dummyResponseObject, dummyResponseError
+	}
+
+	// act
+	var result, header, err = sut.ProcessAny(
+		dummyDataTemplateMap,
+	)
+
+	// assert
+	assert.Empty(t, dummyDataTemplateMap)
+	assert.Zero(t, result)
+	assert.Empty(t, header)
+	assert.NoError(t, err)
+
+	// verify
+	verifyAll(t)
+}
+
+func TestWebRequestProcessAny_Success_ValidObject(t *testing.T) {
+	// arrange
+	var dummyStatusCode = 200 + rand.Intn(100)
+	var dummyHeader = map[string][]string{
+		"foo":  {"bar"},
+		"test": {"123", "456", "789"},
+	}
+	var dummyBody = ioutil.NopCloser(bytes.NewBufferString("some body"))
+	var dummyResponseObject = &http.Response{
+		StatusCode: dummyStatusCode,
+		Header:     dummyHeader,
+		Body:       dummyBody,
+	}
+	var dummyResponseError error
+	var dummyParseError = errors.New("some parse error")
+	var dummyDataTemplate string
+	var dummyDataTemplateMap = map[int]interface{}{
+		dummyStatusCode:       &dummyDataTemplate,
+		dummyStatusCode + 100: nil,
+	}
+	var dummyData = "some data"
+	var dummySession = &session{id: uuid.New()}
+
+	// SUT
+	var sut = &webRequest{
+		session: dummySession,
+	}
+
+	// mock
+	createMock(t)
+
+	// expect
+	doRequestProcessingFuncExpected = 1
+	doRequestProcessingFunc = func(webRequest *webRequest) (*http.Response, error) {
+		doRequestProcessingFuncCalled++
+		assert.Equal(t, sut, webRequest)
+		return dummyResponseObject, dummyResponseError
+	}
+	parseResponseFuncExpected = 1
+	parseResponseFunc = func(session *session, body io.ReadCloser, dataTemplate interface{}) error {
+		parseResponseFuncCalled++
+		assert.Equal(t, dummySession, session)
+		assert.Equal(t, dummyBody, body)
+		(*(dataTemplate).(*string)) = dummyData
+		return dummyParseError
+	}
+
+	// act
+	var result, header, err = sut.ProcessAny(
+		dummyDataTemplateMap,
+	)
+
+	// assert
+	assert.Equal(t, dummyData, dummyDataTemplate)
+	assert.Nil(t, dummyDataTemplateMap[dummyStatusCode+100])
 	assert.Equal(t, dummyStatusCode, result)
 	assert.Equal(t, http.Header(dummyHeader), header)
 	assert.Equal(t, dummyParseError, err)
