@@ -217,5 +217,6 @@ var (
 	logErrorResponseFunc    = logErrorResponse
 	logSuccessResponseFunc  = logSuccessResponse
 	doRequestProcessingFunc = doRequestProcessing
+	getDataTemplateFunc     = getDataTemplate
 	parseResponseFunc       = parseResponse
 )

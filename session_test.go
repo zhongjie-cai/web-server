@@ -2039,6 +2039,7 @@ func TestSessionCreateWebcallRequest(t *testing.T) {
 	assert.Nil(t, webrequest.httpRetry)
 	assert.Equal(t, dummySendClientCert, webrequest.sendClientCert)
 	assert.Zero(t, webrequest.retryDelay)
+	assert.Empty(t, webrequest.dataReceivers)
 
 	// verify
 	verifyAll(t)

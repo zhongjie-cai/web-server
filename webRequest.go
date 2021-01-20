@@ -105,17 +105,21 @@ func initializeHTTPClients(
 // WebRequest is an interface for easy operating on webcall requests and responses
 type WebRequest interface {
 	// AddQuery adds a query to the request URL for sending through HTTP
-	AddQuery(name string, value string)
+	AddQuery(name string, value string) WebRequest
 	// AddHeader adds a header to the request Header for sending through HTTP
-	AddHeader(name string, value string)
-	// EnableRetry sets up automatic retry upon error of specific HTTP status codes; each entry maps an HTTP status code to how many times retry should happen if code matches
-	EnableRetry(connectivityRetryCount int, httpStatusRetryCount map[int]int, retryDuration time.Duration)
-	// Process sends the webcall request over the wire, retrieves and serialize the response to dataTemplate, and provides status code, header and error if applicable
-	Process(dataTemplate interface{}) (statusCode int, responseHeader http.Header, responseError error)
-	// Process sends the webcall request over the wire, retrieves and serialize the response to dataTemplateMap according to HTTP status code as entry, and provides status code, header and error if applicable
-	ProcessAny(dataTemplateMap map[int]interface{}) (statusCode int, responseHeader http.Header, responseError error)
-	// ProcessRaw sends the webcall request over the wire, retrieves the response, and returns that response and error if applicable
-	ProcessRaw() (responseObject *http.Response, responseError error)
+	AddHeader(name string, value string) WebRequest
+	// SetupRetry sets up automatic retry upon error of specific HTTP status codes; each entry maps an HTTP status code to how many times retry should happen if code matches
+	SetupRetry(connectivityRetryCount int, httpStatusRetryCount map[int]int, retryDelay time.Duration) WebRequest
+	// Anticipate registers a data template to be deserialized to when the given range of HTTP status codes are returned during the processing of the web request; latter registration overrides former when overlapping
+	Anticipate(beginStatusCode int, endStatusCode int, dataTemplate interface{}) WebRequest
+	// Process sends the webcall request over the wire, retrieves and serialize the response to registered data templates, and returns status code, header and error accordingly
+	Process() (statusCode int, responseHeader http.Header, responseError error)
+}
+
+type dataReceiver struct {
+	beginStatusCode int
+	endStatusCode   int
+	dataTemplate    interface{}
 }
 
 type webRequest struct {
@@ -129,10 +133,11 @@ type webRequest struct {
 	httpRetry      map[int]int
 	sendClientCert bool
 	retryDelay     time.Duration
+	dataReceivers  []dataReceiver
 }
 
 // AddQuery adds a query to the request URL for sending through HTTP
-func (webRequest *webRequest) AddQuery(name string, value string) {
+func (webRequest *webRequest) AddQuery(name string, value string) WebRequest {
 	if webRequest.query == nil {
 		webRequest.query = make(map[string][]string)
 	}
@@ -142,10 +147,11 @@ func (webRequest *webRequest) AddQuery(name string, value string) {
 		value,
 	)
 	webRequest.query[name] = queryValues
+	return webRequest
 }
 
 // AddHeader adds a header to the request Header for sending through HTTP
-func (webRequest *webRequest) AddHeader(name string, value string) {
+func (webRequest *webRequest) AddHeader(name string, value string) WebRequest {
 	if webRequest.header == nil {
 		webRequest.header = make(map[string][]string)
 	}
@@ -155,13 +161,28 @@ func (webRequest *webRequest) AddHeader(name string, value string) {
 		value,
 	)
 	webRequest.header[name] = headerValues
+	return webRequest
 }
 
-// EnableRetry sets up automatic retry upon error of specific HTTP status codes; each entry maps an HTTP status code to how many times retry should happen if code matches; 0 stands for error not mapped to an HTTP status code, e.g. webcall or connectivity issue
-func (webRequest *webRequest) EnableRetry(connectivityRetryCount int, httpStatusRetryCount map[int]int, retryDelay time.Duration) {
+// SetupRetry sets up automatic retry upon error of specific HTTP status codes; each entry maps an HTTP status code to how many times retry should happen if code matches; 0 stands for error not mapped to an HTTP status code, e.g. webcall or connectivity issue
+func (webRequest *webRequest) SetupRetry(connectivityRetryCount int, httpStatusRetryCount map[int]int, retryDelay time.Duration) WebRequest {
 	webRequest.connRetry = connectivityRetryCount
 	webRequest.httpRetry = httpStatusRetryCount
 	webRequest.retryDelay = retryDelay
+	return webRequest
+}
+
+// Anticipate registers a data template to be deserialized to when the given range of HTTP status codes are returned during the processing of the web request; latter registration overrides former when overlapping
+func (webRequest *webRequest) Anticipate(beginStatusCode int, endStatusCode int, dataTemplate interface{}) WebRequest {
+	webRequest.dataReceivers = append(
+		webRequest.dataReceivers,
+		dataReceiver{
+			beginStatusCode: beginStatusCode,
+			endStatusCode:   endStatusCode,
+			dataTemplate:    dataTemplate,
+		},
+	)
+	return webRequest
 }
 
 func createQueryString(
@@ -364,19 +385,15 @@ func doRequestProcessing(webRequest *webRequest) (*http.Response, error) {
 	return responseObject, responseError
 }
 
-// ProcessRaw sends the webcall request over the wire, retrieves the response, and returns that response and error if applicable
-func (webRequest *webRequest) ProcessRaw() (responseObject *http.Response, responseError error) {
-	if webRequest == nil {
-		return nil,
-			newAppErrorFunc(
-				errorCodeGeneralFailure,
-				errorMessageWebRequestNil,
-				[]error{},
-			)
+func getDataTemplate(statusCode int, dataReceivers []dataReceiver) interface{} {
+	var dataTemplate interface{}
+	for _, dataReceiver := range dataReceivers {
+		if dataReceiver.beginStatusCode <= statusCode &&
+			dataReceiver.endStatusCode >= statusCode {
+			dataTemplate = dataReceiver.dataTemplate
+		}
 	}
-	return doRequestProcessingFunc(
-		webRequest,
-	)
+	return dataTemplate
 }
 
 func parseResponse(session *session, body io.ReadCloser, dataTemplate interface{}) error {
@@ -408,7 +425,7 @@ func parseResponse(session *session, body io.ReadCloser, dataTemplate interface{
 }
 
 // Process sends the webcall request over the wire, retrieves and serialize the response to dataTemplate, and provides status code, header and error if applicable
-func (webRequest *webRequest) Process(dataTemplate interface{}) (statusCode int, responseHeader http.Header, responseError error) {
+func (webRequest *webRequest) Process() (statusCode int, responseHeader http.Header, responseError error) {
 	if webRequest == nil ||
 		webRequest.session == nil {
 		return http.StatusInternalServerError,
@@ -433,47 +450,14 @@ func (webRequest *webRequest) Process(dataTemplate interface{}) (statusCode int,
 		if responseObject == nil {
 			return 0, make(http.Header), nil
 		}
+		var dataTemplate = getDataTemplateFunc(
+			responseObject.StatusCode,
+			webRequest.dataReceivers,
+		)
 		responseError = parseResponseFunc(
 			webRequest.session,
 			responseObject.Body,
 			dataTemplate,
-		)
-	}
-	return responseObject.StatusCode,
-		responseObject.Header,
-		responseError
-}
-
-// Process sends the webcall request over the wire, retrieves and serialize the response to dataTemplateMap according to HTTP status code as entry, and provides status code, header and error if applicable
-func (webRequest *webRequest) ProcessAny(dataTemplateMap map[int]interface{}) (statusCode int, responseHeader http.Header, responseError error) {
-	if webRequest == nil ||
-		webRequest.session == nil {
-		return http.StatusInternalServerError,
-			http.Header{},
-			newAppErrorFunc(
-				errorCodeGeneralFailure,
-				errorMessageWebRequestNil,
-				[]error{},
-			)
-	}
-	var responseObject *http.Response
-	responseObject, responseError = doRequestProcessingFunc(
-		webRequest,
-	)
-	if responseError != nil {
-		if responseObject == nil {
-			return http.StatusInternalServerError,
-				make(http.Header),
-				responseError
-		}
-	} else {
-		if responseObject == nil {
-			return 0, make(http.Header), nil
-		}
-		responseError = parseResponseFunc(
-			webRequest.session,
-			responseObject.Body,
-			dataTemplateMap[responseObject.StatusCode],
 		)
 	}
 	return responseObject.StatusCode,

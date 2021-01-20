@@ -286,6 +286,8 @@ var (
 	logSuccessResponseFuncCalled            int
 	doRequestProcessingFuncExpected         int
 	doRequestProcessingFuncCalled           int
+	getDataTemplateFuncExpected             int
+	getDataTemplateFuncCalled               int
 	parseResponseFuncExpected               int
 	parseResponseFuncCalled                 int
 )
@@ -1018,6 +1020,12 @@ func createMock(t *testing.T) {
 		doRequestProcessingFuncCalled++
 		return nil, nil
 	}
+	getDataTemplateFuncExpected = 0
+	getDataTemplateFuncCalled = 0
+	getDataTemplateFunc = func(statusCode int, dataReceivers []dataReceiver) interface{} {
+		getDataTemplateFuncCalled++
+		return nil
+	}
 	parseResponseFuncExpected = 0
 	parseResponseFuncCalled = 0
 	parseResponseFunc = func(session *session, body io.ReadCloser, dataTemplate interface{}) error {
@@ -1281,6 +1289,8 @@ func verifyAll(t *testing.T) {
 	assert.Equal(t, logSuccessResponseFuncExpected, logSuccessResponseFuncCalled, "Unexpected number of calls to method logSuccessResponseFunc")
 	doRequestProcessingFunc = doRequestProcessing
 	assert.Equal(t, doRequestProcessingFuncExpected, doRequestProcessingFuncCalled, "Unexpected number of calls to method doRequestProcessingFunc")
+	getDataTemplateFunc = getDataTemplate
+	assert.Equal(t, getDataTemplateFuncExpected, getDataTemplateFuncCalled, "Unexpected number of calls to method getDataTemplateFunc")
 	parseResponseFunc = parseResponse
 	assert.Equal(t, parseResponseFuncExpected, parseResponseFuncCalled, "Unexpected number of calls to method parseResponseFunc")
 
