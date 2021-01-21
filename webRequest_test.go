@@ -1187,7 +1187,7 @@ func TestCreateHTTPRequest_Success(t *testing.T) {
 	logWebcallRequestFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		logWebcallRequestFuncCalled++
 		assert.Equal(t, dummySession, session)
-		assert.Zero(t, subcategory)
+		assert.Equal(t, "Content", subcategory)
 		assert.Empty(t, parameters)
 		if logWebcallRequestFuncCalled == 1 {
 			assert.Equal(t, "Payload", category)
@@ -1239,8 +1239,8 @@ func TestLogErrorResponse(t *testing.T) {
 	logWebcallResponseFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		logWebcallResponseFuncCalled++
 		assert.Equal(t, dummySession, session)
-		assert.Equal(t, "Message", category)
-		assert.Zero(t, subcategory)
+		assert.Equal(t, "Error", category)
+		assert.Equal(t, "Content", subcategory)
 		assert.Equal(t, "%+v", messageFormat)
 		assert.Equal(t, 1, len(parameters))
 		assert.Equal(t, dummyError, parameters[0])
@@ -1256,7 +1256,7 @@ func TestLogErrorResponse(t *testing.T) {
 		logWebcallFinishFuncCalled++
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, "Error", category)
-		assert.Zero(t, subcategory)
+		assert.Equal(t, "-1", subcategory)
 		assert.Equal(t, "%s", messageFormat)
 		assert.Equal(t, 1, len(parameters))
 		assert.Equal(t, dummyTimeSince, parameters[0])
@@ -1355,7 +1355,7 @@ func TestLogSuccessResponse_ValidResponse(t *testing.T) {
 	logWebcallResponseFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		logWebcallResponseFuncCalled++
 		assert.Equal(t, dummySession, session)
-		assert.Zero(t, subcategory)
+		assert.Equal(t, "Content", subcategory)
 		assert.Empty(t, parameters)
 		if logWebcallResponseFuncCalled == 1 {
 			assert.Equal(t, "Header", category)
@@ -1647,14 +1647,34 @@ func TestDoRequestProcessing_ResponseSuccess(t *testing.T) {
 
 func TestGetDataTemplate_EmptyDataReceivers(t *testing.T) {
 	// arrange
+	var dummySession = &session{}
 	var dummyStatusCode = rand.Intn(100)
 	var dummyDataReceivers = []dataReceiver{}
 
 	// mock
 	createMock(t)
 
+	// expect
+	isInterfaceValueNilFuncExpected = 1
+	isInterfaceValueNilFunc = func(i interface{}) bool {
+		isInterfaceValueNilFuncCalled++
+		assert.Nil(t, i)
+		return true
+	}
+	logWebcallResponseFuncExpected = 1
+	logWebcallResponseFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+		logWebcallResponseFuncCalled++
+		assert.Equal(t, dummySession, session)
+		assert.Equal(t, "Body", category)
+		assert.Equal(t, "Receiver", subcategory)
+		assert.Equal(t, "No data template registered for HTTP status %v", messageFormat)
+		assert.Equal(t, 1, len(parameters))
+		assert.Equal(t, dummyStatusCode, parameters[0])
+	}
+
 	// SUT + act
 	var result = getDataTemplate(
+		dummySession,
 		dummyStatusCode,
 		dummyDataReceivers,
 	)
@@ -1668,6 +1688,7 @@ func TestGetDataTemplate_EmptyDataReceivers(t *testing.T) {
 
 func TestGetDataTemplate_NoMatch(t *testing.T) {
 	// arrange
+	var dummySession = &session{}
 	var dummyStatusCode = rand.Intn(100)
 	var dummyDataTemplate string
 	var dummyDataReceivers = []dataReceiver{
@@ -1681,8 +1702,27 @@ func TestGetDataTemplate_NoMatch(t *testing.T) {
 	// mock
 	createMock(t)
 
+	// expect
+	isInterfaceValueNilFuncExpected = 1
+	isInterfaceValueNilFunc = func(i interface{}) bool {
+		isInterfaceValueNilFuncCalled++
+		assert.Nil(t, i)
+		return true
+	}
+	logWebcallResponseFuncExpected = 1
+	logWebcallResponseFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+		logWebcallResponseFuncCalled++
+		assert.Equal(t, dummySession, session)
+		assert.Equal(t, "Body", category)
+		assert.Equal(t, "Receiver", subcategory)
+		assert.Equal(t, "No data template registered for HTTP status %v", messageFormat)
+		assert.Equal(t, 1, len(parameters))
+		assert.Equal(t, dummyStatusCode, parameters[0])
+	}
+
 	// SUT + act
 	var result = getDataTemplate(
+		dummySession,
 		dummyStatusCode,
 		dummyDataReceivers,
 	)
@@ -1696,13 +1736,14 @@ func TestGetDataTemplate_NoMatch(t *testing.T) {
 
 func TestGetDataTemplate_SingleMatch(t *testing.T) {
 	// arrange
+	var dummySession = &session{}
 	var dummyStatusCode = rand.Intn(100)
 	var dummyDataTemplate1 string
 	var dummyDataTemplate2 int
 	var dummyDataReceivers = []dataReceiver{
 		{
 			beginStatusCode: dummyStatusCode - rand.Intn(10),
-			endStatusCode:   dummyStatusCode + rand.Intn(10),
+			endStatusCode:   dummyStatusCode + 1 + rand.Intn(10),
 			dataTemplate:    &dummyDataTemplate1,
 		},
 		{
@@ -1715,8 +1756,17 @@ func TestGetDataTemplate_SingleMatch(t *testing.T) {
 	// mock
 	createMock(t)
 
+	// expect
+	isInterfaceValueNilFuncExpected = 1
+	isInterfaceValueNilFunc = func(i interface{}) bool {
+		isInterfaceValueNilFuncCalled++
+		assert.Equal(t, &dummyDataTemplate1, i)
+		return false
+	}
+
 	// SUT + act
 	var result = getDataTemplate(
+		dummySession,
 		dummyStatusCode,
 		dummyDataReceivers,
 	)
@@ -1730,18 +1780,19 @@ func TestGetDataTemplate_SingleMatch(t *testing.T) {
 
 func TestGetDataTemplate_OverlapMatch(t *testing.T) {
 	// arrange
+	var dummySession = &session{}
 	var dummyStatusCode = rand.Intn(100)
 	var dummyDataTemplate1 string
 	var dummyDataTemplate2 int
 	var dummyDataReceivers = []dataReceiver{
 		{
 			beginStatusCode: dummyStatusCode - rand.Intn(10),
-			endStatusCode:   dummyStatusCode + rand.Intn(10),
+			endStatusCode:   dummyStatusCode + 1 + rand.Intn(10),
 			dataTemplate:    &dummyDataTemplate1,
 		},
 		{
 			beginStatusCode: dummyStatusCode - rand.Intn(10),
-			endStatusCode:   dummyStatusCode + rand.Intn(10),
+			endStatusCode:   dummyStatusCode + 1 + rand.Intn(10),
 			dataTemplate:    &dummyDataTemplate2,
 		},
 	}
@@ -1749,8 +1800,17 @@ func TestGetDataTemplate_OverlapMatch(t *testing.T) {
 	// mock
 	createMock(t)
 
+	// expect
+	isInterfaceValueNilFuncExpected = 1
+	isInterfaceValueNilFunc = func(i interface{}) bool {
+		isInterfaceValueNilFuncCalled++
+		assert.Equal(t, &dummyDataTemplate2, i)
+		return false
+	}
+
 	// SUT + act
 	var result = getDataTemplate(
+		dummySession,
 		dummyStatusCode,
 		dummyDataReceivers,
 	)
@@ -2107,8 +2167,9 @@ func TestWebRequestProcess_Success_ValidObject(t *testing.T) {
 		return dummyResponseObject, dummyResponseError
 	}
 	getDataTemplateFuncExpected = 1
-	getDataTemplateFunc = func(statusCode int, dataReceivers []dataReceiver) interface{} {
+	getDataTemplateFunc = func(session *session, statusCode int, dataReceivers []dataReceiver) interface{} {
 		getDataTemplateFuncCalled++
+		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyStatusCode, statusCode)
 		assert.Equal(t, dummyDataReceivers, dataReceivers)
 		return &dummyDataTemplate

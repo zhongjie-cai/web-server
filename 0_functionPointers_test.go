@@ -1022,7 +1022,7 @@ func createMock(t *testing.T) {
 	}
 	getDataTemplateFuncExpected = 0
 	getDataTemplateFuncCalled = 0
-	getDataTemplateFunc = func(statusCode int, dataReceivers []dataReceiver) interface{} {
+	getDataTemplateFunc = func(session *session, statusCode int, dataReceivers []dataReceiver) interface{} {
 		getDataTemplateFuncCalled++
 		return nil
 	}

@@ -276,6 +276,9 @@ if !success {
 The library provides a way to send out HTTP/HTTPS requests to external web services based on current session. 
 Using this provided feature ensures the logging of the web service requests into corresponding log type for the given session. 
 
+You can reuse a same struct for multiple HTTP status codes, as long as the structures in JSON format are compatible.
+If there is no receiver entry registered for a particular HTTP status code, the corresponding response body is ignored for deserialization when that HTTP status code is received.
+
 ```golang
 ...
 
@@ -283,41 +286,34 @@ var webcallRequest = session.CreateWebcallRequest(
 	HTTP.POST,                       // Method
 	"https://www.example.com/tests", // URL
 	"{\"foo\":\"bar\"}",             // Payload
-	map[string]string{               // Headers
-		"Content-Type": "application/json",
-		"Accept": "application/json",
-	},
 	true,                            // SendClientCert
 )
-var testSample testSampleStruct
-var statusCode, responseHeader, responseError = webcallRequest.Process(
-	&testSample,
-)
-
-...
-```
-
-If the response from external web services is anticipated to be different according to HTTP status code, use the following declaration and processing logic to intelligently receive and deserialize the response body to anticipated data template structure:
-
-```golang
-...
-
 var responseOn200 responseOn200Struct
 var responseOn400 responseOn400Struct
 var responseOn500 responseOn500Struct
-var statusCode, responseHeader, responseError = webcallRequest.Process(
-	map[int]interface{}{
-		http.StatusOK:                  &responseOn200,
-		http.StatusBadRequest:          &responseOn400,
-		http.StatusForbidden:           &responseOn400,
-		http.StatusInternalServerError: &responseOn500,
-	},
+webcallRequest.AddHeader(
+	"Content-Type",
+	"application/json",
+).AddHeader(
+	"Accept",
+	"application/json",
+).Anticipate(
+	http.StatusOK,
+	http.StatusBadRequest,
+	&responseOn200,
+).Anticipate(
+	http.StatusBadRequest,
+	http.StatusInternalServerError,
+	&responseOn400,
+).Anticipate(
+	http.StatusInternalServerError,
+	999,
+	&responseOn500,
 )
+var statusCode, responseHeader, responseError = webcallRequest.Process()
 
 ...
 ```
-
-You can reuse a same struct for multiple HTTP status codes, as long as the structures in JSON format are compatible. If there is no receiver entry defined in data template map for a particular HTTP status code, the corresponding response body is ignored for deserialization when that HTTP status code is received.
 
 Webcall requests would send out client certificate for mTLS communications if the following customization is in place.
 

@@ -264,7 +264,7 @@ func createHTTPRequest(webRequest *webRequest) (*http.Request, error) {
 	logWebcallRequestFunc(
 		webRequest.session,
 		"Payload",
-		"",
+		"Content",
 		webRequest.payload,
 	)
 	requestObject.Header = make(http.Header)
@@ -276,7 +276,7 @@ func createHTTPRequest(webRequest *webRequest) (*http.Request, error) {
 	logWebcallRequestFunc(
 		webRequest.session,
 		"Header",
-		"",
+		"Content",
 		marshalIgnoreErrorFunc(
 			requestObject.Header,
 		),
@@ -290,15 +290,15 @@ func createHTTPRequest(webRequest *webRequest) (*http.Request, error) {
 func logErrorResponse(session *session, responseError error, startTime time.Time) {
 	logWebcallResponseFunc(
 		session,
-		"Message",
-		"",
+		"Error",
+		"Content",
 		"%+v",
 		responseError,
 	)
 	logWebcallFinishFunc(
 		session,
 		"Error",
-		"",
+		"-1",
 		"%s",
 		timeSince(startTime),
 	)
@@ -322,7 +322,7 @@ func logSuccessResponse(session *session, response *http.Response, startTime tim
 	logWebcallResponseFunc(
 		session,
 		"Header",
-		"",
+		"Content",
 		marshalIgnoreErrorFunc(
 			responseHeaders,
 		),
@@ -330,7 +330,7 @@ func logSuccessResponse(session *session, response *http.Response, startTime tim
 	logWebcallResponseFunc(
 		session,
 		"Body",
-		"",
+		"Content",
 		string(responseBody),
 	)
 	logWebcallFinishFunc(
@@ -385,13 +385,22 @@ func doRequestProcessing(webRequest *webRequest) (*http.Response, error) {
 	return responseObject, responseError
 }
 
-func getDataTemplate(statusCode int, dataReceivers []dataReceiver) interface{} {
+func getDataTemplate(session *session, statusCode int, dataReceivers []dataReceiver) interface{} {
 	var dataTemplate interface{}
 	for _, dataReceiver := range dataReceivers {
 		if dataReceiver.beginStatusCode <= statusCode &&
-			dataReceiver.endStatusCode >= statusCode {
+			dataReceiver.endStatusCode > statusCode {
 			dataTemplate = dataReceiver.dataTemplate
 		}
+	}
+	if isInterfaceValueNilFunc(dataTemplate) {
+		logWebcallResponseFunc(
+			session,
+			"Body",
+			"Receiver",
+			"No data template registered for HTTP status %v",
+			statusCode,
+		)
 	}
 	return dataTemplate
 }
@@ -451,6 +460,7 @@ func (webRequest *webRequest) Process() (statusCode int, responseHeader http.Hea
 			return 0, make(http.Header), nil
 		}
 		var dataTemplate = getDataTemplateFunc(
+			webRequest.session,
 			responseObject.StatusCode,
 			webRequest.dataReceivers,
 		)
