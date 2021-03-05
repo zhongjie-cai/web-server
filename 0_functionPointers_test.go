@@ -486,7 +486,7 @@ func createMock(t *testing.T) {
 	}
 	finalizeSessionFuncExpected = 0
 	finalizeSessionFuncCalled = 0
-	finalizeSessionFunc = func(session *session, startTime time.Time) {
+	finalizeSessionFunc = func(session *session, startTime time.Time, recoverResult interface{}) {
 		finalizeSessionFuncCalled++
 	}
 	logEndpointEnterFuncExpected = 0

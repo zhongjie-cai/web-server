@@ -50,10 +50,11 @@ func initiateSession(
 func finalizeSession(
 	session *session,
 	startTime time.Time,
+	recoverResult interface{},
 ) {
 	handlePanicFunc(
 		session,
-		recover(),
+		recoverResult,
 	)
 	logEndpointExitFunc(
 		session,
@@ -118,6 +119,7 @@ func handleSession(
 	defer finalizeSessionFunc(
 		session,
 		getTimeNowUTCFunc(),
+		recover(),
 	)
 	if routeError != nil {
 		writeResponseFunc(

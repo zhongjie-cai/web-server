@@ -221,6 +221,7 @@ func TestFinalizeSession(t *testing.T) {
 		request: dummyHTTPRequest,
 	}
 	var dummyStartTime = time.Now().UTC()
+	var dummyRecoverResult = "some recover result"
 	var dummyDuration = time.Duration(rand.Intn(100))
 
 	// mock
@@ -231,7 +232,7 @@ func TestFinalizeSession(t *testing.T) {
 	handlePanicFunc = func(session *session, recoverResult interface{}) {
 		handlePanicFuncCalled++
 		assert.Equal(t, dummySession, session)
-		assert.Equal(t, recover(), recoverResult)
+		assert.Equal(t, dummyRecoverResult, recoverResult)
 	}
 	logEndpointExitFuncExpected = 1
 	logEndpointExitFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
@@ -254,6 +255,7 @@ func TestFinalizeSession(t *testing.T) {
 	finalizeSession(
 		dummySession,
 		dummyStartTime,
+		dummyRecoverResult,
 	)
 
 	// verify
@@ -487,10 +489,11 @@ func TestHandleSession_RouteError(t *testing.T) {
 		return dummyStartTime
 	}
 	finalizeSessionFuncExpected = 1
-	finalizeSessionFunc = func(session *session, startTime time.Time) {
+	finalizeSessionFunc = func(session *session, startTime time.Time, recoverResult interface{}) {
 		finalizeSessionFuncCalled++
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyStartTime, startTime)
+		assert.Equal(t, recover(), recoverResult)
 	}
 	writeResponseFuncExpected = 1
 	writeResponseFunc = func(session *session, responseObject interface{}, responseError error) {
@@ -550,10 +553,11 @@ func TestHandleSession_Success(t *testing.T) {
 		return dummyStartTime
 	}
 	finalizeSessionFuncExpected = 1
-	finalizeSessionFunc = func(session *session, startTime time.Time) {
+	finalizeSessionFunc = func(session *session, startTime time.Time, recoverResult interface{}) {
 		finalizeSessionFuncCalled++
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyStartTime, startTime)
+		assert.Equal(t, recover(), recoverResult)
 	}
 	handleActionFuncExpected = 1
 	handleActionFunc = func(session *session, action ActionFunc) {
