@@ -66,8 +66,6 @@ var (
 var (
 	stringsSplit         = strings.Split
 	strconvAtoi          = strconv.Atoi
-	getRequestedPortFunc = getRequestedPort
-	getApplicationFunc   = getApplication
 	getRouteInfoFunc     = getRouteInfo
 	initiateSessionFunc  = initiateSession
 	getTimeNowUTCFunc    = getTimeNowUTC

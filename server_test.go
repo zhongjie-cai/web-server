@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"math/rand"
+	"net"
 	"net/http"
 	"os"
 	"testing"
@@ -18,7 +19,10 @@ import (
 
 func TestHostServer_ErrorRegisterRoutes(t *testing.T) {
 	// arrange
-	var dummyPort = rand.Intn(65536)
+	var dummyAddress = "some address"
+	var dummyApplication = &application{
+		address: dummyAddress,
+	}
 	var dummySession = &session{id: uuid.New()}
 	var dummyShutdownSignal = make(chan os.Signal)
 	var dummyStarted = rand.Intn(100) > 50
@@ -30,16 +34,16 @@ func TestHostServer_ErrorRegisterRoutes(t *testing.T) {
 
 	// expect
 	instantiateRouterFuncExpected = 1
-	instantiateRouterFunc = func(port int, session *session) (*mux.Router, error) {
+	instantiateRouterFunc = func(app *application, session *session) (*mux.Router, error) {
 		instantiateRouterFuncCalled++
-		assert.Equal(t, dummyPort, port)
+		assert.Equal(t, dummyApplication, app)
 		assert.Equal(t, dummySession, session)
 		return dummyRouter, dummyError
 	}
 
 	// SUT + act
 	var err = hostServer(
-		dummyPort,
+		dummyApplication,
 		dummySession,
 		dummyShutdownSignal,
 		&dummyStarted,
@@ -54,7 +58,10 @@ func TestHostServer_ErrorRegisterRoutes(t *testing.T) {
 
 func TestHostServer_RunServerFailure(t *testing.T) {
 	// arrange
-	var dummyPort = rand.Intn(65536)
+	var dummyAddress = "some address"
+	var dummyApplication = &application{
+		address: dummyAddress,
+	}
 	var dummySession = &session{id: uuid.New()}
 	var dummyShutdownSignal = make(chan os.Signal)
 	var dummyStarted = rand.Intn(100) > 50
@@ -66,9 +73,9 @@ func TestHostServer_RunServerFailure(t *testing.T) {
 
 	// expect
 	instantiateRouterFuncExpected = 1
-	instantiateRouterFunc = func(port int, session *session) (*mux.Router, error) {
+	instantiateRouterFunc = func(app *application, session *session) (*mux.Router, error) {
 		instantiateRouterFuncCalled++
-		assert.Equal(t, dummyPort, port)
+		assert.Equal(t, dummyApplication, app)
 		assert.Equal(t, dummySession, session)
 		return dummyRouter, nil
 	}
@@ -79,18 +86,18 @@ func TestHostServer_RunServerFailure(t *testing.T) {
 		assert.Equal(t, "server", category)
 		assert.Equal(t, "hostServer", subcategory)
 		if logAppRootFuncCalled == 1 {
-			assert.Equal(t, "Targeting port [%v]", messageFormat)
+			assert.Equal(t, "Targeting address [%v]", messageFormat)
 			assert.Equal(t, 1, len(parameters))
-			assert.Equal(t, dummyPort, parameters[0])
+			assert.Equal(t, dummyAddress, parameters[0])
 		} else if logAppRootFuncCalled == 2 {
 			assert.Equal(t, "Server terminated", messageFormat)
 			assert.Empty(t, parameters)
 		}
 	}
 	runServerFuncExpected = 1
-	runServerFunc = func(port int, session *session, router *mux.Router, shutdownSignal chan os.Signal, started *bool) bool {
+	runServerFunc = func(address string, session *session, router *mux.Router, shutdownSignal chan os.Signal, started *bool) bool {
 		runServerFuncCalled++
-		assert.Equal(t, dummyPort, port)
+		assert.Equal(t, dummyAddress, address)
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyRouter, router)
 		assert.Equal(t, dummyShutdownSignal, shutdownSignal)
@@ -108,7 +115,7 @@ func TestHostServer_RunServerFailure(t *testing.T) {
 
 	// SUT + act
 	var err = hostServer(
-		dummyPort,
+		dummyApplication,
 		dummySession,
 		dummyShutdownSignal,
 		&dummyStarted,
@@ -123,7 +130,10 @@ func TestHostServer_RunServerFailure(t *testing.T) {
 
 func TestHostServer_RunServerSuccess(t *testing.T) {
 	// arrange
-	var dummyPort = rand.Intn(65536)
+	var dummyAddress = "some address"
+	var dummyApplication = &application{
+		address: dummyAddress,
+	}
 	var dummySession = &session{id: uuid.New()}
 	var dummyShutdownSignal = make(chan os.Signal)
 	var dummyStarted = rand.Intn(100) > 50
@@ -134,9 +144,9 @@ func TestHostServer_RunServerSuccess(t *testing.T) {
 
 	// expect
 	instantiateRouterFuncExpected = 1
-	instantiateRouterFunc = func(port int, session *session) (*mux.Router, error) {
+	instantiateRouterFunc = func(app *application, session *session) (*mux.Router, error) {
 		instantiateRouterFuncCalled++
-		assert.Equal(t, dummyPort, port)
+		assert.Equal(t, dummyApplication, app)
 		assert.Equal(t, dummySession, session)
 		return dummyRouter, nil
 	}
@@ -147,18 +157,18 @@ func TestHostServer_RunServerSuccess(t *testing.T) {
 		assert.Equal(t, "server", category)
 		assert.Equal(t, "hostServer", subcategory)
 		if logAppRootFuncCalled == 1 {
-			assert.Equal(t, "Targeting port [%v]", messageFormat)
+			assert.Equal(t, "Targeting address [%v]", messageFormat)
 			assert.Equal(t, 1, len(parameters))
-			assert.Equal(t, dummyPort, parameters[0])
+			assert.Equal(t, dummyAddress, parameters[0])
 		} else if logAppRootFuncCalled == 2 {
 			assert.Equal(t, "Server closed", messageFormat)
 			assert.Empty(t, parameters)
 		}
 	}
 	runServerFuncExpected = 1
-	runServerFunc = func(port int, session *session, router *mux.Router, shutdownSignal chan os.Signal, started *bool) bool {
+	runServerFunc = func(address string, session *session, router *mux.Router, shutdownSignal chan os.Signal, started *bool) bool {
 		runServerFuncCalled++
-		assert.Equal(t, dummyPort, port)
+		assert.Equal(t, dummyAddress, address)
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyRouter, router)
 		assert.Equal(t, dummyShutdownSignal, shutdownSignal)
@@ -168,7 +178,7 @@ func TestHostServer_RunServerSuccess(t *testing.T) {
 
 	// SUT + act
 	var err = hostServer(
-		dummyPort,
+		dummyApplication,
 		dummySession,
 		dummyShutdownSignal,
 		&dummyStarted,
@@ -186,6 +196,7 @@ type dummyCustomizationCreateServer struct {
 	serverCert  func() *tls.Certificate
 	caCertPool  func() *x509.CertPool
 	wrapHandler func(http.Handler) http.Handler
+	listener    func() net.Listener
 }
 
 func (customization *dummyCustomizationCreateServer) ServerCert() *tls.Certificate {
@@ -212,9 +223,17 @@ func (customization *dummyCustomizationCreateServer) WrapHandler(handler http.Ha
 	return nil
 }
 
+func (customization *dummyCustomizationCreateServer) Listener() net.Listener {
+	if customization.listener != nil {
+		return customization.listener()
+	}
+	assert.Fail(customization.t, "Unexpected call to Listener")
+	return nil
+}
+
 func TestCreateServer_NoServerCert(t *testing.T) {
 	// arrange
-	var dummyPort = rand.Intn(65536)
+	var dummyAddress = "some address"
 	var dummyCustomizationCreateServer = &dummyCustomizationCreateServer{
 		dummyCustomization: dummyCustomization{t: t},
 	}
@@ -230,7 +249,6 @@ func TestCreateServer_NoServerCert(t *testing.T) {
 	var customizationWrapHandlerExpected int
 	var customizationWrapHandlerCalled int
 	var dummyServerCert *tls.Certificate
-	var dummyAddress = "some address"
 
 	// mock
 	createMock(t)
@@ -241,14 +259,6 @@ func TestCreateServer_NoServerCert(t *testing.T) {
 		customizationServerCertCalled++
 		return dummyServerCert
 	}
-	fmtSprintfExpected = 1
-	fmtSprintf = func(format string, a ...interface{}) string {
-		fmtSprintfCalled++
-		assert.Equal(t, ":%v", format)
-		assert.Equal(t, 1, len(a))
-		assert.Equal(t, dummyPort, a[0])
-		return dummyAddress
-	}
 	customizationWrapHandlerExpected = 1
 	dummyCustomizationCreateServer.wrapHandler = func(handler http.Handler) http.Handler {
 		customizationWrapHandlerCalled++
@@ -258,7 +268,7 @@ func TestCreateServer_NoServerCert(t *testing.T) {
 
 	// SUT + act
 	var server, https = createServer(
-		dummyPort,
+		dummyAddress,
 		dummySession,
 		dummyRouter,
 	)
@@ -287,7 +297,7 @@ func TestCreateServer_NoServerCert(t *testing.T) {
 
 func TestCreateServer_WithServerCert_NoCaCertPool(t *testing.T) {
 	// arrange
-	var dummyPort = rand.Intn(65536)
+	var dummyAddress = "some address"
 	var dummyCustomizationCreateServer = &dummyCustomizationCreateServer{
 		dummyCustomization: dummyCustomization{t: t},
 	}
@@ -304,7 +314,6 @@ func TestCreateServer_WithServerCert_NoCaCertPool(t *testing.T) {
 	var customizationWrapHandlerCalled int
 	var dummyServerCert = &tls.Certificate{}
 	var dummyCaCertPool *x509.CertPool
-	var dummyAddress = "some address"
 
 	// mock
 	createMock(t)
@@ -320,14 +329,6 @@ func TestCreateServer_WithServerCert_NoCaCertPool(t *testing.T) {
 		customizationCaCertPoolCalled++
 		return dummyCaCertPool
 	}
-	fmtSprintfExpected = 1
-	fmtSprintf = func(format string, a ...interface{}) string {
-		fmtSprintfCalled++
-		assert.Equal(t, ":%v", format)
-		assert.Equal(t, 1, len(a))
-		assert.Equal(t, dummyPort, a[0])
-		return dummyAddress
-	}
 	customizationWrapHandlerExpected = 1
 	dummyCustomizationCreateServer.wrapHandler = func(handler http.Handler) http.Handler {
 		customizationWrapHandlerCalled++
@@ -337,7 +338,7 @@ func TestCreateServer_WithServerCert_NoCaCertPool(t *testing.T) {
 
 	// SUT + act
 	var server, https = createServer(
-		dummyPort,
+		dummyAddress,
 		dummySession,
 		dummyRouter,
 	)
@@ -367,7 +368,7 @@ func TestCreateServer_WithServerCert_NoCaCertPool(t *testing.T) {
 
 func TestCreateServer_WithServerCert_WithCaCertPool(t *testing.T) {
 	// arrange
-	var dummyPort = rand.Intn(65536)
+	var dummyAddress = "some address"
 	var dummyCustomizationCreateServer = &dummyCustomizationCreateServer{
 		dummyCustomization: dummyCustomization{t: t},
 	}
@@ -384,7 +385,6 @@ func TestCreateServer_WithServerCert_WithCaCertPool(t *testing.T) {
 	var customizationWrapHandlerCalled int
 	var dummyServerCert = &tls.Certificate{}
 	var dummyCaCertPool = &x509.CertPool{}
-	var dummyAddress = "some address"
 
 	// mock
 	createMock(t)
@@ -400,14 +400,6 @@ func TestCreateServer_WithServerCert_WithCaCertPool(t *testing.T) {
 		customizationCaCertPoolCalled++
 		return dummyCaCertPool
 	}
-	fmtSprintfExpected = 1
-	fmtSprintf = func(format string, a ...interface{}) string {
-		fmtSprintfCalled++
-		assert.Equal(t, ":%v", format)
-		assert.Equal(t, 1, len(a))
-		assert.Equal(t, dummyPort, a[0])
-		return dummyAddress
-	}
 	customizationWrapHandlerExpected = 1
 	dummyCustomizationCreateServer.wrapHandler = func(handler http.Handler) http.Handler {
 		customizationWrapHandlerCalled++
@@ -417,7 +409,7 @@ func TestCreateServer_WithServerCert_WithCaCertPool(t *testing.T) {
 
 	// SUT + act
 	var server, https = createServer(
-		dummyPort,
+		dummyAddress,
 		dummySession,
 		dummyRouter,
 	)
@@ -445,10 +437,22 @@ func TestCreateServer_WithServerCert_WithCaCertPool(t *testing.T) {
 	assert.Equal(t, customizationWrapHandlerExpected, customizationWrapHandlerCalled, "Unexpected number of calls to customization.WrapHandler")
 }
 
-func TestListenAndServe_HTTPS(t *testing.T) {
+func TestListenAndServe_NoListener_HTTPS(t *testing.T) {
 	// arrange
+	var dummyCustomizationCreateServer = &dummyCustomizationCreateServer{
+		dummyCustomization: dummyCustomization{t: t},
+	}
+	var dummySession = &session{
+		id:            uuid.New(),
+		customization: dummyCustomizationCreateServer,
+	}
 	var dummyServer = &http.Server{}
 	var dummyServeHTTPS = true
+	
+	// stub
+	dummyCustomizationCreateServer.listener = func() net.Listener {
+		return nil
+	}
 
 	// mock
 	createMock(t)
@@ -458,6 +462,7 @@ func TestListenAndServe_HTTPS(t *testing.T) {
 		t,
 		func() {
 			go listenAndServe(
+				dummySession,
 				dummyServer,
 				dummyServeHTTPS,
 			)
@@ -472,10 +477,22 @@ func TestListenAndServe_HTTPS(t *testing.T) {
 	verifyAll(t)
 }
 
-func TestListenAndServe_HTTP(t *testing.T) {
+func TestListenAndServe_NoListener_HTTP(t *testing.T) {
 	// arrange
+	var dummyCustomizationCreateServer = &dummyCustomizationCreateServer{
+		dummyCustomization: dummyCustomization{t: t},
+	}
+	var dummySession = &session{
+		id:            uuid.New(),
+		customization: dummyCustomizationCreateServer,
+	}
 	var dummyServer = &http.Server{}
 	var dummyServeHTTPS = false
+
+	// stub
+	dummyCustomizationCreateServer.listener = func() net.Listener {
+		return nil
+	}
 
 	// mock
 	createMock(t)
@@ -485,6 +502,89 @@ func TestListenAndServe_HTTP(t *testing.T) {
 		t,
 		func() {
 			go listenAndServe(
+				dummySession,
+				dummyServer,
+				dummyServeHTTPS,
+			)
+			var err = dummyServer.Close()
+
+			// assert
+			assert.NoError(t, err)
+		},
+	)
+
+	// verify
+	verifyAll(t)
+}
+
+func TestListenAndServe_WithListener_HTTPS(t *testing.T) {
+	// arrange
+	var dummyCustomizationCreateServer = &dummyCustomizationCreateServer{
+		dummyCustomization: dummyCustomization{t: t},
+	}
+	var dummySession = &session{
+		id:            uuid.New(),
+		customization: dummyCustomizationCreateServer,
+	}
+	var dummyServer = &http.Server{}
+	var dummyServeHTTPS = true
+	var dummyListener = &net.UnixListener{}
+
+	// expect
+	dummyCustomizationCreateServer.listener = func() net.Listener {
+		return dummyListener
+	}
+
+	// mock
+	createMock(t)
+
+	// SUT + act
+	assert.NotPanics(
+		t,
+		func() {
+			go listenAndServe(
+				dummySession,
+				dummyServer,
+				dummyServeHTTPS,
+			)
+			var err = dummyServer.Close()
+
+			// assert
+			assert.NoError(t, err)
+		},
+	)
+
+	// verify
+	verifyAll(t)
+}
+
+func TestListenAndServe_WithListener_HTTP(t *testing.T) {
+	// arrange
+	var dummyCustomizationCreateServer = &dummyCustomizationCreateServer{
+		dummyCustomization: dummyCustomization{t: t},
+	}
+	var dummySession = &session{
+		id:            uuid.New(),
+		customization: dummyCustomizationCreateServer,
+	}
+	var dummyServer = &http.Server{}
+	var dummyServeHTTPS = false
+	var dummyListener = &net.UnixListener{}
+
+	// expect
+	dummyCustomizationCreateServer.listener = func() net.Listener {
+		return dummyListener
+	}
+
+	// mock
+	createMock(t)
+
+	// SUT + act
+	assert.NotPanics(
+		t,
+		func() {
+			go listenAndServe(
+				dummySession,
 				dummyServer,
 				dummyServeHTTPS,
 			)
@@ -621,7 +721,7 @@ func (customization *dummyCustomizationRunServer) GraceShutdownWaitTime() time.D
 
 func TestRunServer_HappyPath(t *testing.T) {
 	// arrange
-	var dummyPort = rand.Intn(65536)
+	var dummyAddress = "some address"
 	var dummyCustomizationRunServer = &dummyCustomizationRunServer{
 		dummyCustomization: dummyCustomization{t: t},
 	}
@@ -651,9 +751,9 @@ func TestRunServer_HappyPath(t *testing.T) {
 
 	// expect
 	createServerFuncExpected = 1
-	createServerFunc = func(port int, session *session, router *mux.Router) (*http.Server, bool) {
+	createServerFunc = func(address string, session *session, router *mux.Router) (*http.Server, bool) {
 		createServerFuncCalled++
-		assert.Equal(t, dummyPort, port)
+		assert.Equal(t, dummyAddress, address)
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyRouter, router)
 		return dummyServer, dummyHTTPS
@@ -666,8 +766,9 @@ func TestRunServer_HappyPath(t *testing.T) {
 		assert.Equal(t, os.Kill, sig[1])
 	}
 	listenAndServeFuncExpected = 1
-	listenAndServeFunc = func(server *http.Server, serveHTTPS bool) error {
+	listenAndServeFunc = func(session *session, server *http.Server, serveHTTPS bool) error {
 		listenAndServeFuncCalled++
+		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyServer, server)
 		assert.Equal(t, dummyHTTPS, serveHTTPS)
 		assert.True(t, dummyStarted)
@@ -727,7 +828,7 @@ func TestRunServer_HappyPath(t *testing.T) {
 
 	// SUT + act
 	var result = runServer(
-		dummyPort,
+		dummyAddress,
 		dummySession,
 		dummyRouter,
 		dummyShutdownSignal,

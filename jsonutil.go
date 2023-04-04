@@ -20,7 +20,7 @@ func marshalIgnoreError(v interface{}) string {
 	var encoder = jsonNewEncoder(buffer)
 	encoder.SetEscapeHTML(false)
 	encoder.Encode(v)
-	var result = string(buffer.Bytes())
+	var result = buffer.String()
 	return stringsTrimRight(result, "\n")
 }
 

@@ -2,7 +2,6 @@ package webserver
 
 import (
 	"os"
-	"sync"
 )
 
 // Application is the interface for web server application
@@ -17,25 +16,9 @@ type Application interface {
 	Stop()
 }
 
-var (
-	applicationLock = sync.RWMutex{}
-	applicationMap  = map[int]*application{}
-	nilApplication  = &application{
-		session: &session{
-			request:        defaultRequest,
-			responseWriter: defaultResponseWriter,
-			attachment:     map[string]interface{}{},
-			customization:  customizationDefault,
-		},
-		customization:  customizationDefault,
-		actionFuncMap:  map[string]ActionFunc{},
-		shutdownSignal: make(chan os.Signal),
-	}
-)
-
 type application struct {
 	name           string
-	port           int
+	address        string
 	version        string
 	session        *session
 	customization  Customization
@@ -47,27 +30,16 @@ type application struct {
 // NewApplication creates a new application for web server hosting
 func NewApplication(
 	name string,
-	port int,
+	address string,
 	version string,
 	customization Customization,
 ) Application {
-	applicationLock.Lock()
-	defer applicationLock.Unlock()
-	var _, found = applicationMap[port]
-	if found {
-		panic(
-			fmtErrorf(
-				"An existing application was already registered with given port: %v",
-				port,
-			),
-		)
-	}
 	if isInterfaceValueNilFunc(customization) {
 		customization = customizationDefault
 	}
 	var application = &application{
 		name,
-		port,
+		address,
 		version,
 		&session{
 			uuidNew(),
@@ -81,20 +53,6 @@ func NewApplication(
 		map[string]ActionFunc{},
 		make(chan os.Signal),
 		false,
-	}
-	applicationMap[port] = application
-	return application
-}
-
-func getApplication(
-	port int,
-) *application {
-	applicationLock.RLock()
-	defer applicationLock.RUnlock()
-	var application, found = applicationMap[port]
-	if !found ||
-		isInterfaceValueNilFunc(application) {
-		return nilApplication
 	}
 	return application
 }
@@ -204,7 +162,7 @@ func beginApplication(app *application) {
 		app.version,
 	)
 	var serverHostError = hostServerFunc(
-		app.port,
+		app,
 		app.session,
 		app.shutdownSignal,
 		&app.started,

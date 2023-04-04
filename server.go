@@ -11,13 +11,13 @@ import (
 
 // hostServer hosts the service entries and starts HTTPS server
 func hostServer(
-	port int,
+	app *application,
 	session *session,
 	shutdownSignal chan os.Signal,
 	started *bool,
 ) error {
 	var router, routerError = instantiateRouterFunc(
-		port,
+		app,
 		session,
 	)
 	if routerError != nil {
@@ -27,11 +27,11 @@ func hostServer(
 		session,
 		"server",
 		"hostServer",
-		"Targeting port [%v]",
-		port,
+		"Targeting address [%v]",
+		app.address,
 	)
 	if runServerFunc(
-		port,
+		app.address,
 		session,
 		router,
 		shutdownSignal,
@@ -59,7 +59,7 @@ func hostServer(
 }
 
 func createServer(
-	port int,
+	address string,
 	session *session,
 	router *mux.Router,
 ) (*http.Server, bool) {
@@ -84,10 +84,6 @@ func createServer(
 			tlsConfig.ClientAuth = tls.RequireAnyClientCert
 		}
 	}
-	var address = fmtSprintf(
-		":%v",
-		port,
-	)
 	return &http.Server{
 		Addr:      address,
 		TLSConfig: tlsConfig,
@@ -98,13 +94,22 @@ func createServer(
 }
 
 func listenAndServe(
+	session *session,
 	server *http.Server,
 	serveHTTPS bool,
 ) error {
-	if serveHTTPS {
-		return server.ListenAndServeTLS("", "")
+	var listener = session.customization.Listener()
+	if listener == nil {
+		if serveHTTPS {
+			return server.ListenAndServeTLS("", "")
+		}
+		return server.ListenAndServe()
+	} else {
+		if serveHTTPS {
+			return server.ServeTLS(listener, "", "")
+		}
+		return server.Serve(listener)
 	}
-	return server.ListenAndServe()
 }
 
 func shutdownServer(
@@ -148,14 +153,14 @@ func evaluateServerErrors(
 }
 
 func runServer(
-	port int,
+	address string,
 	session *session,
 	router *mux.Router,
 	shutdownSignal chan os.Signal,
 	started *bool,
 ) bool {
 	var server, https = createServerFunc(
-		port,
+		address,
 		session,
 		router,
 	)
@@ -171,6 +176,7 @@ func runServer(
 	var hostError error
 	go func() {
 		hostError = listenAndServeFunc(
+			session,
 			server,
 			https,
 		)

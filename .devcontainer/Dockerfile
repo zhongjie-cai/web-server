@@ -1,7 +1,7 @@
 # See here for image contents: https://github.com/microsoft/vscode-dev-containers/tree/v0.154.2/containers/go/.devcontainer/base.Dockerfile
 
 # [Choice] Go version: 1, 1.15, 1.14
-ARG VARIANT="1.15"
+ARG VARIANT="1.19"
 FROM mcr.microsoft.com/vscode/devcontainers/go:0-${VARIANT}
 
 # [Option] Install Node.js
@@ -14,9 +14,9 @@ FROM mcr.microsoft.com/vscode/devcontainers/go:0-${VARIANT}
 #     && apt-get -y install --no-install-recommends <your-package-list-here>
 
 # [Optional] Uncomment the next line to use go get to install anything else you need
-RUN go get -x github.com/google/uuid
-RUN go get -x github.com/gorilla/mux
-RUN go get -x github.com/stretchr/testify/assert
+# RUN go get -x github.com/google/uuid
+# RUN go get -x github.com/gorilla/mux
+# RUN go get -x github.com/stretchr/testify/assert
 
 # [Optional] Uncomment this line to install global node packages.
 # RUN su vscode -c "source /usr/local/share/nvm/nvm.sh && npm install -g <your-package-here>" 2>&1

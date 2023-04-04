@@ -209,7 +209,7 @@ func (customization *dummyCustomizationRegisterRoutes) Routes() []Route {
 
 func TestRegisterRoutes_EmptyRoutes(t *testing.T) {
 	// arrange
-	var dummyPort = rand.Intn(65536)
+	var dummyApplication = &application{}
 	var dummyCustomizationRegisterRoutes = &dummyCustomizationRegisterRoutes{
 		dummyCustomization: dummyCustomization{t: t},
 	}
@@ -242,7 +242,7 @@ func TestRegisterRoutes_EmptyRoutes(t *testing.T) {
 
 	// SUT + act
 	registerRoutes(
-		dummyPort,
+		dummyApplication,
 		dummySession,
 		dummyRouter,
 	)
@@ -254,7 +254,9 @@ func TestRegisterRoutes_EmptyRoutes(t *testing.T) {
 
 func TestRegisterRoutes_ValidRoutes(t *testing.T) {
 	// arrange
-	var dummyPort = rand.Intn(65536)
+	var dummyApplication = &application{
+		actionFuncMap: make(map[string]ActionFunc),
+	}
 	var dummyCustomizationRegisterRoutes = &dummyCustomizationRegisterRoutes{
 		dummyCustomization: dummyCustomization{t: t},
 	}
@@ -346,11 +348,10 @@ func TestRegisterRoutes_ValidRoutes(t *testing.T) {
 		return nil
 	}
 	registerRouteFuncExpected = 2
-	registerRouteFunc = func(router *mux.Router, endpoint string, method string, path string, queries []string, handlerFunc func(http.ResponseWriter, *http.Request), actionFunc ActionFunc, port int) *mux.Route {
+	registerRouteFunc = func(router *mux.Router, endpoint string, method string, path string, queries []string, handlerFunc func(http.ResponseWriter, *http.Request), actionFunc ActionFunc) (string, *mux.Route) {
 		registerRouteFuncCalled++
 		assert.Equal(t, dummyRouter, router)
-		assert.Equal(t, fmt.Sprintf("%v", reflect.ValueOf(handleSession)), fmt.Sprintf("%v", reflect.ValueOf(handlerFunc)))
-		assert.Equal(t, dummyPort, port)
+		assert.Equal(t, fmt.Sprintf("%v", reflect.ValueOf(dummyApplication.handleSession)), fmt.Sprintf("%v", reflect.ValueOf(handlerFunc)))
 		if registerRouteFuncCalled == 1 {
 			assert.Equal(t, dummyEndpoint1, endpoint)
 			assert.Equal(t, dummyMethod1, method)
@@ -364,12 +365,12 @@ func TestRegisterRoutes_ValidRoutes(t *testing.T) {
 			assert.Equal(t, dummyEvaluatedQueries2, queries)
 			assert.Equal(t, dummyActionFunc2Pointer, fmt.Sprintf("%v", reflect.ValueOf(actionFunc)))
 		}
-		return nil
+		return "", nil
 	}
 
 	// SUT + act
 	registerRoutes(
-		dummyPort,
+		dummyApplication,
 		dummySession,
 		dummyRouter,
 	)
@@ -693,7 +694,7 @@ func TestInstantiateRouter_RouterError(t *testing.T) {
 	var dummyCustomizationInitRouter = &dummyCustomizationInitRouter{
 		dummyCustomization: dummyCustomization{t: t},
 	}
-	var dummyPort = rand.Intn(65536)
+	var dummyApplication = &application{}
 	var dummySession = &session{
 		customization: dummyCustomizationInitRouter,
 	}
@@ -711,9 +712,9 @@ func TestInstantiateRouter_RouterError(t *testing.T) {
 		return dummyRouter
 	}
 	registerRoutesFuncExpected = 1
-	registerRoutesFunc = func(port int, session *session, router *mux.Router) {
+	registerRoutesFunc = func(app *application, session *session, router *mux.Router) {
 		registerRoutesFuncCalled++
-		assert.Equal(t, dummyPort, port)
+		assert.Equal(t, dummyApplication, app)
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyRouter, router)
 	}
@@ -758,7 +759,7 @@ func TestInstantiateRouter_RouterError(t *testing.T) {
 
 	// SUT + act
 	var result, err = instantiateRouter(
-		dummyPort,
+		dummyApplication,
 		dummySession,
 	)
 
@@ -775,7 +776,7 @@ func TestInstantiateRouter_HappyPath(t *testing.T) {
 	var dummyCustomizationInitRouter = &dummyCustomizationInitRouter{
 		dummyCustomization: dummyCustomization{t: t},
 	}
-	var dummyPort = rand.Intn(65536)
+	var dummyApplication = &application{}
 	var dummySession = &session{
 		customization: dummyCustomizationInitRouter,
 	}
@@ -793,9 +794,9 @@ func TestInstantiateRouter_HappyPath(t *testing.T) {
 		return dummyRouter
 	}
 	registerRoutesFuncExpected = 1
-	registerRoutesFunc = func(port int, session *session, router *mux.Router) {
+	registerRoutesFunc = func(app *application, session *session, router *mux.Router) {
 		registerRoutesFuncCalled++
-		assert.Equal(t, dummyPort, port)
+		assert.Equal(t, dummyApplication, app)
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyRouter, router)
 	}
@@ -833,7 +834,7 @@ func TestInstantiateRouter_HappyPath(t *testing.T) {
 
 	// SUT + act
 	var result, err = instantiateRouter(
-		dummyPort,
+		dummyApplication,
 		dummySession,
 	)
 

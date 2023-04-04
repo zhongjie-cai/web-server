@@ -2,7 +2,6 @@ package webserver
 
 import (
 	"errors"
-	"math/rand"
 	"net/http"
 	"strings"
 	"testing"
@@ -552,10 +551,6 @@ func TestRegisterRoute(t *testing.T) {
 	var dummyPath = "/foo/{bar}"
 	var dummyQueries = []string{"test", "{test}"}
 	var dummyQueriesTemplates = []string{"test={test}"}
-	var dummyPort = rand.Intn(65536)
-	var dummyApplication = &application{
-		actionFuncMap: map[string]ActionFunc{},
-	}
 
 	// stub
 	var dummyHandlerFuncExpected = 0
@@ -583,18 +578,12 @@ func TestRegisterRoute(t *testing.T) {
 		assert.Equal(t, dummyMethod, a[1])
 		return dummyName
 	}
-	getApplicationFuncExpected = 1
-	getApplicationFunc = func(port int) *application {
-		getApplicationFuncCalled++
-		assert.Equal(t, dummyPort, port)
-		return dummyApplication
-	}
 
 	// SUT
 	var router = mux.NewRouter()
 
 	// act
-	var route = registerRoute(
+	var rn, route = registerRoute(
 		router,
 		dummyEndpoint,
 		dummyMethod,
@@ -602,7 +591,6 @@ func TestRegisterRoute(t *testing.T) {
 		dummyQueries,
 		dummyHandlerFunc,
 		dummyActionFunc,
-		dummyPort,
 	)
 	var name = route.GetName()
 	var methods, _ = route.GetMethods()
@@ -610,6 +598,7 @@ func TestRegisterRoute(t *testing.T) {
 	var queriesTemplate, _ = route.GetQueriesTemplates()
 
 	// assert
+	assert.Equal(t, dummyName, rn)
 	assert.Equal(t, dummyName, name)
 	assert.Equal(t, 1, len(methods))
 	assert.Equal(t, dummyMethod, methods[0])
@@ -617,7 +606,6 @@ func TestRegisterRoute(t *testing.T) {
 	assert.Equal(t, dummyQueriesTemplates, queriesTemplate)
 	assert.Equal(t, dummyHandlerFuncExpected, dummyHandlerFuncCalled)
 	assert.Equal(t, dummyActionFuncExpected, dummyActionFuncCalled)
-	functionPointerEquals(t, dummyActionFunc, dummyApplication.actionFuncMap[dummyName])
 
 	// verify
 	verifyAll(t)

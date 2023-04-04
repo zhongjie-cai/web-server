@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/textproto"
 	"net/url"
@@ -22,7 +23,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
@@ -88,10 +88,6 @@ var (
 	stringsSplitCalled                      int
 	strconvAtoiExpected                     int
 	strconvAtoiCalled                       int
-	getRequestedPortFuncExpected            int
-	getRequestedPortFuncCalled              int
-	getApplicationFuncExpected              int
-	getApplicationFuncCalled                int
 	getRouteInfoFuncExpected                int
 	getRouteInfoFuncCalled                  int
 	initiateSessionFuncExpected             int
@@ -408,7 +404,7 @@ func createMock(t *testing.T) {
 	}
 	hostServerFuncExpected = 0
 	hostServerFuncCalled = 0
-	hostServerFunc = func(port int, session *session, shutdownSignal chan os.Signal, started *bool) error {
+	hostServerFunc = func(app *application, session *session, shutdownSignal chan os.Signal, started *bool) error {
 		hostServerFuncCalled++
 		return nil
 	}
@@ -454,18 +450,6 @@ func createMock(t *testing.T) {
 		strconvAtoiCalled++
 		return 0, nil
 	}
-	getRequestedPortFuncExpected = 0
-	getRequestedPortFuncCalled = 0
-	getRequestedPortFunc = func(httpRequest *http.Request) int {
-		getRequestedPortFuncCalled++
-		return 0
-	}
-	getApplicationFuncExpected = 0
-	getApplicationFuncCalled = 0
-	getApplicationFunc = func(port int) *application {
-		getApplicationFuncCalled++
-		return nil
-	}
 	getRouteInfoFuncExpected = 0
 	getRouteInfoFuncCalled = 0
 	getRouteInfoFunc = func(httpRequest *http.Request, actionFuncMap map[string]ActionFunc) (string, ActionFunc, error) {
@@ -474,7 +458,7 @@ func createMock(t *testing.T) {
 	}
 	initiateSessionFuncExpected = 0
 	initiateSessionFuncCalled = 0
-	initiateSessionFunc = func(responseWriter http.ResponseWriter, httpRequest *http.Request) (*session, ActionFunc, error) {
+	initiateSessionFunc = func(app *application, responseWriter http.ResponseWriter, httpRequest *http.Request) (*session, ActionFunc, error) {
 		initiateSessionFuncCalled++
 		return nil, nil, nil
 	}
@@ -640,9 +624,9 @@ func createMock(t *testing.T) {
 	}
 	registerRouteFuncExpected = 0
 	registerRouteFuncCalled = 0
-	registerRouteFunc = func(router *mux.Router, endpoint string, method string, path string, queries []string, handleFunc func(http.ResponseWriter, *http.Request), actionFunc ActionFunc, port int) *mux.Route {
+	registerRouteFunc = func(router *mux.Router, endpoint string, method string, path string, queries []string, handleFunc func(http.ResponseWriter, *http.Request), actionFunc ActionFunc) (string, *mux.Route) {
 		registerRouteFuncCalled++
-		return nil
+		return "", nil
 	}
 	registerStaticFuncExpected = 0
 	registerStaticFuncCalled = 0
@@ -663,7 +647,7 @@ func createMock(t *testing.T) {
 	}
 	registerRoutesFuncExpected = 0
 	registerRoutesFuncCalled = 0
-	registerRoutesFunc = func(port int, session *session, router *mux.Router) {
+	registerRoutesFunc = func(app *application, session *session, router *mux.Router) {
 		registerRoutesFuncCalled++
 	}
 	registerStaticsFuncExpected = 0
@@ -772,19 +756,19 @@ func createMock(t *testing.T) {
 	}
 	instantiateRouterFuncExpected = 0
 	instantiateRouterFuncCalled = 0
-	instantiateRouterFunc = func(port int, session *session) (*mux.Router, error) {
+	instantiateRouterFunc = func(app *application, session *session) (*mux.Router, error) {
 		instantiateRouterFuncCalled++
 		return nil, nil
 	}
 	runServerFuncExpected = 0
 	runServerFuncCalled = 0
-	runServerFunc = func(port int, session *session, router *mux.Router, shutdownSignal chan os.Signal, started *bool) bool {
+	runServerFunc = func(address string, session *session, router *mux.Router, shutdownSignal chan os.Signal, started *bool) bool {
 		runServerFuncCalled++
 		return false
 	}
 	createServerFuncExpected = 0
 	createServerFuncCalled = 0
-	createServerFunc = func(port int, session *session, router *mux.Router) (*http.Server, bool) {
+	createServerFunc = func(address string, session *session, router *mux.Router) (*http.Server, bool) {
 		createServerFuncCalled++
 		return nil, false
 	}
@@ -795,7 +779,7 @@ func createMock(t *testing.T) {
 	}
 	listenAndServeFuncExpected = 0
 	listenAndServeFuncCalled = 0
-	listenAndServeFunc = func(server *http.Server, serveHTTPS bool) error {
+	listenAndServeFunc = func(session *session, server *http.Server, serveHTTPS bool) error {
 		listenAndServeFuncCalled++
 		return nil
 	}
@@ -1091,10 +1075,6 @@ func verifyAll(t *testing.T) {
 	assert.Equal(t, stringsSplitExpected, stringsSplitCalled, "Unexpected number of calls to method stringsSplit")
 	strconvAtoi = strconv.Atoi
 	assert.Equal(t, strconvAtoiExpected, strconvAtoiCalled, "Unexpected number of calls to method strconvAtoi")
-	getRequestedPortFunc = getRequestedPort
-	assert.Equal(t, getRequestedPortFuncExpected, getRequestedPortFuncCalled, "Unexpected number of calls to method getRequestedPortFunc")
-	getApplicationFunc = getApplication
-	assert.Equal(t, getApplicationFuncExpected, getApplicationFuncCalled, "Unexpected number of calls to method getApplicationFunc")
 	getRouteInfoFunc = getRouteInfo
 	assert.Equal(t, getRouteInfoFuncExpected, getRouteInfoFuncCalled, "Unexpected number of calls to method getRouteInfoFunc")
 	initiateSessionFunc = initiateSession
@@ -1293,9 +1273,6 @@ func verifyAll(t *testing.T) {
 	assert.Equal(t, getDataTemplateFuncExpected, getDataTemplateFuncCalled, "Unexpected number of calls to method getDataTemplateFunc")
 	parseResponseFunc = parseResponse
 	assert.Equal(t, parseResponseFuncExpected, parseResponseFuncCalled, "Unexpected number of calls to method parseResponseFunc")
-
-	applicationLock = sync.RWMutex{}
-	applicationMap = map[int]*application{}
 }
 
 func functionPointerEquals(t *testing.T, expectFunc interface{}, actualFunc interface{}) {
@@ -1305,28 +1282,6 @@ func functionPointerEquals(t *testing.T, expectFunc interface{}, actualFunc inte
 }
 
 // mock structs
-type dummyApplication struct {
-	t *testing.T
-}
-
-func (application *dummyApplication) Start() {
-	assert.Fail(application.t, "Unexpected call to Start")
-}
-
-func (application *dummyApplication) Session() Session {
-	assert.Fail(application.t, "Unexpected call to Session")
-	return nil
-}
-
-func (application *dummyApplication) IsRunning() bool {
-	assert.Fail(application.t, "Unexpected call to IsRunning")
-	return false
-}
-
-func (application *dummyApplication) Stop() {
-	assert.Fail(application.t, "Unexpected call to Stop")
-}
-
 type dummyAppError struct {
 	t *testing.T
 }
@@ -1421,6 +1376,11 @@ func (customization *dummyCustomization) InstrumentRouter(router *mux.Router) *m
 
 func (customization *dummyCustomization) WrapHandler(handler http.Handler) http.Handler {
 	assert.Fail(customization.t, "Unexpected call to WrapHandler")
+	return nil
+}
+
+func (customization *dummyCustomization) Listener() net.Listener {
+	assert.Fail(customization.t, "Unexpected call to Listener")
 	return nil
 }
 

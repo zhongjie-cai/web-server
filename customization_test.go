@@ -295,6 +295,20 @@ func TestDefaultCustomization_WrapHandler(t *testing.T) {
 	verifyAll(t)
 }
 
+func TestDefaultCustomization_Listener(t *testing.T) {
+	// mock
+	createMock(t)
+
+	// SUT + act
+	var result = customizationDefault.Listener()
+
+	// assert
+	assert.Nil(t, result)
+
+	// verify
+	verifyAll(t)
+}
+
 func TestDefaultCustomization_PreAction(t *testing.T) {
 	// arrange
 	var dummySession Session

@@ -4,148 +4,17 @@ import (
 	"errors"
 	"math/rand"
 	"net/http"
-	"strconv"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
-
 	"github.com/stretchr/testify/assert"
 )
-
-func TestGetRequestedPort_NilRequest(t *testing.T) {
-	// arrange
-	var dummyHTTPRequest *http.Request
-
-	// mock
-	createMock(t)
-
-	// SUT + act
-	var result = getRequestedPort(
-		dummyHTTPRequest,
-	)
-
-	// assert
-	assert.Zero(t, result)
-
-	// verify
-	verifyAll(t)
-}
-
-func TestGetRequestedPort_NoPort(t *testing.T) {
-	// arrange
-	var dummyHost = "some host"
-	var dummyHTTPRequest = &http.Request{
-		Host: dummyHost,
-	}
-
-	// mock
-	createMock(t)
-
-	// expect
-	stringsSplitExpected = 1
-	stringsSplit = func(s, sep string) []string {
-		stringsSplitCalled++
-		assert.Equal(t, dummyHost, s)
-		assert.Equal(t, ":", sep)
-		return strings.Split(s, sep)
-	}
-
-	// SUT + act
-	var result = getRequestedPort(
-		dummyHTTPRequest,
-	)
-
-	// assert
-	assert.Zero(t, result)
-
-	// verify
-	verifyAll(t)
-}
-
-func TestGetRequestedPort_InvalidPort(t *testing.T) {
-	// arrange
-	var dummyPort = "some port"
-	var dummyHost = "some host:" + dummyPort
-	var dummyHTTPRequest = &http.Request{
-		Host: dummyHost,
-	}
-
-	// mock
-	createMock(t)
-
-	// expect
-	stringsSplitExpected = 1
-	stringsSplit = func(s, sep string) []string {
-		stringsSplitCalled++
-		assert.Equal(t, dummyHost, s)
-		assert.Equal(t, ":", sep)
-		return strings.Split(s, sep)
-	}
-	strconvAtoiExpected = 1
-	strconvAtoi = func(s string) (int, error) {
-		strconvAtoiCalled++
-		assert.Equal(t, dummyPort, s)
-		return strconv.Atoi(s)
-	}
-
-	// SUT + act
-	var result = getRequestedPort(
-		dummyHTTPRequest,
-	)
-
-	// assert
-	assert.Zero(t, result)
-
-	// verify
-	verifyAll(t)
-}
-
-func TestGetRequestedPort_Success(t *testing.T) {
-	// arrange
-	var dummyPortValue = rand.Intn(65536)
-	var dummyPortString = strconv.Itoa(dummyPortValue)
-	var dummyHost = "some host:" + dummyPortString
-	var dummyHTTPRequest = &http.Request{
-		Host: dummyHost,
-	}
-
-	// mock
-	createMock(t)
-
-	// expect
-	stringsSplitExpected = 1
-	stringsSplit = func(s, sep string) []string {
-		stringsSplitCalled++
-		assert.Equal(t, dummyHost, s)
-		assert.Equal(t, ":", sep)
-		return strings.Split(s, sep)
-	}
-	strconvAtoiExpected = 1
-	strconvAtoi = func(s string) (int, error) {
-		strconvAtoiCalled++
-		assert.Equal(t, dummyPortString, s)
-		return strconv.Atoi(s)
-	}
-
-	// SUT + act
-	var result = getRequestedPort(
-		dummyHTTPRequest,
-	)
-
-	// assert
-	assert.Equal(t, dummyPortValue, result)
-
-	// verify
-	verifyAll(t)
-}
 
 func TestInitiateSession(t *testing.T) {
 	// arrange
 	var dummyResponseWriter = &dummyResponseWriter{t: t}
 	var dummyHTTPRequest = &http.Request{Host: "some host"}
-	var dummyPort = rand.Intn(65536)
 	var dummyCustomization = &dummyCustomization{t: t}
 	var dummyAction = func(session Session) (interface{}, error) { return nil, nil }
 	var dummyActionFuncMap = map[string]ActionFunc{
@@ -163,18 +32,6 @@ func TestInitiateSession(t *testing.T) {
 	createMock(t)
 
 	// expect
-	getRequestedPortFuncExpected = 1
-	getRequestedPortFunc = func(httpRequest *http.Request) int {
-		getRequestedPortFuncCalled++
-		assert.Equal(t, dummyHTTPRequest, httpRequest)
-		return dummyPort
-	}
-	getApplicationFuncExpected = 1
-	getApplicationFunc = func(port int) *application {
-		getApplicationFuncCalled++
-		assert.Equal(t, dummyPort, port)
-		return dummyApplication
-	}
 	uuidNewExpected = 1
 	uuidNew = func() uuid.UUID {
 		uuidNewCalled++
@@ -190,6 +47,7 @@ func TestInitiateSession(t *testing.T) {
 
 	// SUT + act
 	var session, action, err = initiateSession(
+		dummyApplication,
 		dummyResponseWriter,
 		dummyHTTPRequest,
 	)
@@ -450,6 +308,7 @@ func TestHandleAction_HappyPath(t *testing.T) {
 
 func TestHandleSession_RouteError(t *testing.T) {
 	// arrange
+	var dummyApplication = &application{}
 	var dummyResponseWriter = &dummyResponseWriter{t: t}
 	var dummyMethod = "some method"
 	var dummyHTTPRequest = &http.Request{
@@ -468,8 +327,9 @@ func TestHandleSession_RouteError(t *testing.T) {
 
 	// expect
 	initiateSessionFuncExpected = 1
-	initiateSessionFunc = func(responseWriter http.ResponseWriter, httpRequest *http.Request) (*session, ActionFunc, error) {
+	initiateSessionFunc = func(app *application, responseWriter http.ResponseWriter, httpRequest *http.Request) (*session, ActionFunc, error) {
 		initiateSessionFuncCalled++
+		assert.Equal(t, dummyApplication, app)
 		assert.Equal(t, dummyResponseWriter, responseWriter)
 		assert.Equal(t, dummyHTTPRequest, httpRequest)
 		return dummySession, dummyAction, dummyRouteError
@@ -504,7 +364,7 @@ func TestHandleSession_RouteError(t *testing.T) {
 	}
 
 	// SUT + act
-	handleSession(
+	dummyApplication.handleSession(
 		dummyResponseWriter,
 		dummyHTTPRequest,
 	)
@@ -515,6 +375,7 @@ func TestHandleSession_RouteError(t *testing.T) {
 
 func TestHandleSession_Success(t *testing.T) {
 	// arrange
+	var dummyApplication = &application{}
 	var dummyResponseWriter = &dummyResponseWriter{t: t}
 	var dummyMethod = "some method"
 	var dummyHTTPRequest = &http.Request{
@@ -532,8 +393,9 @@ func TestHandleSession_Success(t *testing.T) {
 
 	// expect
 	initiateSessionFuncExpected = 1
-	initiateSessionFunc = func(responseWriter http.ResponseWriter, httpRequest *http.Request) (*session, ActionFunc, error) {
+	initiateSessionFunc = func(app *application, responseWriter http.ResponseWriter, httpRequest *http.Request) (*session, ActionFunc, error) {
 		initiateSessionFuncCalled++
+		assert.Equal(t, dummyApplication, app)
 		assert.Equal(t, dummyResponseWriter, responseWriter)
 		assert.Equal(t, dummyHTTPRequest, httpRequest)
 		return dummySession, dummyAction, nil
@@ -567,7 +429,7 @@ func TestHandleSession_Success(t *testing.T) {
 	}
 
 	// SUT + act
-	handleSession(
+	dummyApplication.handleSession(
 		dummyResponseWriter,
 		dummyHTTPRequest,
 	)

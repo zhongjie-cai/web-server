@@ -13,70 +13,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNilApplication(t *testing.T) {
-	// mock
-	createMock(t)
-
-	// assert
-	assert.NotNil(t, nilApplication)
-	assert.Zero(t, nilApplication.name)
-	assert.Zero(t, nilApplication.port)
-	assert.Zero(t, nilApplication.version)
-	assert.NotNil(t, nilApplication.session)
-	assert.Equal(t, defaultRequest, nilApplication.session.request)
-	assert.Equal(t, defaultResponseWriter, nilApplication.session.responseWriter)
-	assert.Empty(t, nilApplication.session.attachment)
-	assert.Equal(t, customizationDefault, nilApplication.session.customization)
-	assert.Equal(t, customizationDefault, nilApplication.customization)
-	assert.Empty(t, nilApplication.actionFuncMap)
-	assert.NotZero(t, nilApplication.shutdownSignal)
-
-	// verify
-	verifyAll(t)
-}
-
-func TestNewApplication_PortUsed(t *testing.T) {
-	// arrange
-	var dummyName = "some name"
-	var dummyPort = rand.Intn(65536)
-	var dummyVersion = "some version"
-	var dummyCustomization Customization
-	var dummyError = errors.New("some error")
-
-	// stub
-	applicationMap[dummyPort] = &application{}
-
-	// mock
-	createMock(t)
-
-	// expect
-	fmtErrorfExpected = 1
-	fmtErrorf = func(format string, a ...interface{}) error {
-		fmtErrorfCalled++
-		assert.Equal(t, "An existing application was already registered with given port: %v", format)
-		assert.Equal(t, 1, len(a))
-		assert.Equal(t, dummyPort, a[0])
-		return dummyError
-	}
-
-	// assert
-	assert.PanicsWithValue(t, dummyError, func() {
-		NewApplication(
-			dummyName,
-			dummyPort,
-			dummyVersion,
-			dummyCustomization,
-		)
-	})
-
-	// verify
-	verifyAll(t)
-}
-
 func TestNewApplication_NilCustomization(t *testing.T) {
 	// arrange
 	var dummyName = "some name"
-	var dummyPort = rand.Intn(65536)
+	var dummyAddress = "some address"
 	var dummyVersion = "some version"
 	var dummyCustomization Customization
 	var dummySessionID = uuid.New()
@@ -100,7 +40,7 @@ func TestNewApplication_NilCustomization(t *testing.T) {
 	// SUT
 	var result = NewApplication(
 		dummyName,
-		dummyPort,
+		dummyAddress,
 		dummyVersion,
 		dummyCustomization,
 	)
@@ -112,7 +52,7 @@ func TestNewApplication_NilCustomization(t *testing.T) {
 	assert.True(t, ok)
 	assert.NotNil(t, value)
 	assert.Equal(t, dummyName, value.name)
-	assert.Equal(t, dummyPort, value.port)
+	assert.Equal(t, dummyAddress, value.address)
 	assert.Equal(t, dummyVersion, value.version)
 	assert.NotNil(t, value.session)
 	assert.Equal(t, dummySessionID, value.session.id)
@@ -124,8 +64,6 @@ func TestNewApplication_NilCustomization(t *testing.T) {
 	assert.Equal(t, customizationDefault, value.customization)
 	assert.Empty(t, value.actionFuncMap)
 	assert.NotZero(t, value.shutdownSignal)
-	assert.Equal(t, 1, len(applicationMap))
-	assert.Equal(t, value, applicationMap[dummyPort])
 
 	// verify
 	verifyAll(t)
@@ -134,7 +72,7 @@ func TestNewApplication_NilCustomization(t *testing.T) {
 func TestNewApplication_HasCustomization(t *testing.T) {
 	// arrange
 	var dummyName = "some name"
-	var dummyPort = rand.Intn(65536)
+	var dummyAddress = "some address"
 	var dummyVersion = "some version"
 	var dummyCustomization = &dummyCustomization{t: t}
 	var dummySessionID = uuid.New()
@@ -158,7 +96,7 @@ func TestNewApplication_HasCustomization(t *testing.T) {
 	// SUT
 	var result = NewApplication(
 		dummyName,
-		dummyPort,
+		dummyAddress,
 		dummyVersion,
 		dummyCustomization,
 	)
@@ -170,7 +108,7 @@ func TestNewApplication_HasCustomization(t *testing.T) {
 	assert.True(t, ok)
 	assert.NotNil(t, value)
 	assert.Equal(t, dummyName, value.name)
-	assert.Equal(t, dummyPort, value.port)
+	assert.Equal(t, dummyAddress, value.address)
 	assert.Equal(t, dummyVersion, value.version)
 	assert.NotNil(t, value.session)
 	assert.Equal(t, dummySessionID, value.session.id)
@@ -182,100 +120,6 @@ func TestNewApplication_HasCustomization(t *testing.T) {
 	assert.Equal(t, dummyCustomization, value.customization)
 	assert.Empty(t, value.actionFuncMap)
 	assert.NotZero(t, value.shutdownSignal)
-	assert.Equal(t, 1, len(applicationMap))
-	assert.Equal(t, value, applicationMap[dummyPort])
-
-	// verify
-	verifyAll(t)
-}
-
-func TestGetApplication_NotFound(t *testing.T) {
-	// arrange
-	var dummyPort = rand.Intn(65536)
-
-	// stub
-	applicationMap = map[int]*application{}
-
-	// mock
-	createMock(t)
-
-	// expect
-
-	// SUT + act
-	var result = getApplication(
-		dummyPort,
-	)
-
-	// assert
-	assert.Equal(t, nilApplication, result)
-
-	// verify
-	verifyAll(t)
-}
-
-func TestGetApplication_NilFound(t *testing.T) {
-	// arrange
-	var dummyPort = rand.Intn(65536)
-	var dummyApplication *application
-
-	// stub
-	applicationMap = map[int]*application{
-		dummyPort: dummyApplication,
-	}
-
-	// mock
-	createMock(t)
-
-	// expect
-	isInterfaceValueNilFuncExpected = 1
-	isInterfaceValueNilFunc = func(i interface{}) bool {
-		isInterfaceValueNilFuncCalled++
-		assert.Equal(t, dummyApplication, i)
-		return true
-	}
-
-	// SUT + act
-	var result = getApplication(
-		dummyPort,
-	)
-
-	// assert
-	assert.Equal(t, nilApplication, result)
-
-	// verify
-	verifyAll(t)
-}
-
-func TestGetApplication_ValidFound(t *testing.T) {
-	// arrange
-	var dummyPort = rand.Intn(65536)
-	var dummyApplication = &application{
-		name: "some name",
-	}
-
-	// stub
-	applicationMap = map[int]*application{
-		dummyPort: dummyApplication,
-	}
-
-	// mock
-	createMock(t)
-
-	// expect
-	isInterfaceValueNilFuncExpected = 1
-	isInterfaceValueNilFunc = func(i interface{}) bool {
-		isInterfaceValueNilFuncCalled++
-		assert.Equal(t, dummyApplication, i)
-		return false
-	}
-
-	// SUT + act
-	var result = getApplication(
-		dummyPort,
-	)
-
-	// assert
-	assert.Equal(t, dummyApplication, result)
 
 	// verify
 	verifyAll(t)
@@ -859,7 +703,7 @@ func TestBeginApplication_HostError(t *testing.T) {
 	// arrange
 	var dummyName = "some name"
 	var dummyVersion = "some version"
-	var dummyPort = rand.Intn(65536)
+	var dummyAddress = "some address"
 	var dummySession = &session{id: uuid.New()}
 	var dummyCustomization = &dummyCustomization{t: t}
 	var dummyShutdownSignal = make(chan os.Signal)
@@ -867,7 +711,7 @@ func TestBeginApplication_HostError(t *testing.T) {
 	var dummyApplication = &application{
 		name:           dummyName,
 		version:        dummyVersion,
-		port:           dummyPort,
+		address:        dummyAddress,
 		session:        dummySession,
 		customization:  dummyCustomization,
 		shutdownSignal: dummyShutdownSignal,
@@ -897,9 +741,9 @@ func TestBeginApplication_HostError(t *testing.T) {
 		}
 	}
 	hostServerFuncExpected = 1
-	hostServerFunc = func(port int, session *session, shutdownSignal chan os.Signal, started *bool) error {
+	hostServerFunc = func(app *application, session *session, shutdownSignal chan os.Signal, started *bool) error {
 		hostServerFuncCalled++
-		assert.Equal(t, dummyPort, port)
+		assert.Equal(t, dummyApplication, app)
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyShutdownSignal, shutdownSignal)
 		assert.Equal(t, &dummyStarted, started)
@@ -919,7 +763,7 @@ func TestBeginApplication_HostSuccess(t *testing.T) {
 	// arrange
 	var dummyName = "some name"
 	var dummyVersion = "some version"
-	var dummyPort = rand.Intn(65536)
+	var dummyAddress = "some address"
 	var dummySession = &session{id: uuid.New()}
 	var dummyCustomization = &dummyCustomization{t: t}
 	var dummyShutdownSignal = make(chan os.Signal)
@@ -927,7 +771,7 @@ func TestBeginApplication_HostSuccess(t *testing.T) {
 	var dummyApplication = &application{
 		name:           dummyName,
 		version:        dummyVersion,
-		port:           dummyPort,
+		address:        dummyAddress,
 		session:        dummySession,
 		customization:  dummyCustomization,
 		shutdownSignal: dummyShutdownSignal,
@@ -955,9 +799,9 @@ func TestBeginApplication_HostSuccess(t *testing.T) {
 		}
 	}
 	hostServerFuncExpected = 1
-	hostServerFunc = func(port int, session *session, shutdownSignal chan os.Signal, started *bool) error {
+	hostServerFunc = func(app *application, session *session, shutdownSignal chan os.Signal, started *bool) error {
 		hostServerFuncCalled++
-		assert.Equal(t, dummyPort, port)
+		assert.Equal(t, dummyApplication, app)
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyShutdownSignal, shutdownSignal)
 		assert.Equal(t, &dummyStarted, started)

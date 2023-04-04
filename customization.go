@@ -3,6 +3,7 @@ package webserver
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"net"
 	"net/http"
 	"time"
 
@@ -66,6 +67,9 @@ type HostingCustomization interface {
 
 	// WrapHandler is to customize the overall wrapping of http.Handler before the server is configured
 	WrapHandler(handler http.Handler) http.Handler
+
+	// Listener is to customize the override of net.Listener to be used by http.Serve and http.ServeTLS; usually useful with UDS connections for local web server
+	Listener() net.Listener
 }
 
 // HandlerCustomization holds customization methods related to handlers
@@ -187,6 +191,11 @@ func (customization *DefaultCustomization) InstrumentRouter(router *mux.Router) 
 // WrapHandler is to customize the overall wrapping of http.Handler before the server is configured
 func (customization *DefaultCustomization) WrapHandler(handler http.Handler) http.Handler {
 	return handler
+}
+
+// Listener is to customize the override of net.Listener to be used by http.Serve and http.ServeTLS; usually useful with UDS connections for local web server
+func (customization *DefaultCustomization) Listener() net.Listener {
+	return nil
 }
 
 // PreAction is to customize the pre-action used before each route action takes place, e.g. authorization, etc.

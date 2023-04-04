@@ -99,8 +99,7 @@ func registerRoute(
 	queries []string,
 	handleFunc func(http.ResponseWriter, *http.Request),
 	actionFunc ActionFunc,
-	port int,
-) *mux.Route {
+) (string, *mux.Route) {
 	var name = fmtSprintf(
 		"%v:%v",
 		endpoint,
@@ -116,9 +115,7 @@ func registerRoute(
 	).Name(
 		name,
 	)
-	var application = getApplicationFunc(port)
-	application.actionFuncMap[name] = actionFunc
-	return route
+	return name, route
 }
 
 func defaultActionFunc(session Session) (interface{}, error) {

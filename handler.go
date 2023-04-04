@@ -5,37 +5,14 @@ import (
 	"time"
 )
 
-func getRequestedPort(
-	httpRequest *http.Request,
-) int {
-	if httpRequest == nil {
-		return 0
-	}
-	var hostAddress = httpRequest.Host
-	var hostParts = stringsSplit(hostAddress, ":")
-	if len(hostParts) < 2 {
-		return 0
-	}
-	var portNumber, parseError = strconvAtoi(hostParts[1])
-	if parseError != nil {
-		return 0
-	}
-	return portNumber
-}
-
 func initiateSession(
+	app *application,
 	responseWriter http.ResponseWriter,
 	httpRequest *http.Request,
 ) (*session, ActionFunc, error) {
-	var port = getRequestedPortFunc(
-		httpRequest,
-	)
-	var application = getApplicationFunc(
-		port,
-	)
 	var endpoint, action, routeError = getRouteInfoFunc(
 		httpRequest,
-		application.actionFuncMap,
+		app.actionFuncMap,
 	)
 	return &session{
 		uuidNew(),
@@ -43,7 +20,7 @@ func initiateSession(
 		httpRequest,
 		responseWriter,
 		map[string]interface{}{},
-		application.customization,
+		app.customization,
 	}, action, routeError
 }
 
@@ -102,11 +79,12 @@ func handleAction(
 }
 
 // handleSession wraps the HTTP handler with session related operations
-func handleSession(
+func (app *application) handleSession(
 	responseWriter http.ResponseWriter,
 	httpRequest *http.Request,
 ) {
 	var session, action, routeError = initiateSessionFunc(
+		app,
 		responseWriter,
 		httpRequest,
 	)
