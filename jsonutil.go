@@ -2,7 +2,11 @@ package webserver
 
 import (
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"reflect"
+	"strconv"
+	"strings"
 )
 
 var (
@@ -17,24 +21,24 @@ var (
 // marshalIgnoreError returns the string representation of the given object; returns empty string in case of error
 func marshalIgnoreError(v interface{}) string {
 	var buffer = &bytes.Buffer{}
-	var encoder = jsonNewEncoder(buffer)
+	var encoder = json.NewEncoder(buffer)
 	encoder.SetEscapeHTML(false)
 	encoder.Encode(v)
 	var result = buffer.String()
-	return stringsTrimRight(result, "\n")
+	return strings.TrimRight(result, "\n")
 }
 
 func tryUnmarshalPrimitiveTypes(value string, dataTemplate interface{}) bool {
 	if value == "" {
 		return true
 	}
-	switch reflectTypeOf(dataTemplate) {
+	switch reflect.TypeOf(dataTemplate) {
 	case typeOfString:
 		(*(dataTemplate).(*string)) = value
 		return true
 	case typeOfBool:
-		var parsedValue, parseError = strconvParseBool(
-			stringsToLower(
+		var parsedValue, parseError = strconv.ParseBool(
+			strings.ToLower(
 				value,
 			),
 		)
@@ -44,28 +48,28 @@ func tryUnmarshalPrimitiveTypes(value string, dataTemplate interface{}) bool {
 		(*(dataTemplate).(*bool)) = parsedValue
 		return true
 	case typeOfInteger:
-		var parsedValue, parseError = strconvAtoi(value)
+		var parsedValue, parseError = strconv.Atoi(value)
 		if parseError != nil {
 			return false
 		}
 		(*(dataTemplate).(*int)) = parsedValue
 		return true
 	case typeOfInt64:
-		var parsedValue, parseError = strconvParseInt(value, 0, 64)
+		var parsedValue, parseError = strconv.ParseInt(value, 0, 64)
 		if parseError != nil {
 			return false
 		}
 		(*(dataTemplate).(*int64)) = parsedValue
 		return true
 	case typeOfFloat64:
-		var parsedValue, parseError = strconvParseFloat(value, 64)
+		var parsedValue, parseError = strconv.ParseFloat(value, 64)
 		if parseError != nil {
 			return false
 		}
 		(*(dataTemplate).(*float64)) = parsedValue
 		return true
 	case typeOfByte:
-		var parsedValue, parseError = strconvParseUint(value, 0, 8)
+		var parsedValue, parseError = strconv.ParseUint(value, 0, 8)
 		if parseError != nil {
 			return false
 		}
@@ -77,31 +81,31 @@ func tryUnmarshalPrimitiveTypes(value string, dataTemplate interface{}) bool {
 
 // tryUnmarshal tries to unmarshal given value to dataTemplate
 func tryUnmarshal(value string, dataTemplate interface{}) error {
-	if isInterfaceValueNilFunc(dataTemplate) {
+	if isInterfaceValueNil(dataTemplate) {
 		return nil
 	}
-	if tryUnmarshalPrimitiveTypesFunc(
+	if tryUnmarshalPrimitiveTypes(
 		value,
 		dataTemplate,
 	) {
 		return nil
 	}
-	var noQuoteJSONError = jsonUnmarshal(
+	var noQuoteJSONError = json.Unmarshal(
 		[]byte(value),
 		dataTemplate,
 	)
 	if noQuoteJSONError == nil {
 		return nil
 	}
-	var withQuoteJSONError = jsonUnmarshal(
+	var withQuoteJSONError = json.Unmarshal(
 		[]byte("\""+value+"\""),
 		dataTemplate,
 	)
 	if withQuoteJSONError == nil {
 		return nil
 	}
-	return fmtErrorf(
-		"Unable to unmarshal value [%v] into data template",
+	return fmt.Errorf(
+		"unable to unmarshal value [%v] into data template",
 		value,
 	)
 }

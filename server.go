@@ -5,6 +5,8 @@ import (
 	"crypto/tls"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/gorilla/mux"
 )
@@ -16,28 +18,28 @@ func hostServer(
 	shutdownSignal chan os.Signal,
 	started *bool,
 ) error {
-	var router, routerError = instantiateRouterFunc(
+	var router, routerError = instantiateRouter(
 		app,
 		session,
 	)
 	if routerError != nil {
 		return routerError
 	}
-	logAppRootFunc(
+	logAppRoot(
 		session,
 		"server",
 		"hostServer",
 		"Targeting address [%v]",
 		app.address,
 	)
-	if runServerFunc(
+	if runServer(
 		app.address,
 		session,
 		router,
 		shutdownSignal,
 		started,
 	) {
-		logAppRootFunc(
+		logAppRoot(
 			session,
 			"server",
 			"hostServer",
@@ -45,13 +47,13 @@ func hostServer(
 		)
 		return nil
 	}
-	logAppRootFunc(
+	logAppRoot(
 		session,
 		"server",
 		"hostServer",
 		"Server terminated",
 	)
-	return newAppErrorFunc(
+	return newAppError(
 		errorCodeGeneralFailure,
 		errorMessageHostServer,
 		[]error{},
@@ -64,8 +66,6 @@ func createServer(
 	router *mux.Router,
 ) (*http.Server, bool) {
 	var tlsConfig = &tls.Config{
-		// Force it server side
-		PreferServerCipherSuites: true,
 		// TLS 1.2 as minimum requirement
 		MinVersion: tls.VersionTLS12,
 	}
@@ -129,7 +129,7 @@ func evaluateServerErrors(
 	var result = true
 	if hostError != nil &&
 		hostError != http.ErrServerClosed {
-		logAppRootFunc(
+		logAppRoot(
 			session,
 			"server",
 			"runServer",
@@ -140,7 +140,7 @@ func evaluateServerErrors(
 	}
 	if shutdownError != nil &&
 		shutdownError != http.ErrServerClosed {
-		logAppRootFunc(
+		logAppRoot(
 			session,
 			"server",
 			"runServer",
@@ -159,28 +159,28 @@ func runServer(
 	shutdownSignal chan os.Signal,
 	started *bool,
 ) bool {
-	var server, https = createServerFunc(
+	var server, https = createServer(
 		address,
 		session,
 		router,
 	)
 
-	signalNotify(
+	signal.Notify(
 		shutdownSignal,
 		os.Interrupt,
-		os.Kill,
+		syscall.SIGTERM,
 	)
 
 	*started = true
 
 	var hostError error
 	go func() {
-		hostError = listenAndServeFunc(
+		hostError = listenAndServe(
 			session,
 			server,
 			https,
 		)
-		haltServerFunc(
+		haltServer(
 			shutdownSignal,
 		)
 	}()
@@ -189,25 +189,25 @@ func runServer(
 
 	*started = false
 
-	logAppRootFunc(
+	logAppRoot(
 		session,
 		"server",
 		"runServer",
 		"Interrupt signal received: Terminating server",
 	)
 
-	var runtimeContext, cancelCallback = contextWithTimeout(
-		contextBackground(),
+	var runtimeContext, cancelCallback = context.WithTimeout(
+		context.Background(),
 		session.customization.GraceShutdownWaitTime(),
 	)
 	defer cancelCallback()
 
-	var shutdownError = shutdownServerFunc(
+	var shutdownError = shutdownServer(
 		runtimeContext,
 		server,
 	)
 
-	return evaluateServerErrorsFunc(
+	return evaluateServerErrors(
 		session,
 		hostError,
 		shutdownError,

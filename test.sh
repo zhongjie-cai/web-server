@@ -26,7 +26,7 @@ then
 
     mkfifo testResultsPipe
     tee unitTestResults.txt < testResultsPipe &
-    go test $(go list ./../... | grep -v '/vendor/') -short -v 2>&1 > testResultsPipe
+    go test $(go list ./../... | grep -v '/vendor/') -short -gcflags=all=-l -v 2>&1 > testResultsPipe
 else
     if [ "$1" = "integration" ];
     then
@@ -37,7 +37,7 @@ else
 
         mkfifo testResultsPipe
         tee -a integrationTestResults.txt < testResultsPipe &
-        go test $(go list ./../... | grep -v '/vendor/') -run Integration -v 2>&1 > testResultsPipe
+        go test $(go list ./../... | grep -v '/vendor/') -run Integration -gcflags=all=-l -v 2>&1 > testResultsPipe
     else
         # Delete existing files when running the complete tests
         rm -f testResultsPipe
@@ -47,6 +47,6 @@ else
 
         mkfifo testResultsPipe
         tee testResults.txt < testResultsPipe &
-        go test $(go list ./../... | grep -v '/vendor/') -v 2>&1 > testResultsPipe
+        go test $(go list ./../... | grep -v '/vendor/') -gcflags=all=-l -v 2>&1 > testResultsPipe
     fi
 fi

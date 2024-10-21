@@ -8,14 +8,9 @@ const (
 	dateTimeFormat string = dateFormat + "T" + timeFormat
 )
 
-// getTimeNow returns the current system time
-func getTimeNow() time.Time {
-	return timeNow()
-}
-
-// getTimeNowUTC returns the UTC representation of the current system time
+// getTimeNowUTC returns the current time in UTC format
 func getTimeNowUTC() time.Time {
-	return timeNow().UTC()
+	return time.Now().UTC()
 }
 
 // formatDate returns the time in string format "yyyy-MM-dd"

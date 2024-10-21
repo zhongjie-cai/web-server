@@ -1,5 +1,7 @@
 package webserver
 
+import "regexp"
+
 // ParameterType defines the type specification of a route parameter
 type ParameterType string
 
@@ -19,7 +21,7 @@ const (
 // Evaludate evaluates the given value against the parameter type's defined regex expression and returns whether or not the regex matches
 func (parameterType *ParameterType) Evaludate(value string) (bool, error) {
 	var pattern = "^" + string(*parameterType) + "$"
-	return regexpMatchString(
+	return regexp.MatchString(
 		pattern,
 		value,
 	)

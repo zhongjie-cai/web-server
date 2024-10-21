@@ -2,6 +2,8 @@ package webserver
 
 import (
 	"os"
+
+	"github.com/google/uuid"
 )
 
 // Application is the interface for web server application
@@ -34,7 +36,7 @@ func NewApplication(
 	version string,
 	customization Customization,
 ) Application {
-	if isInterfaceValueNilFunc(customization) {
+	if isInterfaceValueNil(customization) {
 		customization = customizationDefault
 	}
 	var application = &application{
@@ -42,7 +44,7 @@ func NewApplication(
 		address,
 		version,
 		&session{
-			uuidNew(),
+			uuid.New(),
 			name,
 			defaultRequest,
 			defaultResponseWriter,
@@ -58,7 +60,7 @@ func NewApplication(
 }
 
 func (app *application) Start() {
-	startApplicationFunc(
+	startApplication(
 		app,
 	)
 }
@@ -75,7 +77,7 @@ func (app *application) Stop() {
 	if !app.started {
 		return
 	}
-	haltServerFunc(
+	haltServer(
 		app.shutdownSignal,
 	)
 }
@@ -84,21 +86,21 @@ func startApplication(app *application) {
 	if app.started {
 		return
 	}
-	if !preBootstrapingFunc(app) {
+	if !preBootstraping(app) {
 		return
 	}
-	bootstrapFunc(app)
-	if !postBootstrapingFunc(app) {
+	bootstrap(app)
+	if !postBootstraping(app) {
 		return
 	}
-	defer endApplicationFunc(app)
-	beginApplicationFunc(app)
+	defer endApplication(app)
+	beginApplication(app)
 }
 
 func preBootstraping(app *application) bool {
 	var preBootstrapError = app.customization.PreBootstrap()
 	if preBootstrapError != nil {
-		logAppRootFunc(
+		logAppRoot(
 			app.session,
 			"application",
 			"preBootstraping",
@@ -107,7 +109,7 @@ func preBootstraping(app *application) bool {
 		)
 		return false
 	}
-	logAppRootFunc(
+	logAppRoot(
 		app.session,
 		"application",
 		"preBootstraping",
@@ -117,13 +119,13 @@ func preBootstraping(app *application) bool {
 }
 
 func bootstrap(app *application) {
-	initializeHTTPClientsFunc(
+	initializeHTTPClients(
 		app.customization.DefaultTimeout(),
 		app.customization.SkipServerCertVerification(),
 		app.customization.ClientCert(),
 		app.customization.RoundTripper,
 	)
-	logAppRootFunc(
+	logAppRoot(
 		app.session,
 		"application",
 		"bootstrap",
@@ -134,7 +136,7 @@ func bootstrap(app *application) {
 func postBootstraping(app *application) bool {
 	var postBootstrapError = app.customization.PostBootstrap()
 	if postBootstrapError != nil {
-		logAppRootFunc(
+		logAppRoot(
 			app.session,
 			"application",
 			"postBootstraping",
@@ -143,7 +145,7 @@ func postBootstraping(app *application) bool {
 		)
 		return false
 	}
-	logAppRootFunc(
+	logAppRoot(
 		app.session,
 		"application",
 		"postBootstraping",
@@ -153,7 +155,7 @@ func postBootstraping(app *application) bool {
 }
 
 func beginApplication(app *application) {
-	logAppRootFunc(
+	logAppRoot(
 		app.session,
 		"application",
 		"beginApplication",
@@ -161,14 +163,14 @@ func beginApplication(app *application) {
 		app.name,
 		app.version,
 	)
-	var serverHostError = hostServerFunc(
+	var serverHostError = hostServer(
 		app,
 		app.session,
 		app.shutdownSignal,
 		&app.started,
 	)
 	if serverHostError != nil {
-		logAppRootFunc(
+		logAppRoot(
 			app.session,
 			"application",
 			"beginApplication",
@@ -176,7 +178,7 @@ func beginApplication(app *application) {
 			serverHostError,
 		)
 	} else {
-		logAppRootFunc(
+		logAppRoot(
 			app.session,
 			"application",
 			"beginApplication",
@@ -188,7 +190,7 @@ func beginApplication(app *application) {
 func endApplication(app *application) {
 	var appClosingError = app.customization.AppClosing()
 	if appClosingError != nil {
-		logAppRootFunc(
+		logAppRoot(
 			app.session,
 			"application",
 			"endApplication",
@@ -196,7 +198,7 @@ func endApplication(app *application) {
 			appClosingError,
 		)
 	} else {
-		logAppRootFunc(
+		logAppRoot(
 			app.session,
 			"application",
 			"endApplication",

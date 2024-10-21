@@ -1,22 +1,24 @@
 # web-server
 
-[![Build Status](https://travis-ci.com/zhongjie-cai/web-server.svg?branch=master)](https://travis-ci.com/zhongjie-cai/web-server)
-[![GoDoc](https://godoc.org/github.com/golang/gddo?status.svg)](http://godoc.org/github.com/zhongjie-cai/web-server)
+![Test](https://github.com/zhongjie-cai/web-server/actions/workflows/ci.yaml/badge.svg)
+![Coverage](https://img.shields.io/badge/Coverage-100.0%25-brightgreen)
 [![Go Report Card](https://goreportcard.com/badge/github.com/zhongjie-cai/web-server)](https://goreportcard.com/report/github.com/zhongjie-cai/web-server)
-[![Coverage](http://gocover.io/_badge/github.com/zhongjie-cai/web-server)](http://gocover.io/github.com/zhongjie-cai/web-server)
+[![Go Reference](https://pkg.go.dev/badge/github.com/zhongjie-cai/web-server.svg)](https://pkg.go.dev/github.com/zhongjie-cai/web-server)
 
 This library is provided as a wrapper utility for quickly create and host your web services.
 
 Original source: https://github.com/zhongjie-cai/web-server
 
 Library dependencies (must be present in vendor folder or in Go path):
-* [UUID](https://github.com/google/uuid): `go get -u github.com/google/uuid`
-* [MUX](https://github.com/gorilla/mux): `go get -u github.com/gorilla/mux`
-* [Testify](https://github.com/stretchr/testify): `go get -u github.com/stretchr/testify` (For tests only)
+
+- [UUID](https://github.com/google/uuid): `go get -u github.com/google/uuid`
+- [MUX](https://github.com/gorilla/mux): `go get -u github.com/gorilla/mux`
+- [Testify](https://github.com/stretchr/testify): `go get -u github.com/stretchr/testify` (For tests only)
 
 A sample application is shown below:
 
 # main.go
+
 ```golang
 package main
 
@@ -174,16 +176,16 @@ return webserver.SkipResponseHandling()
 
 To simplify the error handling, one could utilize the built-in error interface `AppError`, which provides support to many basic types of errors that are mapped to corresponding HTTP status codes:
 
-* BadRequest       => BadRequest (400)
-* Unauthorized     => Unauthorized (401)
-* CircuitBreak     => Forbidden (403)
-* AccessForbidden  => Forbidden (403)
-* NotFound         => NotFound (404)
-* InvalidOperation => MethodNotAllowed (405)
-* DataCorruption   => Conflict (409)
-* OperationLock    => Locked (423)
-* GeneralFailure   => InternalServerError (500)
-* NotImplemented   => NotImplemented (501)
+- BadRequest => BadRequest (400)
+- Unauthorized => Unauthorized (401)
+- CircuitBreak => Forbidden (403)
+- AccessForbidden => Forbidden (403)
+- NotFound => NotFound (404)
+- InvalidOperation => MethodNotAllowed (405)
+- DataCorruption => Conflict (409)
+- OperationLock => Locked (423)
+- GeneralFailure => InternalServerError (500)
+- NotImplemented => NotImplemented (501)
 
 If you bring in your own implementation for the error interface `AppHTTPError`, the web server engine could automatically utilise the corresponding methods to translate an `AppHTTPError` into HTTP status code and response message:
 
@@ -202,22 +204,23 @@ func (customization *myCustomization) InterpretError(err error) (statusCode int,
 
 # Logging
 
-The library allows the user to customize its logging function by customizing the `Log` method. 
-The logging is split into two management areas: log type and log level. 
+The library allows the user to customize its logging function by customizing the `Log` method.
+The logging is split into two management areas: log type and log level.
 
 ## Log Type
 
-The log type definitions can be found under the `logType.go` file. 
-Apart from all `Method`-prefixed log types, all remainig log types are managed by the library internally and should not be worried by the consumer. 
+The log type definitions can be found under the `logType.go` file.
+Apart from all `Method`-prefixed log types, all remainig log types are managed by the library internally and should not be worried by the consumer.
 
 ## Log Level
 
-The log level definitions can be found under the `logLevel.go` file. 
-Log level only affects all `Method`-prefixed log types; for all other log types, the log level is default to `Info`. 
+The log level definitions can be found under the `logLevel.go` file.
+Log level only affects all `Method`-prefixed log types; for all other log types, the log level is default to `Info`.
 
 ## Session Logging
 
 The registered session allows the user to add manual logging to its codebase, through several listed methods as
+
 ```golang
 session.LogMethodEnter()
 session.LogMethodParameter(parameters ...interface{})
@@ -226,7 +229,7 @@ session.LogMethodReturn(returns ...interface{})
 session.LogMethodExit()
 ```
 
-The `Enter`, `Parameter`, `Return` and `Exit` are limited to the scope of method boundary area loggings. 
+The `Enter`, `Parameter`, `Return` and `Exit` are limited to the scope of method boundary area loggings.
 The `Logic` is the normal logging that can be used in any place at any level in the codebase to enforce the user's customized logging entries.
 
 # Session Attachment
@@ -273,8 +276,8 @@ if !success {
 
 # External Webcall Requests
 
-The library provides a way to send out HTTP/HTTPS requests to external web services based on current session. 
-Using this provided feature ensures the logging of the web service requests into corresponding log type for the given session. 
+The library provides a way to send out HTTP/HTTPS requests to external web services based on current session.
+Using this provided feature ensures the logging of the web service requests into corresponding log type for the given session.
 
 You can reuse a same struct for multiple HTTP status codes, as long as the structures in JSON format are compatible.
 If there is no receiver entry registered for a particular HTTP status code, the corresponding response body is ignored for deserialization when that HTTP status code is received.
@@ -327,7 +330,7 @@ Webcall requests could also be customized for：
 
 ## HTTP Client's HTTP Transport (http.RoundTripper)
 
-This is to enable the 3rd party monitoring libraries, e.g. new relic, to wrap the HTTP transport for better handling of webcall communications. 
+This is to enable the 3rd party monitoring libraries, e.g. new relic, to wrap the HTTP transport for better handling of webcall communications.
 
 ```golang
 func (customization *myCustomization) RoundTripper(originalTransport http.RoundTripper) http.RoundTripper {

@@ -3,8 +3,10 @@ package webserver
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"fmt"
 	"net"
 	"net/http"
+	"runtime/debug"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -138,10 +140,10 @@ func (customization *DefaultCustomization) AppClosing() error {
 
 // Log is to customize the logging backend for the whole application
 func (customization *DefaultCustomization) Log(session Session, logType LogType, logLevel LogLevel, category, subcategory, description string) {
-	if isInterfaceValueNilFunc(session) {
+	if isInterfaceValueNil(session) {
 		return
 	}
-	fmtPrintf(
+	fmt.Printf(
 		"<%v|%v> (%v|%v) [%v|%v] %v\n",
 		session.GetID(),
 		session.GetName(),
@@ -210,10 +212,10 @@ func (customization *DefaultCustomization) PostAction(session Session) error {
 
 // InterpretSuccess is to customize how application interpret a response content into HTTP status code and corresponding response body
 func (customization *DefaultCustomization) InterpretSuccess(responseContent interface{}) (int, string) {
-	if isInterfaceValueNilFunc(responseContent) {
+	if isInterfaceValueNil(responseContent) {
 		return http.StatusNoContent, ""
 	}
-	var responseMessage = marshalIgnoreErrorFunc(responseContent)
+	var responseMessage = marshalIgnoreError(responseContent)
 	if responseMessage == "" {
 		return http.StatusNoContent, ""
 	}
@@ -234,14 +236,14 @@ func (customization *DefaultCustomization) InterpretError(err error) (int, strin
 func getRecoverError(recoverResult interface{}) error {
 	var err, ok = recoverResult.(error)
 	if !ok {
-		err = fmtErrorf("Endpoint panic: %v", recoverResult)
+		err = fmt.Errorf("endpoint panic: %v", recoverResult)
 	}
 	return err
 }
 
 // RecoverPanic is to customize the recovery of panic into a valid response and error in case it happens (for recoverable panic only)
 func (customization *DefaultCustomization) RecoverPanic(session Session, recoverResult interface{}) (interface{}, error) {
-	var err = getRecoverErrorFunc(
+	var err = getRecoverError(
 		recoverResult,
 	)
 	session.LogMethodLogic(
@@ -251,7 +253,7 @@ func (customization *DefaultCustomization) RecoverPanic(session Session, recover
 		"Error: %+v\nCallstack: %v",
 		err,
 		string(
-			debugStack(),
+			debug.Stack(),
 		),
 	)
 	return nil, err

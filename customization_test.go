@@ -2,78 +2,41 @@ package webserver
 
 import (
 	"errors"
+	"fmt"
 	"math/rand"
 	"net/http"
+	"runtime/debug"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
+	"github.com/zhongjie-cai/gomocker"
 )
 
 func TestDefaultCustomization_PreBootstrap(t *testing.T) {
-	// mock
-	createMock(t)
-
 	// SUT + act
 	var err = customizationDefault.PreBootstrap()
 
 	// assert
 	assert.NoError(t, err)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestDefaultCustomization_PostBootstrap(t *testing.T) {
-	// mock
-	createMock(t)
-
 	// SUT + act
 	var err = customizationDefault.PostBootstrap()
 
 	// assert
 	assert.NoError(t, err)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestDefaultCustomization_AppClosing(t *testing.T) {
-	// mock
-	createMock(t)
-
 	// SUT + act
 	var err = customizationDefault.AppClosing()
 
 	// assert
 	assert.NoError(t, err)
-
-	// verify
-	verifyAll(t)
-}
-
-type dummySessionLog struct {
-	dummySession
-	getID   func() uuid.UUID
-	getName func() string
-}
-
-func (session *dummySessionLog) GetID() uuid.UUID {
-	if session.getID != nil {
-		return session.getID()
-	}
-	assert.Fail(session.t, "Unexpected call to GetID")
-	return uuid.Nil
-}
-
-func (session *dummySessionLog) GetName() string {
-	if session.getName != nil {
-		return session.getName()
-	}
-	assert.Fail(session.t, "Unexpected call to GetName")
-	return ""
 }
 
 func TestDefaultCustomization_Log_NilSession(t *testing.T) {
@@ -86,15 +49,13 @@ func TestDefaultCustomization_Log_NilSession(t *testing.T) {
 	var dummyDescription = "some description"
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	isInterfaceValueNilFuncExpected = 1
-	isInterfaceValueNilFunc = func(i interface{}) bool {
-		isInterfaceValueNilFuncCalled++
+	m.ExpectFunc(isInterfaceValueNil, 1, func(i interface{}) bool {
 		assert.Equal(t, dummySession, i)
 		return true
-	}
+	})
 
 	// SUT + act
 	customizationDefault.Log(
@@ -105,50 +66,35 @@ func TestDefaultCustomization_Log_NilSession(t *testing.T) {
 		dummySubcategory,
 		dummyDescription,
 	)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestDefaultCustomization_Log_HappyPath(t *testing.T) {
 	// arrange
-	var dummySession = &dummySessionLog{dummySession: dummySession{t: t}}
+	var dummySession = &session{}
 	var dummyLogType = LogType(rand.Intn(100))
 	var dummyLogLevel = LogLevel(rand.Intn(100))
 	var dummyCategory = "some category"
 	var dummySubcategory = "some subcategory"
 	var dummyDescription = "some description"
-	var sessionGetIDExpected int
-	var sessionGetIDCalled int
-	var sessionGetNameExpected int
-	var sessionGetNameCalled int
 	var dummySessionID = uuid.New()
 	var dummySessionName = "some session name"
 	var dummyFormat = "<%v|%v> (%v|%v) [%v|%v] %v\n"
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	isInterfaceValueNilFuncExpected = 1
-	isInterfaceValueNilFunc = func(i interface{}) bool {
-		isInterfaceValueNilFuncCalled++
+	m.ExpectFunc(isInterfaceValueNil, 1, func(i interface{}) bool {
 		assert.Equal(t, dummySession, i)
 		return false
-	}
-	sessionGetIDExpected = 1
-	dummySession.getID = func() uuid.UUID {
-		sessionGetIDCalled++
+	})
+	m.ExpectMethod(dummySession, "GetID", 1, func() uuid.UUID {
 		return dummySessionID
-	}
-	sessionGetNameExpected = 1
-	dummySession.getName = func() string {
-		sessionGetNameCalled++
+	})
+	m.ExpectMethod(dummySession, "GetName", 1, func() string {
 		return dummySessionName
-	}
-	fmtPrintfExpected = 1
-	fmtPrintf = func(format string, a ...interface{}) (n int, err error) {
-		fmtPrintfCalled++
+	})
+	m.ExpectFunc(fmt.Printf, 1, func(format string, a ...interface{}) (n int, err error) {
 		assert.Equal(t, dummyFormat, format)
 		assert.Equal(t, 7, len(a))
 		assert.Equal(t, dummySessionID, a[0])
@@ -159,7 +105,7 @@ func TestDefaultCustomization_Log_HappyPath(t *testing.T) {
 		assert.Equal(t, dummySubcategory, a[5])
 		assert.Equal(t, dummyDescription, a[6])
 		return rand.Int(), errors.New("some error")
-	}
+	})
 
 	// SUT + act
 	customizationDefault.Log(
@@ -170,177 +116,106 @@ func TestDefaultCustomization_Log_HappyPath(t *testing.T) {
 		dummySubcategory,
 		dummyDescription,
 	)
-
-	// verify
-	verifyAll(t)
-	assert.Equal(t, sessionGetIDExpected, sessionGetIDCalled, "Unexpected number of calls to method sessionGetID")
-	assert.Equal(t, sessionGetNameExpected, sessionGetNameCalled, "Unexpected number of calls to method sessionGetName")
 }
 
 func TestDefaultCustomization_ServerCert(t *testing.T) {
-	// mock
-	createMock(t)
-
 	// SUT + act
 	var result = customizationDefault.ServerCert()
 
 	// assert
 	assert.Nil(t, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestDefaultCustomization_CaCertPool(t *testing.T) {
-	// mock
-	createMock(t)
-
 	// SUT + act
 	var result = customizationDefault.CaCertPool()
 
 	// assert
 	assert.Nil(t, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestDefaultCustomization_GraceShutdownWaitTime(t *testing.T) {
-	// mock
-	createMock(t)
-
 	// SUT + act
 	var result = customizationDefault.GraceShutdownWaitTime()
 
 	// assert
 	assert.Equal(t, 3*time.Minute, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestDefaultCustomization_Routes(t *testing.T) {
-	// mock
-	createMock(t)
-
 	// SUT + act
 	var results = customizationDefault.Routes()
 
 	// assert
 	assert.Empty(t, results)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestDefaultCustomization_Statics(t *testing.T) {
-	// mock
-	createMock(t)
-
 	// SUT + act
 	var results = customizationDefault.Statics()
 
 	// assert
 	assert.Empty(t, results)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestDefaultCustomization_Middlewares(t *testing.T) {
-	// mock
-	createMock(t)
-
 	// SUT + act
 	var results = customizationDefault.Middlewares()
 
 	// assert
 	assert.Empty(t, results)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestDefaultCustomization_InstrumentRouter(t *testing.T) {
 	// arrange
 	var dummyRouter = &mux.Router{KeepContext: rand.Intn(100) > 50}
 
-	// mock
-	createMock(t)
-
 	// SUT + act
 	var result = customizationDefault.InstrumentRouter(dummyRouter)
 
 	// assert
 	assert.Equal(t, dummyRouter, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestDefaultCustomization_WrapHandler(t *testing.T) {
 	// arrange
 	var dummyRouter = &mux.Router{KeepContext: rand.Intn(100) > 50}
 
-	// mock
-	createMock(t)
-
 	// SUT + act
 	var result = customizationDefault.WrapHandler(dummyRouter)
 
 	// assert
 	assert.Equal(t, dummyRouter, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestDefaultCustomization_Listener(t *testing.T) {
-	// mock
-	createMock(t)
-
 	// SUT + act
 	var result = customizationDefault.Listener()
 
 	// assert
 	assert.Nil(t, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestDefaultCustomization_PreAction(t *testing.T) {
 	// arrange
 	var dummySession Session
 
-	// mock
-	createMock(t)
-
 	// SUT + act
 	var err = customizationDefault.PreAction(dummySession)
 
 	// assert
 	assert.NoError(t, err)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestDefaultCustomization_PostAction(t *testing.T) {
 	// arrange
 	var dummySession Session
 
-	// mock
-	createMock(t)
-
 	// SUT + act
 	var err = customizationDefault.PostAction(dummySession)
 
 	// assert
 	assert.NoError(t, err)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestDefaultCustomization_InterpretSuccess_NilResponseContent(t *testing.T) {
@@ -348,15 +223,13 @@ func TestDefaultCustomization_InterpretSuccess_NilResponseContent(t *testing.T) 
 	var dummyResponseContent interface{}
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	isInterfaceValueNilFuncExpected = 1
-	isInterfaceValueNilFunc = func(i interface{}) bool {
-		isInterfaceValueNilFuncCalled++
+	m.ExpectFunc(isInterfaceValueNil, 1, func(i interface{}) bool {
 		assert.Equal(t, dummyResponseContent, i)
 		return true
-	}
+	})
 
 	// SUT + act
 	var code, message = customizationDefault.InterpretSuccess(
@@ -366,9 +239,6 @@ func TestDefaultCustomization_InterpretSuccess_NilResponseContent(t *testing.T) 
 	// assert
 	assert.Equal(t, http.StatusNoContent, code)
 	assert.Zero(t, message)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestDefaultCustomization_InterpretSuccess_EmptyResponseContent(t *testing.T) {
@@ -377,21 +247,17 @@ func TestDefaultCustomization_InterpretSuccess_EmptyResponseContent(t *testing.T
 	var dummyContent string
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	isInterfaceValueNilFuncExpected = 1
-	isInterfaceValueNilFunc = func(i interface{}) bool {
-		isInterfaceValueNilFuncCalled++
+	m.ExpectFunc(isInterfaceValueNil, 1, func(i interface{}) bool {
 		assert.Equal(t, dummyResponseContent, i)
 		return false
-	}
-	marshalIgnoreErrorFuncExpected = 1
-	marshalIgnoreErrorFunc = func(v interface{}) string {
-		marshalIgnoreErrorFuncCalled++
+	})
+	m.ExpectFunc(marshalIgnoreError, 1, func(v interface{}) string {
 		assert.Equal(t, dummyResponseContent, v)
 		return dummyContent
-	}
+	})
 
 	// SUT + act
 	var code, message = customizationDefault.InterpretSuccess(
@@ -401,9 +267,6 @@ func TestDefaultCustomization_InterpretSuccess_EmptyResponseContent(t *testing.T
 	// assert
 	assert.Equal(t, http.StatusNoContent, code)
 	assert.Zero(t, message)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestDefaultCustomization_InterpretSuccess_HappyPath(t *testing.T) {
@@ -412,21 +275,17 @@ func TestDefaultCustomization_InterpretSuccess_HappyPath(t *testing.T) {
 	var dummyContent = "some content"
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	isInterfaceValueNilFuncExpected = 1
-	isInterfaceValueNilFunc = func(i interface{}) bool {
-		isInterfaceValueNilFuncCalled++
+	m.ExpectFunc(isInterfaceValueNil, 1, func(i interface{}) bool {
 		assert.Equal(t, dummyResponseContent, i)
 		return false
-	}
-	marshalIgnoreErrorFuncExpected = 1
-	marshalIgnoreErrorFunc = func(v interface{}) string {
-		marshalIgnoreErrorFuncCalled++
+	})
+	m.ExpectFunc(marshalIgnoreError, 1, func(v interface{}) string {
 		assert.Equal(t, dummyResponseContent, v)
 		return dummyContent
-	}
+	})
 
 	// SUT + act
 	var code, message = customizationDefault.InterpretSuccess(
@@ -436,18 +295,12 @@ func TestDefaultCustomization_InterpretSuccess_HappyPath(t *testing.T) {
 	// assert
 	assert.Equal(t, http.StatusOK, code)
 	assert.Equal(t, dummyContent, message)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestDefaultCustomization_InterpretError_NormalError(t *testing.T) {
 	// arrange
 	var dummyErrorMessage = "some error message"
 	var dummyError = errors.New(dummyErrorMessage)
-
-	// mock
-	createMock(t)
 
 	// SUT + act
 	var code, message = customizationDefault.InterpretError(
@@ -457,81 +310,38 @@ func TestDefaultCustomization_InterpretError_NormalError(t *testing.T) {
 	// assert
 	assert.Equal(t, http.StatusInternalServerError, code)
 	assert.Equal(t, dummyErrorMessage, message)
-
-	// verify
-	verifyAll(t)
-}
-
-type dummyAppErrorInterpretError struct {
-	dummyAppError
-	httpStatusCode      func() int
-	httpResponseMessage func() string
-}
-
-func (dummyAppErrorInterpretError *dummyAppErrorInterpretError) HTTPStatusCode() int {
-	if dummyAppErrorInterpretError.httpStatusCode != nil {
-		return dummyAppErrorInterpretError.httpStatusCode()
-	}
-	assert.Fail(dummyAppErrorInterpretError.t, "Unexpected call to method AppError.HTTPStatusCode")
-	return 0
-}
-
-func (dummyAppErrorInterpretError *dummyAppErrorInterpretError) HTTPResponseMessage() string {
-	if dummyAppErrorInterpretError.httpResponseMessage != nil {
-		return dummyAppErrorInterpretError.httpResponseMessage()
-	}
-	assert.Fail(dummyAppErrorInterpretError.t, "Unexpected call to method AppError.HTTPResponseMessage")
-	return ""
 }
 
 func TestDefaultCustomization_InterpretError_AppError(t *testing.T) {
 	// arrange
 	var dummyStatusCode = rand.Intn(600)
 	var dummyResponseMessage = "some response message"
-	var dummyAppErrorInterpretError = &dummyAppErrorInterpretError{
-		dummyAppError: dummyAppError{t: t},
-	}
-	var appErrorHTTPStatusCodeExpected int
-	var appErrorHTTPStatusCodeCalled int
-	var appErrorHTTPResponseMessageExpected int
-	var appErrorHTTPResponseMessageCalled int
+	var dummyAppError = &appError{}
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	appErrorHTTPStatusCodeExpected = 1
-	dummyAppErrorInterpretError.httpStatusCode = func() int {
-		appErrorHTTPStatusCodeCalled++
+	m.ExpectMethod(dummyAppError, "HTTPStatusCode", 1, func() int {
 		return dummyStatusCode
-	}
-	appErrorHTTPResponseMessageExpected = 1
-	dummyAppErrorInterpretError.httpResponseMessage = func() string {
-		appErrorHTTPResponseMessageCalled++
+	})
+	m.ExpectMethod(dummyAppError, "HTTPResponseMessage", 1, func() string {
 		return dummyResponseMessage
-	}
+	})
 
 	// SUT + act
 	var code, message = customizationDefault.InterpretError(
-		dummyAppErrorInterpretError,
+		dummyAppError,
 	)
 
 	// assert
 	assert.Equal(t, dummyStatusCode, code)
 	assert.Equal(t, dummyResponseMessage, message)
-
-	// verify
-	verifyAll(t)
-	assert.Equal(t, appErrorHTTPStatusCodeExpected, appErrorHTTPStatusCodeCalled, "Unexpected number of calls to appError.HTTPStatusCode")
-	assert.Equal(t, appErrorHTTPResponseMessageExpected, appErrorHTTPResponseMessageCalled, "Unexpected number of calls to appError.HTTPResponseMessage")
 }
 
 func TestGetRecoverError_Error(t *testing.T) {
 	// arrange
 	var dummyRecoverResult = errors.New("some error")
-
-	// mock
-	createMock(t)
 
 	// SUT + act
 	var result = getRecoverError(
@@ -540,9 +350,6 @@ func TestGetRecoverError_Error(t *testing.T) {
 
 	// assert
 	assert.Equal(t, dummyRecoverResult, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestGetRecoverError_NonError(t *testing.T) {
@@ -551,17 +358,15 @@ func TestGetRecoverError_NonError(t *testing.T) {
 	var dummyError = errors.New("some error")
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	fmtErrorfExpected = 1
-	fmtErrorf = func(format string, a ...interface{}) error {
-		fmtErrorfCalled++
-		assert.Equal(t, "Endpoint panic: %v", format)
+	m.ExpectFunc(fmt.Errorf, 1, func(format string, a ...interface{}) error {
+		assert.Equal(t, "endpoint panic: %v", format)
 		assert.Equal(t, 1, len(a))
 		assert.Equal(t, dummyRecoverResult, a[0])
 		return dummyError
-	}
+	})
 
 	// SUT + act
 	var result = getRecoverError(
@@ -570,71 +375,34 @@ func TestGetRecoverError_NonError(t *testing.T) {
 
 	// assert
 	assert.Equal(t, dummyError, result)
-
-	// verify
-	verifyAll(t)
-}
-
-type dummySessionRecoverPanic struct {
-	dummySession
-	getName        func() string
-	logMethodLogic func(logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{})
-}
-
-func (dummySessionRecoverPanic *dummySessionRecoverPanic) GetName() string {
-	if dummySessionRecoverPanic.getName != nil {
-		return dummySessionRecoverPanic.getName()
-	}
-	assert.Fail(dummySessionRecoverPanic.t, "Unexpected call to GetName")
-	return ""
-}
-
-func (dummySessionRecoverPanic *dummySessionRecoverPanic) LogMethodLogic(logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-	if dummySessionRecoverPanic.logMethodLogic != nil {
-		dummySessionRecoverPanic.logMethodLogic(logLevel, category, subcategory, messageFormat, parameters...)
-		return
-	}
-	assert.Fail(dummySessionRecoverPanic.t, "Unexpected call to LogMethodLogic")
 }
 
 func TestDefaultCustomization_RecoverPanic(t *testing.T) {
 	// arrange
-	var dummySessionRecoverPanic = &dummySessionRecoverPanic{
-		dummySession: dummySession{t: t},
-	}
+	var dummySession = &session{}
 	var dummyError = errors.New("some error")
 	var dummyRecoverResult = dummyError.(interface{})
 	var dummyDebugStackString = "some debug stack string"
 	var dummyDebugStack = []byte(dummyDebugStackString)
 	var dummyName = "some name"
-	var sessionGetNameExpected int
-	var sessionGetNameCalled int
-	var sessionLogMethodLogicExpected int
-	var sessionLogMethodLogicCalled int
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	getRecoverErrorFuncExpected = 1
-	getRecoverErrorFunc = func(recoverResult interface{}) error {
-		getRecoverErrorFuncCalled++
+	m.ExpectFunc(getRecoverError, 1, func(recoverResult interface{}) error {
 		assert.Equal(t, dummyRecoverResult, recoverResult)
 		return dummyError
-	}
-	debugStackExpected = 1
-	debugStack = func() []byte {
-		debugStackCalled++
+	})
+	m.ExpectFunc(debug.Stack, 1, func() []byte {
 		return dummyDebugStack
-	}
-	sessionGetNameExpected = 1
-	dummySessionRecoverPanic.getName = func() string {
-		sessionGetNameCalled++
+	})
+	m.ExpectMethod(dummySession, "GetName", 1, func(self *session) string {
+		assert.Equal(t, dummySession, self)
 		return dummyName
-	}
-	sessionLogMethodLogicExpected = 1
-	dummySessionRecoverPanic.logMethodLogic = func(logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		sessionLogMethodLogicCalled++
+	})
+	m.ExpectMethod(dummySession, "LogMethodLogic", 1, func(self *session, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+		assert.Equal(t, dummySession, self)
 		assert.Equal(t, LogLevelError, logLevel)
 		assert.Equal(t, "RecoverPanic", category)
 		assert.Equal(t, dummyName, subcategory)
@@ -642,109 +410,68 @@ func TestDefaultCustomization_RecoverPanic(t *testing.T) {
 		assert.Equal(t, 2, len(parameters))
 		assert.Equal(t, dummyError, parameters[0])
 		assert.Equal(t, dummyDebugStackString, parameters[1])
-	}
+	})
 
 	// SUT + act
 	var result, err = customizationDefault.RecoverPanic(
-		dummySessionRecoverPanic,
+		dummySession,
 		dummyRecoverResult,
 	)
 
 	// assert
 	assert.Nil(t, result)
 	assert.Equal(t, dummyError, err)
-
-	// verify
-	verifyAll(t)
-	assert.Equal(t, sessionGetNameExpected, sessionGetNameCalled, "Unexpected number of calls to method session.GetName")
-	assert.Equal(t, sessionLogMethodLogicExpected, sessionLogMethodLogicCalled, "Unexpected number of calls to method session.LogMethodLogic")
 }
 
 func TestDefaultCustomization_NotFoundHandler(t *testing.T) {
-	// mock
-	createMock(t)
-
 	// SUT + act
 	var result = customizationDefault.NotFoundHandler()
 
 	// assert
 	assert.Nil(t, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestDefaultCustomization_MethodNotAllowedHandler(t *testing.T) {
-	// mock
-	createMock(t)
-
 	// SUT + act
 	var result = customizationDefault.MethodNotAllowedHandler()
 
 	// assert
 	assert.Nil(t, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestDefaultCustomization_ClientCert(t *testing.T) {
-	// mock
-	createMock(t)
-
 	// SUT + act
 	var result = customizationDefault.ClientCert()
 
 	// assert
 	assert.Nil(t, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestDefaultCustomization_DefaultTimeout(t *testing.T) {
-	// mock
-	createMock(t)
-
 	// SUT + act
 	var result = customizationDefault.DefaultTimeout()
 
 	// assert
 	assert.Equal(t, 3*time.Minute, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestDefaultCustomization_SkipServerCertVerification(t *testing.T) {
-	// mock
-	createMock(t)
-
 	// SUT + act
 	var result = customizationDefault.SkipServerCertVerification()
 
 	// assert
 	assert.False(t, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestDefaultCustomization_RoundTripper(t *testing.T) {
 	// arrange
-	var dummyTransport = &dummyTransport{t: t}
-
-	// mock
-	createMock(t)
+	var dummyTransport = &http.Transport{}
 
 	// SUT + act
 	var result = customizationDefault.RoundTripper(dummyTransport)
 
 	// assert
 	assert.Equal(t, dummyTransport, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestDefaultCustomization_WrapRequest(t *testing.T) {
@@ -752,15 +479,9 @@ func TestDefaultCustomization_WrapRequest(t *testing.T) {
 	var dummySession Session
 	var dummyRequest = &http.Request{Host: "some host"}
 
-	// mock
-	createMock(t)
-
 	// SUT + act
 	var result = customizationDefault.WrapRequest(dummySession, dummyRequest)
 
 	// assert
 	assert.Equal(t, dummyRequest, result)
-
-	// verify
-	verifyAll(t)
 }

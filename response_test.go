@@ -4,35 +4,26 @@ import (
 	"errors"
 	"math/rand"
 	"net/http"
-	"reflect"
 	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/zhongjie-cai/gomocker"
 )
 
 func TestSkipResponseHandling(t *testing.T) {
-	// mock
-	createMock(t)
-
 	// SUT + act
 	var result, err = SkipResponseHandling()
 
 	// assert
 	assert.IsType(t, skipResponseHandlingDummy{}, result)
 	assert.NoError(t, err)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestShouldSkipHandling_HasError(t *testing.T) {
 	// arrange
 	var dummyResponseObject skipResponseHandlingDummy
 	var dummyResponseError = errors.New("some error")
-
-	// mock
-	createMock(t)
 
 	// SUT + act
 	var result = shouldSkipHandling(
@@ -42,26 +33,12 @@ func TestShouldSkipHandling_HasError(t *testing.T) {
 
 	// assert
 	assert.False(t, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestShouldSkipHandling_Yes(t *testing.T) {
 	// arrange
 	var dummyResponseObject skipResponseHandlingDummy
 	var dummyResponseError error
-
-	// mock
-	createMock(t)
-
-	// expect
-	reflectTypeOfExpected = 1
-	reflectTypeOf = func(i interface{}) reflect.Type {
-		reflectTypeOfCalled++
-		assert.Equal(t, dummyResponseObject, i)
-		return reflect.TypeOf(i)
-	}
 
 	// SUT + act
 	var result = shouldSkipHandling(
@@ -71,26 +48,12 @@ func TestShouldSkipHandling_Yes(t *testing.T) {
 
 	// assert
 	assert.True(t, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestShouldSkipHandling_No(t *testing.T) {
 	// arrange
 	var dummyResponseObject = rand.Int()
 	var dummyResponseError error
-
-	// mock
-	createMock(t)
-
-	// expect
-	reflectTypeOfExpected = 1
-	reflectTypeOf = func(i interface{}) reflect.Type {
-		reflectTypeOfCalled++
-		assert.Equal(t, dummyResponseObject, i)
-		return reflect.TypeOf(i)
-	}
 
 	// SUT + act
 	var result = shouldSkipHandling(
@@ -100,60 +63,28 @@ func TestShouldSkipHandling_No(t *testing.T) {
 
 	// assert
 	assert.False(t, result)
-
-	// verify
-	verifyAll(t)
-}
-
-type dummyCustomizationConstructResponse struct {
-	dummyCustomization
-	interpretError   func(err error) (int, string)
-	interpretSuccess func(responseContent interface{}) (int, string)
-}
-
-func (customization *dummyCustomizationConstructResponse) InterpretError(err error) (int, string) {
-	if customization.interpretError != nil {
-		return customization.interpretError(err)
-	}
-	assert.Fail(customization.t, "Unexpected call to InterpretError")
-	return 0, ""
-}
-
-func (customization *dummyCustomizationConstructResponse) InterpretSuccess(responseContent interface{}) (int, string) {
-	if customization.interpretSuccess != nil {
-		return customization.interpretSuccess(responseContent)
-	}
-	assert.Fail(customization.t, "Unexpected call to InterpretSuccess")
-	return 0, ""
 }
 
 func TestConstructResponse_ResponseError(t *testing.T) {
 	// arrange
-	var dummyCustomizationConstructResponse = &dummyCustomizationConstructResponse{
-		dummyCustomization: dummyCustomization{t: t},
-	}
+	var dummyCustomization = &DefaultCustomization{}
 	var dummySession = &session{
-		customization: dummyCustomizationConstructResponse,
+		customization: dummyCustomization,
 	}
 	var dummyResponseObject = rand.Int()
 	var dummyResponseError = errors.New("some response error")
-	var customizationInterpretErrorExpected int
-	var customizationInterpretErrorCalled int
-	var customizationInterpretSuccessExpected int
-	var customizationInterpretSuccessCalled int
 	var dummyCode = rand.Int()
 	var dummyMessage = "some message"
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	customizationInterpretErrorExpected = 1
-	dummyCustomizationConstructResponse.interpretError = func(err error) (int, string) {
-		customizationInterpretErrorCalled++
+	m.ExpectMethod(dummyCustomization, "InterpretError", 1, func(self *DefaultCustomization, err error) (int, string) {
+		assert.Equal(t, dummyCustomization, self)
 		assert.Equal(t, dummyResponseError, err)
 		return dummyCode, dummyMessage
-	}
+	})
 
 	// SUT + act
 	var code, message = constructResponse(
@@ -165,39 +96,27 @@ func TestConstructResponse_ResponseError(t *testing.T) {
 	// assert
 	assert.Equal(t, dummyCode, code)
 	assert.Equal(t, dummyMessage, message)
-
-	// verify
-	verifyAll(t)
-	assert.Equal(t, customizationInterpretErrorExpected, customizationInterpretErrorCalled, "Unexpected number of calls to method customization.InterpretError")
-	assert.Equal(t, customizationInterpretSuccessExpected, customizationInterpretSuccessCalled, "Unexpected number of calls to method customization.InterpretSuccess")
 }
 
 func TestConstructResponse_Success(t *testing.T) {
 	// arrange
-	var dummyCustomizationConstructResponse = &dummyCustomizationConstructResponse{
-		dummyCustomization: dummyCustomization{t: t},
-	}
+	var dummyCustomization = &DefaultCustomization{}
 	var dummySession = &session{
-		customization: dummyCustomizationConstructResponse,
+		customization: dummyCustomization,
 	}
 	var dummyResponseObject = rand.Int()
-	var customizationInterpretErrorExpected int
-	var customizationInterpretErrorCalled int
-	var customizationInterpretSuccessExpected int
-	var customizationInterpretSuccessCalled int
 	var dummyCode = rand.Int()
 	var dummyMessage = "some message"
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	customizationInterpretSuccessExpected = 1
-	dummyCustomizationConstructResponse.interpretSuccess = func(responseObject interface{}) (int, string) {
-		customizationInterpretSuccessCalled++
+	m.ExpectMethod(dummyCustomization, "InterpretSuccess", 1, func(self *DefaultCustomization, responseObject interface{}) (int, string) {
+		assert.Equal(t, dummyCustomization, self)
 		assert.Equal(t, dummyResponseObject, responseObject)
 		return dummyCode, dummyMessage
-	}
+	})
 
 	// SUT + act
 	var code, message = constructResponse(
@@ -209,75 +128,33 @@ func TestConstructResponse_Success(t *testing.T) {
 	// assert
 	assert.Equal(t, dummyCode, code)
 	assert.Equal(t, dummyMessage, message)
-
-	// verify
-	verifyAll(t)
-	assert.Equal(t, customizationInterpretErrorExpected, customizationInterpretErrorCalled, "Unexpected number of calls to method customization.InterpretError")
-	assert.Equal(t, customizationInterpretSuccessExpected, customizationInterpretSuccessCalled, "Unexpected number of calls to method customization.InterpretSuccess")
-}
-
-type dummyResponseWriterWriteResponse struct {
-	dummyResponseWriter
-	header      func() http.Header
-	write       func([]byte) (int, error)
-	writeHeader func(int)
-}
-
-func (drw *dummyResponseWriterWriteResponse) Header() http.Header {
-	if drw.header != nil {
-		return drw.header()
-	}
-	assert.Fail(drw.t, "Unexpected number of calls to Header")
-	return nil
-}
-
-func (drw *dummyResponseWriterWriteResponse) Write(bytes []byte) (int, error) {
-	if drw.write != nil {
-		return drw.write(bytes)
-	}
-	assert.Fail(drw.t, "Unexpected number of calls to Write")
-	return 0, nil
-}
-
-func (drw *dummyResponseWriterWriteResponse) WriteHeader(statusCode int) {
-	if drw.writeHeader != nil {
-		drw.writeHeader(statusCode)
-		return
-	}
-	assert.Fail(drw.t, "Unexpected number of calls to WriteHeader")
 }
 
 func TestWriteResponse_SkipHandling(t *testing.T) {
 	// arrange
-	var dummyResponseWriterWriteResponse = &dummyResponseWriterWriteResponse{
-		dummyResponseWriter: dummyResponseWriter{t: t},
-	}
+	var dummyResponseWriter = &dummyResponseWriter{}
 	var dummySession = &session{
-		responseWriter: dummyResponseWriterWriteResponse,
+		responseWriter: dummyResponseWriter,
 	}
 	var dummyResponseObject = rand.Int()
 	var dummyResponseError = errors.New("some response error")
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	skipResponseHandlingFuncExpected = 1
-	shouldSkipHandlingFunc = func(responseObject interface{}, responseError error) bool {
-		skipResponseHandlingFuncCalled++
+	m.ExpectFunc(shouldSkipHandling, 1, func(responseObject interface{}, responseError error) bool {
 		assert.Equal(t, dummyResponseObject, responseObject)
 		assert.Equal(t, dummyResponseError, responseError)
 		return true
-	}
-	logEndpointResponseFuncExpected = 1
-	logEndpointResponseFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		logEndpointResponseFuncCalled++
+	})
+	m.ExpectFunc(logEndpointResponse, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, "None", category)
 		assert.Equal(t, "-1", subcategory)
 		assert.Equal(t, "Skipped response handling", messageFormat)
 		assert.Empty(t, parameters)
-	}
+	})
 
 	// SUT + act
 	writeResponse(
@@ -285,27 +162,16 @@ func TestWriteResponse_SkipHandling(t *testing.T) {
 		dummyResponseObject,
 		dummyResponseError,
 	)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestWriteResponse_HappyPath(t *testing.T) {
 	// arrange
-	var dummyResponseWriterWriteResponse = &dummyResponseWriterWriteResponse{
-		dummyResponseWriter: dummyResponseWriter{t: t},
-	}
+	var dummyResponseWriterInstance = &dummyResponseWriter{}
 	var dummySession = &session{
-		responseWriter: dummyResponseWriterWriteResponse,
+		responseWriter: dummyResponseWriterInstance,
 	}
 	var dummyResponseObject = rand.Int()
 	var dummyResponseError = errors.New("some response error")
-	var responseWriterHeaderExpected int
-	var responseWriterHeaderCalled int
-	var responseWriterWriteHeaderExpected int
-	var responseWriterWriteHeaderCalled int
-	var responseWriterWriteExpected int
-	var responseWriterWriteCalled int
 	var dummyCode = rand.Int()
 	var dummyMessage = "some message"
 	var dummyStatusText = "some status text"
@@ -313,67 +179,52 @@ func TestWriteResponse_HappyPath(t *testing.T) {
 	var dummyHeader = make(http.Header)
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	skipResponseHandlingFuncExpected = 1
-	shouldSkipHandlingFunc = func(responseObject interface{}, responseError error) bool {
-		skipResponseHandlingFuncCalled++
+	m.ExpectFunc(shouldSkipHandling, 1, func(responseObject interface{}, responseError error) bool {
 		assert.Equal(t, dummyResponseObject, responseObject)
 		assert.Equal(t, dummyResponseError, responseError)
 		return false
-	}
-	constructResponseFuncExpected = 1
-	constructResponseFunc = func(session *session, responseObject interface{}, responseError error) (int, string) {
-		constructResponseFuncCalled++
+	})
+	m.ExpectFunc(constructResponse, 1, func(session *session, responseObject interface{}, responseError error) (int, string) {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyResponseObject, responseObject)
 		assert.Equal(t, dummyResponseError, responseError)
 		return dummyCode, dummyMessage
-	}
-	httpStatusTextExpected = 1
-	httpStatusText = func(code int) string {
-		httpStatusTextCalled++
+	})
+	m.ExpectFunc(http.StatusText, 1, func(code int) string {
 		assert.Equal(t, dummyCode, code)
 		return dummyStatusText
-	}
-	strconvItoaExpected = 1
-	strconvItoa = func(i int) string {
-		strconvItoaCalled++
+	})
+	m.ExpectFunc(strconv.Itoa, 1, func(i int) string {
 		assert.Equal(t, dummyCode, i)
 		return dummyCodeString
-	}
-	logEndpointResponseFuncExpected = 1
-	logEndpointResponseFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		logEndpointResponseFuncCalled++
+	})
+	m.ExpectFunc(logEndpointResponse, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyStatusText, category)
 		assert.Equal(t, dummyCodeString, subcategory)
 		assert.Equal(t, dummyMessage, messageFormat)
 		assert.Empty(t, parameters)
-	}
-	isInterfaceValueNilFuncExpected = 1
-	isInterfaceValueNilFunc = func(i interface{}) bool {
-		isInterfaceValueNilFuncCalled++
-		assert.Equal(t, dummyResponseWriterWriteResponse, i)
+	})
+	m.ExpectFunc(isInterfaceValueNil, 1, func(i interface{}) bool {
+		assert.Equal(t, dummyResponseWriterInstance, i)
 		return false
-	}
-	responseWriterHeaderExpected = 1
-	dummyResponseWriterWriteResponse.header = func() http.Header {
-		responseWriterHeaderCalled++
+	})
+	m.ExpectMethod(dummyResponseWriterInstance, "Header", 1, func(self *dummyResponseWriter) http.Header {
+		assert.Equal(t, dummyResponseWriterInstance, self)
 		return dummyHeader
-	}
-	responseWriterWriteHeaderExpected = 1
-	dummyResponseWriterWriteResponse.writeHeader = func(statusCode int) {
-		responseWriterWriteHeaderCalled++
+	})
+	m.ExpectMethod(dummyResponseWriterInstance, "WriteHeader", 1, func(self *dummyResponseWriter, statusCode int) {
+		assert.Equal(t, dummyResponseWriterInstance, self)
 		assert.Equal(t, dummyCode, statusCode)
-	}
-	responseWriterWriteExpected = 1
-	dummyResponseWriterWriteResponse.write = func(bytes []byte) (int, error) {
-		responseWriterWriteCalled++
+	})
+	m.ExpectMethod(dummyResponseWriterInstance, "Write", 1, func(self *dummyResponseWriter, bytes []byte) (int, error) {
+		assert.Equal(t, dummyResponseWriterInstance, self)
 		assert.Equal(t, []byte(dummyMessage), bytes)
 		return rand.Int(), errors.New("some error")
-	}
+	})
 
 	// SUT + act
 	writeResponse(
@@ -385,10 +236,4 @@ func TestWriteResponse_HappyPath(t *testing.T) {
 	// assert
 	assert.Equal(t, 1, len(dummyHeader))
 	assert.Equal(t, ContentTypeJSON, dummyHeader.Get("Content-Type"))
-
-	// verify
-	verifyAll(t)
-	assert.Equal(t, responseWriterHeaderExpected, responseWriterHeaderCalled, "Unexpected number of calls to method responseWriter.Header")
-	assert.Equal(t, responseWriterWriteHeaderExpected, responseWriterWriteHeaderCalled, "Unexpected number of calls to method responseWriter.WriteHeader")
-	assert.Equal(t, responseWriterWriteExpected, responseWriterWriteCalled, "Unexpected number of calls to method responseWriter.Write")
 }

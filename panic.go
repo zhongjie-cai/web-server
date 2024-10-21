@@ -12,7 +12,7 @@ func handlePanic(
 		session,
 		recoverResult,
 	)
-	writeResponseFunc(
+	writeResponse(
 		session,
 		responseObject,
 		responseError,

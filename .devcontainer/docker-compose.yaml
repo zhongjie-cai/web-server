@@ -1,11 +1,9 @@
-version: '3.3'
+version: "3.3"
 
 services:
   webserver_code:
-    build:
-      context: .
-      dockerfile: ./Dockerfile
-    container_name: 'webserver_code'
+    image: mcr.microsoft.com/vscode/devcontainers/go:1.23
+    container_name: "webserver_code"
     volumes:
       # Mounts the project folder to '/workspace'. The target path inside the container
       # should match what your application expects. In this case, the compose file is

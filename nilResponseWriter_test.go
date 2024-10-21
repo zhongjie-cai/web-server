@@ -12,9 +12,6 @@ func TestNilResponseWriter(t *testing.T) {
 	var dummyBody = []byte("some body")
 	var dummyStatus = rand.Int()
 
-	// mock
-	createMock(t)
-
 	// SUT
 	var nilResponseWriter = &nilResponseWriter{}
 
@@ -27,7 +24,4 @@ func TestNilResponseWriter(t *testing.T) {
 	assert.Empty(t, header)
 	assert.Zero(t, result)
 	assert.NoError(t, err)
-
-	// verify
-	verifyAll(t)
 }

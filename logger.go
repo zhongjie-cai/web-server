@@ -1,5 +1,7 @@
 package webserver
 
+import "fmt"
+
 func prepareLogging(
 	session *session,
 	logType LogType,
@@ -18,7 +20,7 @@ func prepareLogging(
 		logLevel,
 		category,
 		subcategory,
-		fmtSprintf(
+		fmt.Sprintf(
 			messageFormat,
 			parameters...,
 		),
@@ -27,7 +29,7 @@ func prepareLogging(
 
 // logAppRoot logs the given message as AppRoot category
 func logAppRoot(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-	prepareLoggingFunc(
+	prepareLogging(
 		session,
 		LogTypeAppRoot,
 		LogLevelInfo,
@@ -40,7 +42,7 @@ func logAppRoot(session *session, category string, subcategory string, messageFo
 
 // logEndpointEnter logs the given message as EndpointEnter category
 func logEndpointEnter(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-	prepareLoggingFunc(
+	prepareLogging(
 		session,
 		LogTypeEndpointEnter,
 		LogLevelInfo,
@@ -53,7 +55,7 @@ func logEndpointEnter(session *session, category string, subcategory string, mes
 
 // logEndpointRequest logs the given message as EndpointRequest category
 func logEndpointRequest(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-	prepareLoggingFunc(
+	prepareLogging(
 		session,
 		LogTypeEndpointRequest,
 		LogLevelInfo,
@@ -66,7 +68,7 @@ func logEndpointRequest(session *session, category string, subcategory string, m
 
 // logMethodEnter logs the given message as MethodEnter category
 func logMethodEnter(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-	prepareLoggingFunc(
+	prepareLogging(
 		session,
 		LogTypeMethodEnter,
 		LogLevelInfo,
@@ -79,7 +81,7 @@ func logMethodEnter(session *session, category string, subcategory string, messa
 
 // logMethodParameter logs the given message as MethodParameter category
 func logMethodParameter(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-	prepareLoggingFunc(
+	prepareLogging(
 		session,
 		LogTypeMethodParameter,
 		LogLevelInfo,
@@ -92,7 +94,7 @@ func logMethodParameter(session *session, category string, subcategory string, m
 
 // logMethodLogic logs the given message as MethodLogic category
 func logMethodLogic(session *session, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-	prepareLoggingFunc(
+	prepareLogging(
 		session,
 		LogTypeMethodLogic,
 		logLevel,
@@ -105,7 +107,7 @@ func logMethodLogic(session *session, logLevel LogLevel, category string, subcat
 
 // logWebcallStart logs the given message as WebcallStart category
 func logWebcallStart(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-	prepareLoggingFunc(
+	prepareLogging(
 		session,
 		LogTypeWebcallStart,
 		LogLevelInfo,
@@ -118,7 +120,7 @@ func logWebcallStart(session *session, category string, subcategory string, mess
 
 // logWebcallRequest logs the given message as WebcallRequest category
 func logWebcallRequest(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-	prepareLoggingFunc(
+	prepareLogging(
 		session,
 		LogTypeWebcallRequest,
 		LogLevelInfo,
@@ -131,7 +133,7 @@ func logWebcallRequest(session *session, category string, subcategory string, me
 
 // logWebcallResponse logs the given message as WebcallResponse category
 func logWebcallResponse(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-	prepareLoggingFunc(
+	prepareLogging(
 		session,
 		LogTypeWebcallResponse,
 		LogLevelInfo,
@@ -144,7 +146,7 @@ func logWebcallResponse(session *session, category string, subcategory string, m
 
 // logWebcallFinish logs the given message as WebcallFinish category
 func logWebcallFinish(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-	prepareLoggingFunc(
+	prepareLogging(
 		session,
 		LogTypeWebcallFinish,
 		LogLevelInfo,
@@ -157,7 +159,7 @@ func logWebcallFinish(session *session, category string, subcategory string, mes
 
 // logMethodReturn logs the given message as MethodReturn category
 func logMethodReturn(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-	prepareLoggingFunc(
+	prepareLogging(
 		session,
 		LogTypeMethodReturn,
 		LogLevelInfo,
@@ -170,7 +172,7 @@ func logMethodReturn(session *session, category string, subcategory string, mess
 
 // logMethodExit logs the given message as MethodExit category
 func logMethodExit(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-	prepareLoggingFunc(
+	prepareLogging(
 		session,
 		LogTypeMethodExit,
 		LogLevelInfo,
@@ -183,7 +185,7 @@ func logMethodExit(session *session, category string, subcategory string, messag
 
 // logEndpointResponse logs the given message as EndpointResponse category
 func logEndpointResponse(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-	prepareLoggingFunc(
+	prepareLogging(
 		session,
 		LogTypeEndpointResponse,
 		LogLevelInfo,
@@ -196,7 +198,7 @@ func logEndpointResponse(session *session, category string, subcategory string, 
 
 // logEndpointExit logs the given message as EndpointExit category
 func logEndpointExit(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-	prepareLoggingFunc(
+	prepareLogging(
 		session,
 		LogTypeEndpointExit,
 		LogLevelInfo,

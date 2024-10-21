@@ -1,5 +1,12 @@
 package webserver
 
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"strings"
+)
+
 // AppError is the error wrapper interface for all web service generated errors
 type AppError interface {
 	// AppBaseError is the error extending interface that is compatible with Golang error type
@@ -51,7 +58,7 @@ func newAppError(errorCode errorCode, errorMessage string, innerErrors []error) 
 	return &appError{
 		Code:    errorCode,
 		Message: errorMessage,
-		InnerErrors: cleanupInnerErrorsFunc(
+		InnerErrors: cleanupInnerErrors(
 			innerErrors,
 		),
 	}
@@ -70,13 +77,13 @@ func printInnerErrors(innerErrors []*appError) string {
 		if innerError != nil {
 			innerErrorMessages = append(
 				innerErrorMessages,
-				getErrorMessageFunc(innerError),
+				getErrorMessage(innerError),
 			)
 		}
 	}
-	return fmtSprintf(
+	return fmt.Sprintf(
 		errorJoiningFormat,
-		stringsJoin(
+		strings.Join(
 			innerErrorMessages,
 			errorSeparator,
 		),
@@ -84,15 +91,15 @@ func printInnerErrors(innerErrors []*appError) string {
 }
 
 func (appError *appError) Error() string {
-	var baseErrorMessage = fmtSprintf(
+	var baseErrorMessage = fmt.Sprintf(
 		errorMessageorFormat,
 		appError.Code,
 		appError.Message,
 	)
-	var innerErrorMessage = printInnerErrorsFunc(
+	var innerErrorMessage = printInnerErrors(
 		appError.InnerErrors,
 	)
-	return fmtSprint(
+	return fmt.Sprint(
 		baseErrorMessage,
 		innerErrorMessage,
 	)
@@ -110,14 +117,14 @@ func (appError *appError) HTTPStatusCode() int {
 
 // HTTPResponseMessage returns the JSON representation of this error for HTTP response
 func (appError *appError) HTTPResponseMessage() string {
-	var bytes, _ = jsonMarshal(appError)
+	var bytes, _ = json.Marshal(appError)
 	return string(bytes)
 }
 
 func equalsError(err, target error) bool {
 	return err == target ||
 		err.Error() == target.Error() ||
-		errorsIs(err, target)
+		errors.Is(err, target)
 }
 
 func appErrorContains(appError AppError, targetError error) bool {
@@ -126,7 +133,7 @@ func appErrorContains(appError AppError, targetError error) bool {
 
 func innerErrorContains(innerErrors []*appError, targetError error) bool {
 	for _, innerError := range innerErrors {
-		if appErrorContainsFunc(
+		if appErrorContains(
 			innerError,
 			targetError,
 		) {
@@ -138,10 +145,10 @@ func innerErrorContains(innerErrors []*appError, targetError error) bool {
 
 // Contains checks if the current error object or any of its inner errors contains the given error object
 func (appError *appError) Contains(targetError error) bool {
-	return equalsErrorFunc(
+	return equalsError(
 		appError,
 		targetError,
-	) || innerErrorContainsFunc(
+	) || innerErrorContains(
 		appError.InnerErrors,
 		targetError,
 	)
@@ -169,7 +176,7 @@ func cleanupInnerErrors(innerErrors []error) []*appError {
 
 // Wrap wraps the given list of inner errors into the current app error object
 func (appError *appError) Wrap(innerErrors ...error) AppError {
-	var cleanedInnerErrors = cleanupInnerErrorsFunc(
+	var cleanedInnerErrors = cleanupInnerErrors(
 		innerErrors,
 	)
 	appError.InnerErrors = append(
@@ -181,7 +188,7 @@ func (appError *appError) Wrap(innerErrors ...error) AppError {
 
 // GetGeneralFailure creates a generic error based on GeneralFailure
 func GetGeneralFailure(errorMessage string, innerErrors ...error) AppError {
-	return newAppErrorFunc(
+	return newAppError(
 		errorCodeGeneralFailure,
 		errorMessage,
 		innerErrors,
@@ -190,7 +197,7 @@ func GetGeneralFailure(errorMessage string, innerErrors ...error) AppError {
 
 // GetUnauthorized creates an error related to Unauthorized
 func GetUnauthorized(errorMessage string, innerErrors ...error) AppError {
-	return newAppErrorFunc(
+	return newAppError(
 		errorCodeUnauthorized,
 		errorMessage,
 		innerErrors,
@@ -199,7 +206,7 @@ func GetUnauthorized(errorMessage string, innerErrors ...error) AppError {
 
 // GetInvalidOperation creates an error related to InvalidOperation
 func GetInvalidOperation(errorMessage string, innerErrors ...error) AppError {
-	return newAppErrorFunc(
+	return newAppError(
 		errorCodeInvalidOperation,
 		errorMessage,
 		innerErrors,
@@ -208,7 +215,7 @@ func GetInvalidOperation(errorMessage string, innerErrors ...error) AppError {
 
 // GetBadRequest creates an error related to BadRequest
 func GetBadRequest(errorMessage string, innerErrors ...error) AppError {
-	return newAppErrorFunc(
+	return newAppError(
 		errorCodeBadRequest,
 		errorMessage,
 		innerErrors,
@@ -217,7 +224,7 @@ func GetBadRequest(errorMessage string, innerErrors ...error) AppError {
 
 // GetNotFound creates an error related to NotFound
 func GetNotFound(errorMessage string, innerErrors ...error) AppError {
-	return newAppErrorFunc(
+	return newAppError(
 		errorCodeNotFound,
 		errorMessage,
 		innerErrors,
@@ -226,7 +233,7 @@ func GetNotFound(errorMessage string, innerErrors ...error) AppError {
 
 // GetCircuitBreak creates an error related to CircuitBreak
 func GetCircuitBreak(errorMessage string, innerErrors ...error) AppError {
-	return newAppErrorFunc(
+	return newAppError(
 		errorCodeCircuitBreak,
 		errorMessage,
 		innerErrors,
@@ -235,7 +242,7 @@ func GetCircuitBreak(errorMessage string, innerErrors ...error) AppError {
 
 // GetOperationLock creates an error related to OperationLock
 func GetOperationLock(errorMessage string, innerErrors ...error) AppError {
-	return newAppErrorFunc(
+	return newAppError(
 		errorCodeOperationLock,
 		errorMessage,
 		innerErrors,
@@ -244,7 +251,7 @@ func GetOperationLock(errorMessage string, innerErrors ...error) AppError {
 
 // GetAccessForbidden creates an error related to AccessForbidden
 func GetAccessForbidden(errorMessage string, innerErrors ...error) AppError {
-	return newAppErrorFunc(
+	return newAppError(
 		errorCodeAccessForbidden,
 		errorMessage,
 		innerErrors,
@@ -253,7 +260,7 @@ func GetAccessForbidden(errorMessage string, innerErrors ...error) AppError {
 
 // GetDataCorruption creates an error related to DataCorruption
 func GetDataCorruption(errorMessage string, innerErrors ...error) AppError {
-	return newAppErrorFunc(
+	return newAppError(
 		errorCodeDataCorruption,
 		errorMessage,
 		innerErrors,
@@ -262,7 +269,7 @@ func GetDataCorruption(errorMessage string, innerErrors ...error) AppError {
 
 // GetNotImplemented creates an error related to NotImplemented
 func GetNotImplemented(errorMessage string, innerErrors ...error) AppError {
-	return newAppErrorFunc(
+	return newAppError(
 		errorCodeNotImplemented,
 		errorMessage,
 		innerErrors,
@@ -273,7 +280,7 @@ func GetNotImplemented(errorMessage string, innerErrors ...error) AppError {
 func WrapError(sourceError error, innerErrors ...error) AppError {
 	var typedError, isTyped = sourceError.(AppError)
 	if !isTyped {
-		return newAppErrorFunc(
+		return newAppError(
 			errorCodeGeneralFailure,
 			sourceError.Error(),
 			innerErrors,

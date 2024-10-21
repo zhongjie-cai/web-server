@@ -6,12 +6,12 @@ import (
 	"math/rand"
 	"net/http"
 	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
+	"github.com/zhongjie-cai/gomocker"
 )
 
 func TestDoParameterReplacement_EmptyParameterType(t *testing.T) {
@@ -22,12 +22,10 @@ func TestDoParameterReplacement_EmptyParameterType(t *testing.T) {
 	var dummyParameterType ParameterType
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	logAppRootFuncExpected = 1
-	logAppRootFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		logAppRootFuncCalled++
+	m.ExpectFunc(logAppRoot, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, "register", category)
 		assert.Equal(t, "doParameterReplacement", subcategory)
@@ -35,7 +33,7 @@ func TestDoParameterReplacement_EmptyParameterType(t *testing.T) {
 		assert.Equal(t, 2, len(parameters))
 		assert.Equal(t, dummyParameterName, parameters[0])
 		assert.Equal(t, dummyOriginalPath, parameters[1])
-	}
+	})
 
 	// SUT + act
 	var result = doParameterReplacement(
@@ -47,9 +45,6 @@ func TestDoParameterReplacement_EmptyParameterType(t *testing.T) {
 
 	// assert
 	assert.Equal(t, dummyOriginalPath, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestDoParameterReplacement_ValidParameterType(t *testing.T) {
@@ -59,35 +54,6 @@ func TestDoParameterReplacement_ValidParameterType(t *testing.T) {
 	var dummyOriginalPath = "/some/original/path/with/{" + dummyParameterName + "}/in/it"
 	var dummyParameterType = ParameterType("some type")
 	var dummyResult = "/some/original/path/with/{" + dummyParameterName + ":" + string(dummyParameterType) + "}/in/it"
-
-	// mock
-	createMock(t)
-
-	// expect
-	fmtSprintfExpected = 2
-	fmtSprintf = func(format string, a ...interface{}) string {
-		fmtSprintfCalled++
-		if fmtSprintfCalled == 1 {
-			assert.Equal(t, "{%v}", format)
-			assert.Equal(t, 1, len(a))
-			assert.Equal(t, dummyParameterName, a[0])
-		} else if fmtSprintfCalled == 2 {
-			assert.Equal(t, "{%v:%v}", format)
-			assert.Equal(t, 2, len(a))
-			assert.Equal(t, dummyParameterName, a[0])
-			assert.Equal(t, dummyParameterType, a[1])
-		}
-		return fmt.Sprintf(format, a...)
-	}
-	stringsReplaceExpected = 1
-	stringsReplace = func(s, old, new string, n int) string {
-		stringsReplaceCalled++
-		assert.Equal(t, dummyOriginalPath, s)
-		assert.Equal(t, "{"+dummyParameterName+"}", old)
-		assert.Equal(t, "{"+dummyParameterName+":"+string(dummyParameterType)+"}", new)
-		assert.Equal(t, -1, n)
-		return strings.Replace(s, old, new, n)
-	}
 
 	// SUT + act
 	var result = doParameterReplacement(
@@ -99,9 +65,6 @@ func TestDoParameterReplacement_ValidParameterType(t *testing.T) {
 
 	// assert
 	assert.Equal(t, dummyResult, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestEvaluatePathWithParameters(t *testing.T) {
@@ -122,12 +85,10 @@ func TestEvaluatePathWithParameters(t *testing.T) {
 	var dummyUpdatedPath = "some updated path"
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	doParameterReplacementFuncExpected = 3
-	doParameterReplacementFunc = func(session *session, originalPath string, parameterName string, parameterType ParameterType) string {
-		doParameterReplacementFuncCalled++
+	m.ExpectFunc(doParameterReplacement, 3, func(session *session, originalPath string, parameterName string, parameterType ParameterType) string {
 		assert.Equal(t, dummySession, session)
 		if dummyParameterName1 == parameterName {
 			assert.Equal(t, dummyParameterType1, parameterType)
@@ -140,7 +101,7 @@ func TestEvaluatePathWithParameters(t *testing.T) {
 			return dummyUpdatedPath
 		}
 		return ""
-	}
+	})
 
 	// SUT + act
 	var result = evaluatePathWithParameters(
@@ -151,9 +112,6 @@ func TestEvaluatePathWithParameters(t *testing.T) {
 
 	// assert
 	assert.Equal(t, dummyUpdatedPath, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestEvaluateQueries(t *testing.T) {
@@ -171,16 +129,6 @@ func TestEvaluateQueries(t *testing.T) {
 		dummyQueryName2, "{" + dummyQueryName2 + ":" + string(dummyParameterType2) + "}",
 	}
 
-	// mock
-	createMock(t)
-
-	// expect
-	fmtSprintfExpected = 2
-	fmtSprintf = func(format string, a ...interface{}) string {
-		fmtSprintfCalled++
-		return fmt.Sprintf(format, a...)
-	}
-
 	// SUT + act
 	var result = evaluateQueries(
 		dummyQueries,
@@ -189,56 +137,32 @@ func TestEvaluateQueries(t *testing.T) {
 	// assert
 	assert.Equal(t, 4, len(result))
 	assert.ElementsMatch(t, expectedResult, result)
-
-	// verify
-	verifyAll(t)
-}
-
-type dummyCustomizationRegisterRoutes struct {
-	dummyCustomization
-	routes func() []Route
-}
-
-func (customization *dummyCustomizationRegisterRoutes) Routes() []Route {
-	if customization.routes != nil {
-		return customization.routes()
-	}
-	assert.Fail(customization.t, "Unexpected call to Routes")
-	return nil
 }
 
 func TestRegisterRoutes_EmptyRoutes(t *testing.T) {
 	// arrange
 	var dummyApplication = &application{}
-	var dummyCustomizationRegisterRoutes = &dummyCustomizationRegisterRoutes{
-		dummyCustomization: dummyCustomization{t: t},
-	}
+	var dummyCustomization = &DefaultCustomization{}
 	var dummySession = &session{
-		customization: dummyCustomizationRegisterRoutes,
+		customization: dummyCustomization,
 	}
 	var dummyRouter = &mux.Router{}
-	var customizationRoutesExpected int
-	var customizationRoutesCalled int
 	var dummyRoutes []Route
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	customizationRoutesExpected = 1
-	dummyCustomizationRegisterRoutes.routes = func() []Route {
-		customizationRoutesCalled++
+	m.ExpectMethod(dummyCustomization, "Routes", 1, func() []Route {
 		return dummyRoutes
-	}
-	logAppRootFuncExpected = 1
-	logAppRootFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		logAppRootFuncCalled++
+	})
+	m.ExpectFunc(logAppRoot, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, "register", category)
 		assert.Equal(t, "registerRoutes", subcategory)
 		assert.Equal(t, "customization.Routes function empty: no routes returned!", messageFormat)
 		assert.Equal(t, 0, len(parameters))
-	}
+	})
 
 	// SUT + act
 	registerRoutes(
@@ -246,10 +170,6 @@ func TestRegisterRoutes_EmptyRoutes(t *testing.T) {
 		dummySession,
 		dummyRouter,
 	)
-
-	// verify
-	verifyAll(t)
-	assert.Equal(t, customizationRoutesExpected, customizationRoutesCalled, "Unexpected number of calls to customization.Routes")
 }
 
 func TestRegisterRoutes_ValidRoutes(t *testing.T) {
@@ -257,15 +177,11 @@ func TestRegisterRoutes_ValidRoutes(t *testing.T) {
 	var dummyApplication = &application{
 		actionFuncMap: make(map[string]ActionFunc),
 	}
-	var dummyCustomizationRegisterRoutes = &dummyCustomizationRegisterRoutes{
-		dummyCustomization: dummyCustomization{t: t},
-	}
+	var dummyCustomization = &DefaultCustomization{}
 	var dummySession = &session{
-		customization: dummyCustomizationRegisterRoutes,
+		customization: dummyCustomization,
 	}
 	var dummyRouter = &mux.Router{}
-	var customizationRoutesExpected int
-	var customizationRoutesCalled int
 	var dummyEndpoint1 = "some endpoint 1"
 	var dummyMethod1 = "some method 1"
 	var dummyPath1 = "some path 1"
@@ -316,17 +232,13 @@ func TestRegisterRoutes_ValidRoutes(t *testing.T) {
 	var dummyEvaluatedQueries2 = []string{"some evaluated queries 2"}
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	customizationRoutesExpected = 1
-	dummyCustomizationRegisterRoutes.routes = func() []Route {
-		customizationRoutesCalled++
+	m.ExpectMethod(dummyCustomization, "Routes", 1, func() []Route {
 		return dummyRoutes
-	}
-	evaluatePathWithParametersFuncExpected = 2
-	evaluatePathWithParametersFunc = func(session *session, path string, parameters map[string]ParameterType) string {
-		evaluatePathWithParametersFuncCalled++
+	})
+	m.ExpectFunc(evaluatePathWithParameters, 2, func(session *session, path string, parameters map[string]ParameterType) string {
 		assert.Equal(t, dummySession, session)
 		if dummyPath1 == path {
 			assert.Equal(t, dummyParameters1, parameters)
@@ -336,29 +248,25 @@ func TestRegisterRoutes_ValidRoutes(t *testing.T) {
 			return dummyEvaluatedPath2
 		}
 		return ""
-	}
-	evaluateQueriesFuncExpected = 2
-	evaluateQueriesFunc = func(queries map[string]ParameterType) []string {
-		evaluateQueriesFuncCalled++
+	})
+	m.ExpectFunc(evaluateQueries, 2, func(queries map[string]ParameterType) []string {
 		if queries["test1"] == ParameterType("me1") {
 			return dummyEvaluatedQueries1
 		} else if queries["test2"] == ParameterType("me2") {
 			return dummyEvaluatedQueries2
 		}
 		return nil
-	}
-	registerRouteFuncExpected = 2
-	registerRouteFunc = func(router *mux.Router, endpoint string, method string, path string, queries []string, handlerFunc func(http.ResponseWriter, *http.Request), actionFunc ActionFunc) (string, *mux.Route) {
-		registerRouteFuncCalled++
+	})
+	m.ExpectFunc(registerRoute, 2, func(router *mux.Router, endpoint string, method string, path string, queries []string, handlerFunc func(http.ResponseWriter, *http.Request), actionFunc ActionFunc) (string, *mux.Route) {
 		assert.Equal(t, dummyRouter, router)
 		assert.Equal(t, fmt.Sprintf("%v", reflect.ValueOf(dummyApplication.handleSession)), fmt.Sprintf("%v", reflect.ValueOf(handlerFunc)))
-		if registerRouteFuncCalled == 1 {
+		if m.FuncCalledCount(registerRoute) == 1 {
 			assert.Equal(t, dummyEndpoint1, endpoint)
 			assert.Equal(t, dummyMethod1, method)
 			assert.Equal(t, dummyEvaluatedPath1, path)
 			assert.Equal(t, dummyEvaluatedQueries1, queries)
 			assert.Equal(t, dummyActionFunc1Pointer, fmt.Sprintf("%v", reflect.ValueOf(actionFunc)))
-		} else if registerRouteFuncCalled == 2 {
+		} else if m.FuncCalledCount(registerRoute) == 2 {
 			assert.Equal(t, dummyEndpoint2, endpoint)
 			assert.Equal(t, dummyMethod2, method)
 			assert.Equal(t, dummyEvaluatedPath2, path)
@@ -366,7 +274,7 @@ func TestRegisterRoutes_ValidRoutes(t *testing.T) {
 			assert.Equal(t, dummyActionFunc2Pointer, fmt.Sprintf("%v", reflect.ValueOf(actionFunc)))
 		}
 		return "", nil
-	}
+	})
 
 	// SUT + act
 	registerRoutes(
@@ -374,85 +282,56 @@ func TestRegisterRoutes_ValidRoutes(t *testing.T) {
 		dummySession,
 		dummyRouter,
 	)
-
-	// verify
-	verifyAll(t)
-	assert.Equal(t, customizationRoutesExpected, customizationRoutesCalled, "Unexpected number of calls to customization.Routes")
-}
-
-type dummyCustomizationRegisterStatics struct {
-	dummyCustomization
-	statics func() []Static
-}
-
-func (customization *dummyCustomizationRegisterStatics) Statics() []Static {
-	if customization.statics != nil {
-		return customization.statics()
-	}
-	assert.Fail(customization.t, "Unexpected call to Statics")
-	return nil
 }
 
 func TestRegisterStatics_EmptyStatics(t *testing.T) {
 	// arrange
-	var dummyCustomizationRegisterStatics = &dummyCustomizationRegisterStatics{
-		dummyCustomization: dummyCustomization{t: t},
-	}
+	var dummyCustomization = &DefaultCustomization{}
 	var dummySession = &session{
-		customization: dummyCustomizationRegisterStatics,
+		customization: dummyCustomization,
 	}
 	var dummyRouter = &mux.Router{}
-	var customizationStaticsExpected int
-	var customizationStaticsCalled int
 	var dummyStatics []Static
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	customizationStaticsExpected = 1
-	dummyCustomizationRegisterStatics.statics = func() []Static {
-		customizationStaticsCalled++
+	m.ExpectMethod(dummyCustomization, "Statics", 1, func() []Static {
 		return dummyStatics
-	}
-	logAppRootFuncExpected = 1
-	logAppRootFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		logAppRootFuncCalled++
+	})
+	m.ExpectFunc(logAppRoot, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, "register", category)
 		assert.Equal(t, "registerStatics", subcategory)
 		assert.Equal(t, "customization.Statics function empty: no static content returned!", messageFormat)
 		assert.Equal(t, 0, len(parameters))
-	}
+	})
 
 	// SUT + act
 	registerStatics(
 		dummySession,
 		dummyRouter,
 	)
+}
 
-	// verify
-	verifyAll(t)
-	assert.Equal(t, customizationStaticsExpected, customizationStaticsCalled, "Unexpected number of calls to customization.Statics")
+type dummyHandler struct {
+	http.Handler
 }
 
 func TestRegisterStatics_ValidStatics(t *testing.T) {
 	// arrange
-	var dummyCustomizationRegisterStatics = &dummyCustomizationRegisterStatics{
-		dummyCustomization: dummyCustomization{t: t},
-	}
+	var dummyCustomization = &DefaultCustomization{}
 	var dummySession = &session{
-		customization: dummyCustomizationRegisterStatics,
+		customization: dummyCustomization,
 	}
 	var dummyRouter = &mux.Router{}
-	var customizationStaticsExpected int
-	var customizationStaticsCalled int
 	var dummyName1 = "some name 1"
 	var dummyPathPrefix1 = "some path prefix 1"
-	var dummyHandler1 = &dummyHandler{t}
+	var dummyHandler1 = &dummyHandler{}
 	var dummyName2 = "some name 2"
 	var dummyPathPrefix2 = "some path prefix 2"
-	var dummyHandler2 = &dummyHandler{t}
+	var dummyHandler2 = &dummyHandler{}
 	var dummyStatics = []Static{
 		{
 			Name:       dummyName1,
@@ -467,108 +346,71 @@ func TestRegisterStatics_ValidStatics(t *testing.T) {
 	}
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	customizationStaticsExpected = 1
-	dummyCustomizationRegisterStatics.statics = func() []Static {
-		customizationStaticsCalled++
+	m.ExpectMethod(dummyCustomization, "Statics", 1, func() []Static {
 		return dummyStatics
-	}
-	registerStaticFuncExpected = 2
-	registerStaticFunc = func(router *mux.Router, name string, path string, handler http.Handler) *mux.Route {
-		registerStaticFuncCalled++
+	})
+	m.ExpectFunc(registerStatic, 2, func(router *mux.Router, name string, path string, handler http.Handler) *mux.Route {
 		assert.Equal(t, dummyRouter, router)
-		if registerStaticFuncCalled == 1 {
+		if m.FuncCalledCount(registerStatic) == 1 {
 			assert.Equal(t, dummyName1, name)
 			assert.Equal(t, dummyPathPrefix1, path)
 			assert.Equal(t, dummyHandler1, handler)
-		} else if registerStaticFuncCalled == 2 {
+		} else if m.FuncCalledCount(registerStatic) == 2 {
 			assert.Equal(t, dummyName2, name)
 			assert.Equal(t, dummyPathPrefix2, path)
 			assert.Equal(t, dummyHandler2, handler)
 		}
 		return nil
-	}
+	})
 
 	// SUT + act
 	registerStatics(
 		dummySession,
 		dummyRouter,
 	)
-
-	// verify
-	verifyAll(t)
-	assert.Equal(t, customizationStaticsExpected, customizationStaticsCalled, "Unexpected number of calls to customization.Statics")
-}
-
-type dummyCustomizationRegisterMiddlewares struct {
-	dummyCustomization
-	middlewares func() []MiddlewareFunc
-}
-
-func (customization *dummyCustomizationRegisterMiddlewares) Middlewares() []MiddlewareFunc {
-	if customization.middlewares != nil {
-		return customization.middlewares()
-	}
-	assert.Fail(customization.t, "Unexpected call to Middlewares")
-	return nil
 }
 
 func TestRegisterMiddlewares_EmptyMiddlewares(t *testing.T) {
 	// arrange
-	var dummyCustomizationRegisterMiddlewares = &dummyCustomizationRegisterMiddlewares{
-		dummyCustomization: dummyCustomization{t: t},
-	}
+	var dummyCustomization = &DefaultCustomization{}
 	var dummySession = &session{
-		customization: dummyCustomizationRegisterMiddlewares,
+		customization: dummyCustomization,
 	}
 	var dummyRouter = &mux.Router{}
-	var customizationMiddlewaresExpected int
-	var customizationMiddlewaresCalled int
 	var dummyMiddlewares []MiddlewareFunc
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	customizationMiddlewaresExpected = 1
-	dummyCustomizationRegisterMiddlewares.middlewares = func() []MiddlewareFunc {
-		customizationMiddlewaresCalled++
+	m.ExpectMethod(dummyCustomization, "Middlewares", 1, func() []MiddlewareFunc {
 		return dummyMiddlewares
-	}
-	logAppRootFuncExpected = 1
-	logAppRootFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		logAppRootFuncCalled++
+	})
+	m.ExpectFunc(logAppRoot, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, "register", category)
 		assert.Equal(t, "registerMiddlewares", subcategory)
 		assert.Equal(t, "customization.Middlewares function empty: no middleware returned!", messageFormat)
 		assert.Equal(t, 0, len(parameters))
-	}
+	})
 
 	// SUT + act
 	registerMiddlewares(
 		dummySession,
 		dummyRouter,
 	)
-
-	// verify
-	verifyAll(t)
-	assert.Equal(t, customizationMiddlewaresExpected, customizationMiddlewaresCalled, "Unexpected number of calls to customization.Middlewares")
 }
 
 func TestRegisterMiddlewares_ValidMiddlewares(t *testing.T) {
 	// arrange
-	var dummyCustomizationRegisterMiddlewares = &dummyCustomizationRegisterMiddlewares{
-		dummyCustomization: dummyCustomization{t: t},
-	}
+	var dummyCustomization = &DefaultCustomization{}
 	var dummySession = &session{
-		customization: dummyCustomizationRegisterMiddlewares,
+		customization: dummyCustomization,
 	}
 	var dummyRouter = &mux.Router{}
-	var customizationMiddlewaresExpected int
-	var customizationMiddlewaresCalled int
 	var dummyMiddleware1 = func(http.Handler) http.Handler { return nil }
 	var dummyMiddleware1Pointer = fmt.Sprintf("%v", reflect.ValueOf(dummyMiddleware1))
 	var dummyMiddleware2 = func(http.Handler) http.Handler { return nil }
@@ -579,183 +421,109 @@ func TestRegisterMiddlewares_ValidMiddlewares(t *testing.T) {
 	}
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	customizationMiddlewaresExpected = 1
-	dummyCustomizationRegisterMiddlewares.middlewares = func() []MiddlewareFunc {
-		customizationMiddlewaresCalled++
+	m.ExpectMethod(dummyCustomization, "Middlewares", 1, func() []MiddlewareFunc {
 		return dummyMiddlewares
-	}
-	addMiddlewareFuncExpected = 2
-	addMiddlewareFunc = func(router *mux.Router, middleware MiddlewareFunc) {
-		addMiddlewareFuncCalled++
+	})
+	m.ExpectFunc(addMiddleware, 2, func(router *mux.Router, middleware MiddlewareFunc) {
 		assert.Equal(t, dummyRouter, router)
 		var middlewarePointer = fmt.Sprintf("%v", reflect.ValueOf(middleware))
-		if addMiddlewareFuncCalled == 1 {
+		if m.FuncCalledCount(addMiddleware) == 1 {
 			assert.Equal(t, dummyMiddleware1Pointer, middlewarePointer)
-		} else if addMiddlewareFuncCalled == 2 {
+		} else if m.FuncCalledCount(addMiddleware) == 2 {
 			assert.Equal(t, dummyMiddleware2Pointer, middlewarePointer)
 		}
-	}
+	})
 
 	// SUT + act
 	registerMiddlewares(
 		dummySession,
 		dummyRouter,
 	)
-
-	// verify
-	verifyAll(t)
-	assert.Equal(t, customizationMiddlewaresExpected, customizationMiddlewaresCalled, "Unexpected number of calls to customization.Middlewares")
-}
-
-type dummyCustomizationErrorHandlers struct {
-	dummyCustomization
-	methodNotAllowedHandler func() http.Handler
-	notFoundHandler         func() http.Handler
-}
-
-func (customization *dummyCustomizationErrorHandlers) MethodNotAllowedHandler() http.Handler {
-	if customization.methodNotAllowedHandler != nil {
-		return customization.methodNotAllowedHandler()
-	}
-	assert.Fail(customization.t, "Unexpected call to MethodNotAllowedHandler")
-	return nil
-}
-
-func (customization *dummyCustomizationErrorHandlers) NotFoundHandler() http.Handler {
-	if customization.notFoundHandler != nil {
-		return customization.notFoundHandler()
-	}
-	assert.Fail(customization.t, "Unexpected call to NotFoundHandler")
-	return nil
 }
 
 func TestRegisterErrorHandlers(t *testing.T) {
 	// arrange
-	var dummyCustomizationErrorHandlers = &dummyCustomizationErrorHandlers{
-		dummyCustomization: dummyCustomization{t: t},
-	}
+	var dummyCustomization = &DefaultCustomization{}
 	var dummyRouter = &mux.Router{}
-	var customizationMethodNotAllowedHandlerExpected int
-	var customizationMethodNotAllowedHandlerCalled int
-	var customizationNotFoundHandlerExpected int
-	var customizationNotFoundHandlerCalled int
 	var dummyMethodNotAllowedHandler = &dummyHandler{}
 	var dummyNotFoundHandler = &dummyHandler{}
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	customizationMethodNotAllowedHandlerExpected = 1
-	dummyCustomizationErrorHandlers.methodNotAllowedHandler = func() http.Handler {
-		customizationMethodNotAllowedHandlerCalled++
+	m.ExpectMethod(dummyCustomization, "MethodNotAllowedHandler", 1, func() http.Handler {
 		return dummyMethodNotAllowedHandler
-	}
-	customizationNotFoundHandlerExpected = 1
-	dummyCustomizationErrorHandlers.notFoundHandler = func() http.Handler {
-		customizationNotFoundHandlerCalled++
+	})
+	m.ExpectMethod(dummyCustomization, "NotFoundHandler", 1, func() http.Handler {
 		return dummyNotFoundHandler
-	}
+	})
 
 	// SUT + act
 	registerErrorHandlers(
-		dummyCustomizationErrorHandlers,
+		dummyCustomization,
 		dummyRouter,
 	)
 
 	// assert
 	assert.Equal(t, dummyMethodNotAllowedHandler, dummyRouter.MethodNotAllowedHandler)
 	assert.Equal(t, dummyNotFoundHandler, dummyRouter.NotFoundHandler)
-
-	// verify
-	verifyAll(t)
-	assert.Equal(t, customizationMethodNotAllowedHandlerExpected, customizationMethodNotAllowedHandlerCalled, "Unexpected number of calls to customization.MethodNotFoundHandler")
-	assert.Equal(t, customizationNotFoundHandlerExpected, customizationNotFoundHandlerCalled, "Unexpected number of calls to customization.NotFoundHandler")
-}
-
-type dummyCustomizationInitRouter struct {
-	dummyCustomization
-	instrumentRouter func(router *mux.Router) *mux.Router
-}
-
-func (customization *dummyCustomizationInitRouter) InstrumentRouter(router *mux.Router) *mux.Router {
-	if customization.instrumentRouter != nil {
-		return customization.instrumentRouter(router)
-	}
-	assert.Fail(customization.t, "Unexpected call to InstrumentRouter")
-	return nil
 }
 
 func TestInstantiateRouter_RouterError(t *testing.T) {
 	// arrange
-	var dummyCustomizationInitRouter = &dummyCustomizationInitRouter{
-		dummyCustomization: dummyCustomization{t: t},
-	}
+	var dummyCustomization = &DefaultCustomization{}
 	var dummyApplication = &application{}
 	var dummySession = &session{
-		customization: dummyCustomizationInitRouter,
+		customization: dummyCustomization,
 	}
 	var dummyRouter = &mux.Router{KeepContext: rand.Intn(100) > 50}
 	var dummyError = errors.New("some error")
 	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	muxNewRouterExpected = 1
-	muxNewRouter = func() *mux.Router {
-		muxNewRouterCalled++
+	m.ExpectFunc(mux.NewRouter, 1, func() *mux.Router {
 		return dummyRouter
-	}
-	registerRoutesFuncExpected = 1
-	registerRoutesFunc = func(app *application, session *session, router *mux.Router) {
-		registerRoutesFuncCalled++
+	})
+	m.ExpectFunc(registerRoutes, 1, func(app *application, session *session, router *mux.Router) {
 		assert.Equal(t, dummyApplication, app)
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyRouter, router)
-	}
-	registerStaticsFuncExpected = 1
-	registerStaticsFunc = func(session *session, router *mux.Router) {
-		registerStaticsFuncCalled++
+	})
+	m.ExpectFunc(registerStatics, 1, func(session *session, router *mux.Router) {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyRouter, router)
-	}
-	registerMiddlewaresFuncExpected = 1
-	registerMiddlewaresFunc = func(session *session, router *mux.Router) {
-		registerMiddlewaresFuncCalled++
+	})
+	m.ExpectFunc(registerMiddlewares, 1, func(session *session, router *mux.Router) {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyRouter, router)
-	}
-	walkRegisteredRoutesFuncExpected = 1
-	walkRegisteredRoutesFunc = func(session *session, router *mux.Router) error {
-		walkRegisteredRoutesFuncCalled++
+	})
+	m.ExpectFunc(walkRegisteredRoutes, 1, func(session *session, router *mux.Router) error {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyRouter, router)
 		return dummyError
-	}
-	logAppRootFuncExpected = 1
-	logAppRootFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		logAppRootFuncCalled++
+	})
+	m.ExpectFunc(logAppRoot, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, "register", category)
 		assert.Equal(t, "instantiateRouter", subcategory)
 		assert.Equal(t, "%+v", messageFormat)
 		assert.Equal(t, 1, len(parameters))
 		assert.Equal(t, dummyError, parameters[0])
-	}
-	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		newAppErrorFuncCalled++
+	})
+	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		assert.Equal(t, errorCodeGeneralFailure, errorCode)
 		assert.Equal(t, errorMessageRouteRegistration, errorMessage)
 		assert.Equal(t, 1, len(innerErrors))
 		assert.Equal(t, dummyError, innerErrors[0])
 		return dummyAppError
-	}
+	})
 
 	// SUT + act
 	var result, err = instantiateRouter(
@@ -766,71 +534,51 @@ func TestInstantiateRouter_RouterError(t *testing.T) {
 	// assert
 	assert.Equal(t, dummyRouter, result)
 	assert.Equal(t, dummyAppError, err)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestInstantiateRouter_HappyPath(t *testing.T) {
 	// arrange
-	var dummyCustomizationInitRouter = &dummyCustomizationInitRouter{
-		dummyCustomization: dummyCustomization{t: t},
-	}
+	var dummyCustomization = &DefaultCustomization{}
 	var dummyApplication = &application{}
 	var dummySession = &session{
-		customization: dummyCustomizationInitRouter,
+		customization: dummyCustomization,
 	}
 	var dummyRouter = &mux.Router{KeepContext: rand.Intn(100) > 50}
-	var customizationInstrumentRouterExpected int
-	var customizationInstrumentRouterCalled int
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	muxNewRouterExpected = 1
-	muxNewRouter = func() *mux.Router {
-		muxNewRouterCalled++
+	m.ExpectFunc(mux.NewRouter, 1, func() *mux.Router {
 		return dummyRouter
-	}
-	registerRoutesFuncExpected = 1
-	registerRoutesFunc = func(app *application, session *session, router *mux.Router) {
-		registerRoutesFuncCalled++
+	})
+	m.ExpectFunc(registerRoutes, 1, func(app *application, session *session, router *mux.Router) {
 		assert.Equal(t, dummyApplication, app)
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyRouter, router)
-	}
-	registerStaticsFuncExpected = 1
-	registerStaticsFunc = func(session *session, router *mux.Router) {
-		registerStaticsFuncCalled++
+	})
+	m.ExpectFunc(registerStatics, 1, func(session *session, router *mux.Router) {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyRouter, router)
-	}
-	registerMiddlewaresFuncExpected = 1
-	registerMiddlewaresFunc = func(session *session, router *mux.Router) {
-		registerMiddlewaresFuncCalled++
+	})
+	m.ExpectFunc(registerMiddlewares, 1, func(session *session, router *mux.Router) {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyRouter, router)
-	}
-	walkRegisteredRoutesFuncExpected = 1
-	walkRegisteredRoutesFunc = func(session *session, router *mux.Router) error {
-		walkRegisteredRoutesFuncCalled++
+	})
+	m.ExpectFunc(walkRegisteredRoutes, 1, func(session *session, router *mux.Router) error {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyRouter, router)
 		return nil
-	}
-	registerErrorHandlersFuncExpected = 1
-	registerErrorHandlersFunc = func(customization Customization, router *mux.Router) {
-		registerErrorHandlersFuncCalled++
-		assert.Equal(t, dummyCustomizationInitRouter, customization)
+	})
+	m.ExpectFunc(registerErrorHandlers, 1, func(customization Customization, router *mux.Router) {
+		assert.Equal(t, dummyCustomization, customization)
 		assert.Equal(t, dummyRouter, router)
-	}
-	customizationInstrumentRouterExpected = 1
-	dummyCustomizationInitRouter.instrumentRouter = func(router *mux.Router) *mux.Router {
-		customizationInstrumentRouterCalled++
+	})
+	m.ExpectMethod(dummyCustomization, "InstrumentRouter", 1, func(self *DefaultCustomization, router *mux.Router) *mux.Router {
+		assert.Equal(t, dummyCustomization, self)
 		assert.Equal(t, dummyRouter, router)
 		return dummyRouter
-	}
+	})
 
 	// SUT + act
 	var result, err = instantiateRouter(
@@ -841,8 +589,4 @@ func TestInstantiateRouter_HappyPath(t *testing.T) {
 	// assert
 	assert.Equal(t, dummyRouter, result)
 	assert.NoError(t, err)
-
-	// verify
-	verifyAll(t)
-	assert.Equal(t, customizationInstrumentRouterExpected, customizationInstrumentRouterCalled, "Unexpected number of calls to customization.InstrumentRouter")
 }

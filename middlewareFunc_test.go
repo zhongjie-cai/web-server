@@ -13,9 +13,6 @@ func TestAddMiddleware(t *testing.T) {
 		return next
 	}
 
-	// mock
-	createMock(t)
-
 	// SUT
 	var router = mux.NewRouter()
 
@@ -24,7 +21,4 @@ func TestAddMiddleware(t *testing.T) {
 		router,
 		dummyMiddleware,
 	)
-
-	// verify
-	verifyAll(t)
 }

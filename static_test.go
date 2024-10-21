@@ -11,10 +11,7 @@ func TestRegisterStatic(t *testing.T) {
 	// arrange
 	var dummyName = "some name"
 	var dummyPath = "/foo/"
-	var dummyHandler = &dummyHandler{t}
-
-	// mock
-	createMock(t)
+	var dummyHandler = &dummyHandler{}
 
 	// SUT
 	var router = mux.NewRouter()
@@ -34,7 +31,4 @@ func TestRegisterStatic(t *testing.T) {
 	assert.Equal(t, dummyName, name)
 	assert.Equal(t, dummyPath, pathTemplate)
 	assert.Equal(t, dummyHandler, handler)
-
-	// verify
-	verifyAll(t)
 }

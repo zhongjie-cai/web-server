@@ -23,7 +23,7 @@ do
 	rm -f $outFileName.cover.json
 
 	# Run test coverage
-	go test -coverprofile $outFileName.cover.profile -v $package 2>&1 >> $allTestCoverResultFile
+	go test -gcflags=all=-l -coverprofile $outFileName.cover.profile -v $package 2>&1 >> $allTestCoverResultFile
 
 	# Generate coverage report HTML
 	go tool cover -html=$outFileName.cover.profile -o $outFileName.cover.html

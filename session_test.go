@@ -5,19 +5,18 @@ import (
 	"errors"
 	"math/rand"
 	"net/http"
+	"net/textproto"
 	"net/url"
 	"runtime"
-	"strconv"
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
+	"github.com/zhongjie-cai/gomocker"
 )
 
 func TestSessionGetID_NilSessionObject(t *testing.T) {
-	// mock
-	createMock(t)
-
 	// SUT
 	var dummySession *session
 
@@ -26,17 +25,11 @@ func TestSessionGetID_NilSessionObject(t *testing.T) {
 
 	// assert
 	assert.Zero(t, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetID_ValidSessionObject(t *testing.T) {
 	// arrange
 	var dummySessionID = uuid.New()
-
-	// mock
-	createMock(t)
 
 	// SUT
 	var dummySession = &session{
@@ -48,15 +41,9 @@ func TestSessionGetID_ValidSessionObject(t *testing.T) {
 
 	// assert
 	assert.Equal(t, dummySessionID, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetName_NilSessionObject(t *testing.T) {
-	// mock
-	createMock(t)
-
 	// SUT
 	var dummySession *session
 
@@ -65,17 +52,11 @@ func TestSessionGetName_NilSessionObject(t *testing.T) {
 
 	// assert
 	assert.Zero(t, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetName_ValidSessionObject(t *testing.T) {
 	// arrange
 	var dummyName = "some name"
-
-	// mock
-	createMock(t)
 
 	// SUT
 	var dummySession = &session{
@@ -87,15 +68,9 @@ func TestSessionGetName_ValidSessionObject(t *testing.T) {
 
 	// assert
 	assert.Equal(t, dummyName, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetRequest_NilSessionObject(t *testing.T) {
-	// mock
-	createMock(t)
-
 	// SUT
 	var dummySession *session
 
@@ -104,17 +79,11 @@ func TestSessionGetRequest_NilSessionObject(t *testing.T) {
 
 	// assert
 	assert.Equal(t, defaultRequest, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetRequest_NilRequest(t *testing.T) {
 	// arrange
 	var dummyHTTPRequest *http.Request
-
-	// mock
-	createMock(t)
 
 	// SUT
 	var dummySession = &session{
@@ -126,9 +95,6 @@ func TestSessionGetRequest_NilRequest(t *testing.T) {
 
 	// assert
 	assert.Equal(t, defaultRequest, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetRequest_ValidRequest(t *testing.T) {
@@ -138,9 +104,6 @@ func TestSessionGetRequest_ValidRequest(t *testing.T) {
 		RequestURI: "http://localhost/",
 		Header:     map[string][]string{},
 	}
-
-	// mock
-	createMock(t)
 
 	// SUT
 	var dummySession = &session{
@@ -152,15 +115,9 @@ func TestSessionGetRequest_ValidRequest(t *testing.T) {
 
 	// assert
 	assert.Equal(t, dummyHTTPRequest, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetResponseWriter_NilSessionObject(t *testing.T) {
-	// mock
-	createMock(t)
-
 	// SUT
 	var dummySession *session
 
@@ -169,9 +126,6 @@ func TestSessionGetResponseWriter_NilSessionObject(t *testing.T) {
 
 	// assert
 	assert.Equal(t, defaultResponseWriter, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetResponseWriter_NilResponseWriter(t *testing.T) {
@@ -179,15 +133,13 @@ func TestSessionGetResponseWriter_NilResponseWriter(t *testing.T) {
 	var dummyResponseWriterObject *dummyResponseWriter
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	isInterfaceValueNilFuncExpected = 1
-	isInterfaceValueNilFunc = func(i interface{}) bool {
-		isInterfaceValueNilFuncCalled++
+	m.ExpectFunc(isInterfaceValueNil, 1, func(i interface{}) bool {
 		assert.Equal(t, dummyResponseWriterObject, i)
 		return true
-	}
+	})
 
 	// SUT
 	var dummySession = &session{
@@ -199,9 +151,6 @@ func TestSessionGetResponseWriter_NilResponseWriter(t *testing.T) {
 
 	// assert
 	assert.Equal(t, defaultResponseWriter, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetResponseWriter_ValidResponseWriter(t *testing.T) {
@@ -209,15 +158,13 @@ func TestSessionGetResponseWriter_ValidResponseWriter(t *testing.T) {
 	var dummyResponseWriterObject = &dummyResponseWriter{}
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	isInterfaceValueNilFuncExpected = 1
-	isInterfaceValueNilFunc = func(i interface{}) bool {
-		isInterfaceValueNilFuncCalled++
+	m.ExpectFunc(isInterfaceValueNil, 1, func(i interface{}) bool {
 		assert.Equal(t, dummyResponseWriterObject, i)
 		return false
-	}
+	})
 
 	// SUT
 	var dummySession = &session{
@@ -229,9 +176,6 @@ func TestSessionGetResponseWriter_ValidResponseWriter(t *testing.T) {
 
 	// assert
 	assert.Equal(t, dummyResponseWriterObject, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetRequestBody_NilSession(t *testing.T) {
@@ -240,17 +184,15 @@ func TestSessionGetRequestBody_NilSession(t *testing.T) {
 	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		newAppErrorFuncCalled++
+	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		assert.Equal(t, errorCodeGeneralFailure, errorCode)
 		assert.Equal(t, errorMessageSessionNil, errorMessage)
 		assert.Empty(t, innerErrors)
 		return dummyAppError
-	}
+	})
 
 	// SUT
 	var dummySession *session
@@ -263,9 +205,6 @@ func TestSessionGetRequestBody_NilSession(t *testing.T) {
 	// assert
 	assert.Equal(t, dummyAppError, err)
 	assert.Zero(t, dummyDataTemplate)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetRequestBody_BodyEmpty(t *testing.T) {
@@ -276,7 +215,7 @@ func TestSessionGetRequestBody_BodyEmpty(t *testing.T) {
 	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// SUT
 	var dummySession = &session{
@@ -284,20 +223,16 @@ func TestSessionGetRequestBody_BodyEmpty(t *testing.T) {
 	}
 
 	// expect
-	getRequestBodyFuncExpected = 1
-	getRequestBodyFunc = func(httpRequest *http.Request) string {
-		getRequestBodyFuncCalled++
+	m.ExpectFunc(getRequestBody, 1, func(httpRequest *http.Request) string {
 		assert.Equal(t, dummyHTTPRequest, httpRequest)
 		return dummyRequestBody
-	}
-	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		newAppErrorFuncCalled++
+	})
+	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		assert.Equal(t, errorCodeBadRequest, errorCode)
 		assert.Equal(t, errorMessageRequestBodyEmpty, errorMessage)
 		assert.Empty(t, innerErrors)
 		return dummyAppError
-	}
+	})
 
 	// act
 	var err = dummySession.GetRequestBody(
@@ -307,9 +242,6 @@ func TestSessionGetRequestBody_BodyEmpty(t *testing.T) {
 	// assert
 	assert.Equal(t, dummyAppError, err)
 	assert.Zero(t, dummyDataTemplate)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetRequestBody_BodyInvalid(t *testing.T) {
@@ -322,7 +254,7 @@ func TestSessionGetRequestBody_BodyInvalid(t *testing.T) {
 	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// SUT
 	var dummySession = &session{
@@ -330,44 +262,36 @@ func TestSessionGetRequestBody_BodyInvalid(t *testing.T) {
 	}
 
 	// expect
-	getRequestBodyFuncExpected = 1
-	getRequestBodyFunc = func(httpRequest *http.Request) string {
-		getRequestBodyFuncCalled++
+	m.ExpectFunc(getRequestBody, 1, func(httpRequest *http.Request) string {
 		assert.Equal(t, dummyHTTPRequest, httpRequest)
 		return dummyRequestBody
-	}
-	logEndpointRequestFuncExpected = 2
-	logEndpointRequestFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		logEndpointRequestFuncCalled++
+	})
+	m.ExpectFunc(logEndpointRequest, 2, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, "Body", category)
-		if logEndpointRequestFuncCalled == 1 {
+		if m.FuncCalledCount(logEndpointRequest) == 1 {
 			assert.Equal(t, "Content", subcategory)
 			assert.Equal(t, dummyRequestBody, messageFormat)
 			assert.Empty(t, parameters)
-		} else if logEndpointRequestFuncCalled == 2 {
+		} else if m.FuncCalledCount(logEndpointRequest) == 2 {
 			assert.Equal(t, "UnmarshalError", subcategory)
 			assert.Equal(t, "%+v", messageFormat)
 			assert.Equal(t, 1, len(parameters))
 			assert.Equal(t, dummyError, parameters[0])
 		}
-	}
-	tryUnmarshalFuncExpected = 1
-	tryUnmarshalFunc = func(value string, dataTemplate interface{}) error {
-		tryUnmarshalFuncCalled++
+	})
+	m.ExpectFunc(tryUnmarshal, 1, func(value string, dataTemplate interface{}) error {
 		assert.Equal(t, dummyRequestBody, value)
 		*(dataTemplate.(*int)) = dummyResult
 		return dummyError
-	}
-	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		newAppErrorFuncCalled++
+	})
+	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		assert.Equal(t, errorCodeBadRequest, errorCode)
 		assert.Equal(t, errorMessageRequestBodyInvalid, errorMessage)
 		assert.Equal(t, 1, len(innerErrors))
 		assert.Equal(t, dummyError, innerErrors[0])
 		return dummyAppError
-	}
+	})
 
 	// act
 	var err = dummySession.GetRequestBody(
@@ -377,9 +301,6 @@ func TestSessionGetRequestBody_BodyInvalid(t *testing.T) {
 	// assert
 	assert.Equal(t, dummyAppError, err)
 	assert.Equal(t, dummyResult, dummyDataTemplate)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetRequestBody_BodyValid(t *testing.T) {
@@ -390,7 +311,7 @@ func TestSessionGetRequestBody_BodyValid(t *testing.T) {
 	var dummyResult = rand.Int()
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// SUT
 	var dummySession = &session{
@@ -398,28 +319,22 @@ func TestSessionGetRequestBody_BodyValid(t *testing.T) {
 	}
 
 	// expect
-	getRequestBodyFuncExpected = 1
-	getRequestBodyFunc = func(httpRequest *http.Request) string {
-		getRequestBodyFuncCalled++
+	m.ExpectFunc(getRequestBody, 1, func(httpRequest *http.Request) string {
 		assert.Equal(t, dummyHTTPRequest, httpRequest)
 		return dummyRequestBody
-	}
-	logEndpointRequestFuncExpected = 1
-	logEndpointRequestFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		logEndpointRequestFuncCalled++
+	})
+	m.ExpectFunc(logEndpointRequest, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, "Body", category)
 		assert.Equal(t, "Content", subcategory)
 		assert.Equal(t, dummyRequestBody, messageFormat)
 		assert.Empty(t, parameters)
-	}
-	tryUnmarshalFuncExpected = 1
-	tryUnmarshalFunc = func(value string, dataTemplate interface{}) error {
-		tryUnmarshalFuncCalled++
+	})
+	m.ExpectFunc(tryUnmarshal, 1, func(value string, dataTemplate interface{}) error {
 		assert.Equal(t, dummyRequestBody, value)
 		*(dataTemplate.(*int)) = dummyResult
 		return nil
-	}
+	})
 
 	// act
 	var err = dummySession.GetRequestBody(
@@ -429,9 +344,6 @@ func TestSessionGetRequestBody_BodyValid(t *testing.T) {
 	// assert
 	assert.NoError(t, err)
 	assert.Equal(t, dummyResult, dummyDataTemplate)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetRequestParameter_NilSession(t *testing.T) {
@@ -441,17 +353,15 @@ func TestSessionGetRequestParameter_NilSession(t *testing.T) {
 	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		newAppErrorFuncCalled++
+	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		assert.Equal(t, errorCodeGeneralFailure, errorCode)
 		assert.Equal(t, errorMessageSessionNil, errorMessage)
 		assert.Empty(t, innerErrors)
 		return dummyAppError
-	}
+	})
 
 	// SUT
 	var dummySession *session
@@ -464,9 +374,6 @@ func TestSessionGetRequestParameter_NilSession(t *testing.T) {
 
 	// assert
 	assert.Equal(t, dummyAppError, err)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetRequestParameter_ParameterNotFound(t *testing.T) {
@@ -481,7 +388,7 @@ func TestSessionGetRequestParameter_ParameterNotFound(t *testing.T) {
 	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// SUT
 	var dummySession = &session{
@@ -489,20 +396,16 @@ func TestSessionGetRequestParameter_ParameterNotFound(t *testing.T) {
 	}
 
 	// expect
-	muxVarsExpected = 1
-	muxVars = func(r *http.Request) map[string]string {
-		muxVarsCalled++
+	m.ExpectFunc(mux.Vars, 1, func(r *http.Request) map[string]string {
 		assert.Equal(t, dummyHTTPRequest, r)
 		return dummyParameters
-	}
-	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		newAppErrorFuncCalled++
+	})
+	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		assert.Equal(t, errorCodeBadRequest, errorCode)
 		assert.Equal(t, errorMessageParameterNotFound, errorMessage)
 		assert.Empty(t, innerErrors)
 		return dummyAppError
-	}
+	})
 
 	// act
 	var err = dummySession.GetRequestParameter(
@@ -512,9 +415,6 @@ func TestSessionGetRequestParameter_ParameterNotFound(t *testing.T) {
 
 	// assert
 	assert.Equal(t, dummyAppError, err)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetRequestParameter_ParameterInvalid(t *testing.T) {
@@ -533,7 +433,7 @@ func TestSessionGetRequestParameter_ParameterInvalid(t *testing.T) {
 	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// SUT
 	var dummySession = &session{
@@ -541,44 +441,36 @@ func TestSessionGetRequestParameter_ParameterInvalid(t *testing.T) {
 	}
 
 	// expect
-	muxVarsExpected = 1
-	muxVars = func(r *http.Request) map[string]string {
-		muxVarsCalled++
+	m.ExpectFunc(mux.Vars, 1, func(r *http.Request) map[string]string {
 		assert.Equal(t, dummyHTTPRequest, r)
 		return dummyParameters
-	}
-	logEndpointRequestFuncExpected = 2
-	logEndpointRequestFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		logEndpointRequestFuncCalled++
+	})
+	m.ExpectFunc(logEndpointRequest, 2, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, "Parameter", category)
-		if logEndpointRequestFuncCalled == 1 {
+		if m.FuncCalledCount(logEndpointRequest) == 1 {
 			assert.Equal(t, dummyName, subcategory)
 			assert.Equal(t, dummyValue, messageFormat)
 			assert.Empty(t, parameters)
-		} else if logEndpointRequestFuncCalled == 2 {
+		} else if m.FuncCalledCount(logEndpointRequest) == 2 {
 			assert.Equal(t, "UnmarshalError", subcategory)
 			assert.Equal(t, "%+v", messageFormat)
 			assert.Equal(t, 1, len(parameters))
 			assert.Equal(t, dummyError, parameters[0])
 		}
-	}
-	tryUnmarshalFuncExpected = 1
-	tryUnmarshalFunc = func(value string, dataTemplate interface{}) error {
-		tryUnmarshalFuncCalled++
+	})
+	m.ExpectFunc(tryUnmarshal, 1, func(value string, dataTemplate interface{}) error {
 		assert.Equal(t, dummyValue, value)
 		*(dataTemplate.(*int)) = dummyResult
 		return dummyError
-	}
-	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		newAppErrorFuncCalled++
+	})
+	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		assert.Equal(t, errorCodeBadRequest, errorCode)
 		assert.Equal(t, errorMessageParameterInvalid, errorMessage)
 		assert.Equal(t, 1, len(innerErrors))
 		assert.Equal(t, dummyError, innerErrors[0])
 		return dummyAppError
-	}
+	})
 
 	// act
 	var err = dummySession.GetRequestParameter(
@@ -589,9 +481,6 @@ func TestSessionGetRequestParameter_ParameterInvalid(t *testing.T) {
 	// assert
 	assert.Equal(t, dummyAppError, err)
 	assert.Equal(t, dummyResult, dummyDataTemplate)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetRequestParameter_ParameterValid(t *testing.T) {
@@ -608,7 +497,7 @@ func TestSessionGetRequestParameter_ParameterValid(t *testing.T) {
 	var dummyResult = rand.Int()
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// SUT
 	var dummySession = &session{
@@ -616,28 +505,22 @@ func TestSessionGetRequestParameter_ParameterValid(t *testing.T) {
 	}
 
 	// expect
-	muxVarsExpected = 1
-	muxVars = func(r *http.Request) map[string]string {
-		muxVarsCalled++
+	m.ExpectFunc(mux.Vars, 1, func(r *http.Request) map[string]string {
 		assert.Equal(t, dummyHTTPRequest, r)
 		return dummyParameters
-	}
-	logEndpointRequestFuncExpected = 1
-	logEndpointRequestFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		logEndpointRequestFuncCalled++
+	})
+	m.ExpectFunc(logEndpointRequest, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, "Parameter", category)
 		assert.Equal(t, dummyName, subcategory)
 		assert.Equal(t, dummyValue, messageFormat)
 		assert.Empty(t, parameters)
-	}
-	tryUnmarshalFuncExpected = 1
-	tryUnmarshalFunc = func(value string, dataTemplate interface{}) error {
-		tryUnmarshalFuncCalled++
+	})
+	m.ExpectFunc(tryUnmarshal, 1, func(value string, dataTemplate interface{}) error {
 		assert.Equal(t, dummyValue, value)
 		*(dataTemplate.(*int)) = dummyResult
 		return nil
-	}
+	})
 
 	// act
 	var err = dummySession.GetRequestParameter(
@@ -648,9 +531,6 @@ func TestSessionGetRequestParameter_ParameterValid(t *testing.T) {
 	// assert
 	assert.NoError(t, err)
 	assert.Equal(t, dummyResult, dummyDataTemplate)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetAllQueries_NoURL(t *testing.T) {
@@ -661,9 +541,6 @@ func TestSessionGetAllQueries_NoURL(t *testing.T) {
 		request: dummyHTTPRequest,
 	}
 
-	// mock
-	createMock(t)
-
 	// SUT + act
 	var result = getAllQueries(
 		dummySession,
@@ -672,9 +549,6 @@ func TestSessionGetAllQueries_NoURL(t *testing.T) {
 
 	// assert
 	assert.Nil(t, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetAllQueries_NotFound(t *testing.T) {
@@ -689,9 +563,6 @@ func TestSessionGetAllQueries_NotFound(t *testing.T) {
 		request: dummyHTTPRequest,
 	}
 
-	// mock
-	createMock(t)
-
 	// SUT + act
 	var result = getAllQueries(
 		dummySession,
@@ -700,9 +571,6 @@ func TestSessionGetAllQueries_NotFound(t *testing.T) {
 
 	// assert
 	assert.Nil(t, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetAllQueries_HappyPath(t *testing.T) {
@@ -717,9 +585,6 @@ func TestSessionGetAllQueries_HappyPath(t *testing.T) {
 		request: dummyHTTPRequest,
 	}
 
-	// mock
-	createMock(t)
-
 	// SUT + act
 	var result = getAllQueries(
 		dummySession,
@@ -730,9 +595,6 @@ func TestSessionGetAllQueries_HappyPath(t *testing.T) {
 	assert.Equal(t, 2, len(result))
 	assert.Equal(t, "me", result[0])
 	assert.Equal(t, "you", result[1])
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetRequestQuery_NilSession(t *testing.T) {
@@ -743,17 +605,15 @@ func TestSessionGetRequestQuery_NilSession(t *testing.T) {
 	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		newAppErrorFuncCalled++
+	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		assert.Equal(t, errorCodeGeneralFailure, errorCode)
 		assert.Equal(t, errorMessageSessionNil, errorMessage)
 		assert.Empty(t, innerErrors)
 		return dummyAppError
-	}
+	})
 
 	// SUT
 	var dummySession *session
@@ -768,9 +628,6 @@ func TestSessionGetRequestQuery_NilSession(t *testing.T) {
 	// assert
 	assert.Equal(t, dummyAppError, err)
 	assert.Zero(t, dummyDataTemplate)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetRequestQuery_QueryNotFound(t *testing.T) {
@@ -787,7 +644,7 @@ func TestSessionGetRequestQuery_QueryNotFound(t *testing.T) {
 	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// SUT
 	var dummySession = &session{
@@ -795,21 +652,17 @@ func TestSessionGetRequestQuery_QueryNotFound(t *testing.T) {
 	}
 
 	// expect
-	getAllQueriesFuncExpected = 1
-	getAllQueriesFunc = func(session *session, name string) []string {
-		getAllQueriesFuncCalled++
+	m.ExpectFunc(getAllQueries, 1, func(session *session, name string) []string {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyName, name)
 		return dummyQueries
-	}
-	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		newAppErrorFuncCalled++
+	})
+	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		assert.Equal(t, errorCodeBadRequest, errorCode)
 		assert.Equal(t, errorMessageQueryNotFound, errorMessage)
 		assert.Empty(t, innerErrors)
 		return dummyAppError
-	}
+	})
 
 	// act
 	var err = dummySession.GetRequestQuery(
@@ -821,9 +674,6 @@ func TestSessionGetRequestQuery_QueryNotFound(t *testing.T) {
 	// assert
 	assert.Equal(t, dummyAppError, err)
 	assert.Zero(t, dummyDataTemplate)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetRequestQuery_QueryInvalid(t *testing.T) {
@@ -842,7 +692,7 @@ func TestSessionGetRequestQuery_QueryInvalid(t *testing.T) {
 	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// SUT
 	var dummySession = &session{
@@ -850,45 +700,37 @@ func TestSessionGetRequestQuery_QueryInvalid(t *testing.T) {
 	}
 
 	// expect
-	getAllQueriesFuncExpected = 1
-	getAllQueriesFunc = func(session *session, name string) []string {
-		getAllQueriesFuncCalled++
+	m.ExpectFunc(getAllQueries, 1, func(session *session, name string) []string {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyName, name)
 		return dummyQueries
-	}
-	logEndpointRequestFuncExpected = 2
-	logEndpointRequestFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		logEndpointRequestFuncCalled++
+	})
+	m.ExpectFunc(logEndpointRequest, 2, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, "Query", category)
-		if logEndpointRequestFuncCalled == 1 {
+		if m.FuncCalledCount(logEndpointRequest) == 1 {
 			assert.Equal(t, dummyName, subcategory)
 			assert.Equal(t, dummyQueries[dummyIndex], messageFormat)
 			assert.Empty(t, parameters)
-		} else if logEndpointRequestFuncCalled == 2 {
+		} else if m.FuncCalledCount(logEndpointRequest) == 2 {
 			assert.Equal(t, "UnmarshalError", subcategory)
 			assert.Equal(t, "%+v", messageFormat)
 			assert.Equal(t, 1, len(parameters))
 			assert.Equal(t, dummyError, parameters[0])
 		}
-	}
-	tryUnmarshalFuncExpected = 1
-	tryUnmarshalFunc = func(value string, dataTemplate interface{}) error {
-		tryUnmarshalFuncCalled++
+	})
+	m.ExpectFunc(tryUnmarshal, 1, func(value string, dataTemplate interface{}) error {
 		assert.Equal(t, dummyQueries[dummyIndex], value)
 		*(dataTemplate.(*int)) = dummyResult
 		return dummyError
-	}
-	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		newAppErrorFuncCalled++
+	})
+	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		assert.Equal(t, errorCodeBadRequest, errorCode)
 		assert.Equal(t, errorMessageQueryInvalid, errorMessage)
 		assert.Equal(t, 1, len(innerErrors))
 		assert.Equal(t, dummyError, innerErrors[0])
 		return dummyAppError
-	}
+	})
 
 	// act
 	var err = dummySession.GetRequestQuery(
@@ -900,9 +742,6 @@ func TestSessionGetRequestQuery_QueryInvalid(t *testing.T) {
 	// assert
 	assert.Equal(t, dummyAppError, err)
 	assert.Equal(t, dummyResult, dummyDataTemplate)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetRequestQuery_QueryValid(t *testing.T) {
@@ -919,7 +758,7 @@ func TestSessionGetRequestQuery_QueryValid(t *testing.T) {
 	var dummyResult = rand.Int()
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// SUT
 	var dummySession = &session{
@@ -927,29 +766,23 @@ func TestSessionGetRequestQuery_QueryValid(t *testing.T) {
 	}
 
 	// expect
-	getAllQueriesFuncExpected = 1
-	getAllQueriesFunc = func(session *session, name string) []string {
-		getAllQueriesFuncCalled++
+	m.ExpectFunc(getAllQueries, 1, func(session *session, name string) []string {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyName, name)
 		return dummyQueries
-	}
-	logEndpointRequestFuncExpected = 1
-	logEndpointRequestFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		logEndpointRequestFuncCalled++
+	})
+	m.ExpectFunc(logEndpointRequest, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, "Query", category)
 		assert.Equal(t, dummyName, subcategory)
 		assert.Equal(t, dummyQueries[dummyIndex], messageFormat)
 		assert.Empty(t, parameters)
-	}
-	tryUnmarshalFuncExpected = 1
-	tryUnmarshalFunc = func(value string, dataTemplate interface{}) error {
-		tryUnmarshalFuncCalled++
+	})
+	m.ExpectFunc(tryUnmarshal, 1, func(value string, dataTemplate interface{}) error {
 		assert.Equal(t, dummyQueries[dummyIndex], value)
 		*(dataTemplate.(*int)) = dummyResult
 		return nil
-	}
+	})
 
 	// act
 	var err = dummySession.GetRequestQuery(
@@ -961,9 +794,6 @@ func TestSessionGetRequestQuery_QueryValid(t *testing.T) {
 	// assert
 	assert.NoError(t, err)
 	assert.Equal(t, dummyResult, dummyDataTemplate)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetAllHeaders_NotFound(t *testing.T) {
@@ -982,15 +812,13 @@ func TestSessionGetAllHeaders_NotFound(t *testing.T) {
 	dummyHTTPRequest.Header.Add("test", "you")
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	textprotoCanonicalMIMEHeaderKeyExpected = 1
-	textprotoCanonicalMIMEHeaderKey = func(s string) string {
-		textprotoCanonicalMIMEHeaderKeyCalled++
+	m.ExpectFunc(textproto.CanonicalMIMEHeaderKey, 1, func(s string) string {
 		assert.Equal(t, dummyName, s)
 		return dummyCanonicalName
-	}
+	})
 
 	// SUT + act
 	var result = getAllHeaders(
@@ -1000,9 +828,6 @@ func TestSessionGetAllHeaders_NotFound(t *testing.T) {
 
 	// assert
 	assert.Nil(t, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetAllHeaders_HappyPath(t *testing.T) {
@@ -1021,15 +846,13 @@ func TestSessionGetAllHeaders_HappyPath(t *testing.T) {
 	dummyHTTPRequest.Header.Add(dummyCanonicalName, "you")
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	textprotoCanonicalMIMEHeaderKeyExpected = 1
-	textprotoCanonicalMIMEHeaderKey = func(s string) string {
-		textprotoCanonicalMIMEHeaderKeyCalled++
+	m.ExpectFunc(textproto.CanonicalMIMEHeaderKey, 1, func(s string) string {
 		assert.Equal(t, dummyName, s)
 		return dummyCanonicalName
-	}
+	})
 
 	// SUT + act
 	var result = getAllHeaders(
@@ -1041,9 +864,6 @@ func TestSessionGetAllHeaders_HappyPath(t *testing.T) {
 	assert.Equal(t, 2, len(result))
 	assert.Equal(t, "me", result[0])
 	assert.Equal(t, "you", result[1])
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetRequestHeader_NilSession(t *testing.T) {
@@ -1054,17 +874,15 @@ func TestSessionGetRequestHeader_NilSession(t *testing.T) {
 	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		newAppErrorFuncCalled++
+	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		assert.Equal(t, errorCodeGeneralFailure, errorCode)
 		assert.Equal(t, errorMessageSessionNil, errorMessage)
 		assert.Empty(t, innerErrors)
 		return dummyAppError
-	}
+	})
 
 	// SUT
 	var dummySession *session
@@ -1079,9 +897,6 @@ func TestSessionGetRequestHeader_NilSession(t *testing.T) {
 	// assert
 	assert.Equal(t, dummyAppError, err)
 	assert.Zero(t, dummyDataTemplate)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetRequestHeader_HeaderNotFound(t *testing.T) {
@@ -1098,7 +913,7 @@ func TestSessionGetRequestHeader_HeaderNotFound(t *testing.T) {
 	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// SUT
 	var dummySession = &session{
@@ -1106,21 +921,17 @@ func TestSessionGetRequestHeader_HeaderNotFound(t *testing.T) {
 	}
 
 	// expect
-	getAllHeadersFuncExpected = 1
-	getAllHeadersFunc = func(session *session, name string) []string {
-		getAllHeadersFuncCalled++
+	m.ExpectFunc(getAllHeaders, 1, func(session *session, name string) []string {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyName, name)
 		return dummyHeaders
-	}
-	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		newAppErrorFuncCalled++
+	})
+	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		assert.Equal(t, errorCodeBadRequest, errorCode)
 		assert.Equal(t, errorMessageHeaderNotFound, errorMessage)
 		assert.Empty(t, innerErrors)
 		return dummyAppError
-	}
+	})
 
 	// act
 	var err = dummySession.GetRequestHeader(
@@ -1132,9 +943,6 @@ func TestSessionGetRequestHeader_HeaderNotFound(t *testing.T) {
 	// assert
 	assert.Equal(t, dummyAppError, err)
 	assert.Zero(t, dummyDataTemplate)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetRequestHeader_HeaderInvalid(t *testing.T) {
@@ -1153,7 +961,7 @@ func TestSessionGetRequestHeader_HeaderInvalid(t *testing.T) {
 	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// SUT
 	var dummySession = &session{
@@ -1161,45 +969,37 @@ func TestSessionGetRequestHeader_HeaderInvalid(t *testing.T) {
 	}
 
 	// expect
-	getAllHeadersFuncExpected = 1
-	getAllHeadersFunc = func(session *session, name string) []string {
-		getAllHeadersFuncCalled++
+	m.ExpectFunc(getAllHeaders, 1, func(session *session, name string) []string {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyName, name)
 		return dummyHeaders
-	}
-	logEndpointRequestFuncExpected = 2
-	logEndpointRequestFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		logEndpointRequestFuncCalled++
+	})
+	m.ExpectFunc(logEndpointRequest, 2, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, "Header", category)
-		if logEndpointRequestFuncCalled == 1 {
+		if m.FuncCalledCount(logEndpointRequest) == 1 {
 			assert.Equal(t, dummyName, subcategory)
 			assert.Equal(t, dummyHeaders[dummyIndex], messageFormat)
 			assert.Empty(t, parameters)
-		} else if logEndpointRequestFuncCalled == 2 {
+		} else if m.FuncCalledCount(logEndpointRequest) == 2 {
 			assert.Equal(t, "UnmarshalError", subcategory)
 			assert.Equal(t, "%+v", messageFormat)
 			assert.Equal(t, 1, len(parameters))
 			assert.Equal(t, dummyError, parameters[0])
 		}
-	}
-	tryUnmarshalFuncExpected = 1
-	tryUnmarshalFunc = func(value string, dataTemplate interface{}) error {
-		tryUnmarshalFuncCalled++
+	})
+	m.ExpectFunc(tryUnmarshal, 1, func(value string, dataTemplate interface{}) error {
 		assert.Equal(t, dummyHeaders[dummyIndex], value)
 		*(dataTemplate.(*int)) = dummyResult
 		return dummyError
-	}
-	newAppErrorFuncExpected = 1
-	newAppErrorFunc = func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		newAppErrorFuncCalled++
+	})
+	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
 		assert.Equal(t, errorCodeBadRequest, errorCode)
 		assert.Equal(t, errorMessageHeaderInvalid, errorMessage)
 		assert.Equal(t, 1, len(innerErrors))
 		assert.Equal(t, dummyError, innerErrors[0])
 		return dummyAppError
-	}
+	})
 
 	// act
 	var err = dummySession.GetRequestHeader(
@@ -1211,9 +1011,6 @@ func TestSessionGetRequestHeader_HeaderInvalid(t *testing.T) {
 	// assert
 	assert.Equal(t, dummyAppError, err)
 	assert.Equal(t, dummyResult, dummyDataTemplate)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetRequestHeader_HeaderValid(t *testing.T) {
@@ -1230,7 +1027,7 @@ func TestSessionGetRequestHeader_HeaderValid(t *testing.T) {
 	var dummyResult = rand.Int()
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// SUT
 	var dummySession = &session{
@@ -1238,29 +1035,23 @@ func TestSessionGetRequestHeader_HeaderValid(t *testing.T) {
 	}
 
 	// expect
-	getAllHeadersFuncExpected = 1
-	getAllHeadersFunc = func(session *session, name string) []string {
-		getAllHeadersFuncCalled++
+	m.ExpectFunc(getAllHeaders, 1, func(session *session, name string) []string {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyName, name)
 		return dummyHeaders
-	}
-	logEndpointRequestFuncExpected = 1
-	logEndpointRequestFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		logEndpointRequestFuncCalled++
+	})
+	m.ExpectFunc(logEndpointRequest, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, "Header", category)
 		assert.Equal(t, dummyName, subcategory)
 		assert.Equal(t, dummyHeaders[dummyIndex], messageFormat)
 		assert.Empty(t, parameters)
-	}
-	tryUnmarshalFuncExpected = 1
-	tryUnmarshalFunc = func(value string, dataTemplate interface{}) error {
-		tryUnmarshalFuncCalled++
+	})
+	m.ExpectFunc(tryUnmarshal, 1, func(value string, dataTemplate interface{}) error {
 		assert.Equal(t, dummyHeaders[dummyIndex], value)
 		*(dataTemplate.(*int)) = dummyResult
 		return nil
-	}
+	})
 
 	// act
 	var err = dummySession.GetRequestHeader(
@@ -1272,9 +1063,6 @@ func TestSessionGetRequestHeader_HeaderValid(t *testing.T) {
 	// assert
 	assert.NoError(t, err)
 	assert.Equal(t, dummyResult, dummyDataTemplate)
-
-	// verify
-	verifyAll(t)
 }
 
 type dummyAttachment struct {
@@ -1292,9 +1080,6 @@ func TestSessionAttach_NilSessionObject(t *testing.T) {
 		Test: rand.Intn(100),
 	}
 
-	// mock
-	createMock(t)
-
 	// SUT
 	var dummySession *session
 
@@ -1306,9 +1091,6 @@ func TestSessionAttach_NilSessionObject(t *testing.T) {
 
 	// assert
 	assert.False(t, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionAttach_NoAttachment(t *testing.T) {
@@ -1320,9 +1102,6 @@ func TestSessionAttach_NoAttachment(t *testing.T) {
 		Test: rand.Intn(100),
 	}
 
-	// mock
-	createMock(t)
-
 	// SUT
 	var dummySession = &session{
 		attachment: nil,
@@ -1337,9 +1116,6 @@ func TestSessionAttach_NoAttachment(t *testing.T) {
 	// assert
 	assert.True(t, result)
 	assert.Equal(t, dummyValue, dummySession.attachment[dummyName])
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionAttach_WithAttachment(t *testing.T) {
@@ -1351,9 +1127,6 @@ func TestSessionAttach_WithAttachment(t *testing.T) {
 		Test: rand.Intn(100),
 	}
 
-	// mock
-	createMock(t)
-
 	// SUT
 	var dummySession = &session{
 		attachment: map[string]interface{}{
@@ -1370,17 +1143,11 @@ func TestSessionAttach_WithAttachment(t *testing.T) {
 	// assert
 	assert.True(t, result)
 	assert.Equal(t, dummyValue, dummySession.attachment[dummyName])
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionDetach_NilSessionObject(t *testing.T) {
 	// arrange
 	var dummyName = "some name"
-
-	// mock
-	createMock(t)
 
 	// SUT
 	var dummySession *session
@@ -1392,17 +1159,11 @@ func TestSessionDetach_NilSessionObject(t *testing.T) {
 
 	// assert
 	assert.False(t, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionDetach_NoAttachment(t *testing.T) {
 	// arrange
 	var dummyName = "some name"
-
-	// mock
-	createMock(t)
 
 	// SUT
 	var dummySession = &session{
@@ -1418,17 +1179,11 @@ func TestSessionDetach_NoAttachment(t *testing.T) {
 	assert.True(t, result)
 	var _, found = dummySession.attachment[dummyName]
 	assert.False(t, found)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionDetach_WithAttachment(t *testing.T) {
 	// arrange
 	var dummyName = "some name"
-
-	// mock
-	createMock(t)
 
 	// SUT
 	var dummySession = &session{
@@ -1446,17 +1201,11 @@ func TestSessionDetach_WithAttachment(t *testing.T) {
 	assert.True(t, result)
 	var _, found = dummySession.attachment[dummyName]
 	assert.False(t, found)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetRawAttachment_NoSession(t *testing.T) {
 	// arrange
 	var dummyName = "some name"
-
-	// mock
-	createMock(t)
 
 	// SUT
 	var dummySession *session
@@ -1469,17 +1218,11 @@ func TestSessionGetRawAttachment_NoSession(t *testing.T) {
 	// assert
 	assert.Nil(t, result)
 	assert.False(t, found)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetRawAttachment_NoAttachment(t *testing.T) {
 	// arrange
 	var dummyName = "some name"
-
-	// mock
-	createMock(t)
 
 	// SUT
 	var dummySession = &session{}
@@ -1492,9 +1235,6 @@ func TestSessionGetRawAttachment_NoAttachment(t *testing.T) {
 	// assert
 	assert.Nil(t, result)
 	assert.False(t, found)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetRawAttachment_Success(t *testing.T) {
@@ -1505,9 +1245,6 @@ func TestSessionGetRawAttachment_Success(t *testing.T) {
 		Test: rand.Intn(100),
 		ID:   uuid.New(),
 	}
-
-	// mock
-	createMock(t)
 
 	// SUT
 	var dummySession = &session{
@@ -1524,18 +1261,12 @@ func TestSessionGetRawAttachment_Success(t *testing.T) {
 	// assert
 	assert.Equal(t, dummyValue, result)
 	assert.True(t, found)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetAttachment_NoSession(t *testing.T) {
 	// arrange
 	var dummyName = "some name"
 	var dummyDataTemplate dummyAttachment
-
-	// mock
-	createMock(t)
 
 	// SUT
 	var dummySession *session
@@ -1549,18 +1280,12 @@ func TestSessionGetAttachment_NoSession(t *testing.T) {
 	// assert
 	assert.False(t, result)
 	assert.Zero(t, dummyDataTemplate)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetAttachment_NoAttachment(t *testing.T) {
 	// arrange
 	var dummyName = "some name"
 	var dummyDataTemplate dummyAttachment
-
-	// mock
-	createMock(t)
 
 	// SUT
 	var dummySession = &session{}
@@ -1574,9 +1299,6 @@ func TestSessionGetAttachment_NoAttachment(t *testing.T) {
 	// assert
 	assert.False(t, result)
 	assert.Zero(t, dummyDataTemplate)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetAttachment_MarshalError(t *testing.T) {
@@ -1590,15 +1312,13 @@ func TestSessionGetAttachment_MarshalError(t *testing.T) {
 	var dummyDataTemplate dummyAttachment
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	jsonMarshalExpected = 1
-	jsonMarshal = func(v interface{}) ([]byte, error) {
-		jsonMarshalCalled++
+	m.ExpectFunc(json.Marshal, 1, func(v interface{}) ([]byte, error) {
 		assert.Equal(t, dummyValue, v)
 		return nil, errors.New("some marshal error")
-	}
+	})
 
 	// SUT
 	var dummySession = &session{
@@ -1616,9 +1336,6 @@ func TestSessionGetAttachment_MarshalError(t *testing.T) {
 	// assert
 	assert.False(t, result)
 	assert.Zero(t, dummyDataTemplate)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetAttachment_UnmarshalError(t *testing.T) {
@@ -1631,22 +1348,6 @@ func TestSessionGetAttachment_UnmarshalError(t *testing.T) {
 	}
 	var dummyDataTemplate int
 
-	// mock
-	createMock(t)
-
-	// expect
-	jsonMarshalExpected = 1
-	jsonMarshal = func(v interface{}) ([]byte, error) {
-		jsonMarshalCalled++
-		assert.Equal(t, dummyValue, v)
-		return json.Marshal(v)
-	}
-	jsonUnmarshalExpected = 1
-	jsonUnmarshal = func(data []byte, v interface{}) error {
-		jsonUnmarshalCalled++
-		return json.Unmarshal(data, v)
-	}
-
 	// SUT
 	var dummySession = &session{
 		attachment: map[string]interface{}{
@@ -1663,9 +1364,6 @@ func TestSessionGetAttachment_UnmarshalError(t *testing.T) {
 	// assert
 	assert.False(t, result)
 	assert.Zero(t, dummyDataTemplate)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetAttachment_Success(t *testing.T) {
@@ -1677,22 +1375,6 @@ func TestSessionGetAttachment_Success(t *testing.T) {
 		ID:   uuid.New(),
 	}
 	var dummyDataTemplate dummyAttachment
-
-	// mock
-	createMock(t)
-
-	// expect
-	jsonMarshalExpected = 1
-	jsonMarshal = func(v interface{}) ([]byte, error) {
-		jsonMarshalCalled++
-		assert.Equal(t, dummyValue, v)
-		return json.Marshal(v)
-	}
-	jsonUnmarshalExpected = 1
-	jsonUnmarshal = func(data []byte, v interface{}) error {
-		jsonUnmarshalCalled++
-		return json.Unmarshal(data, v)
-	}
 
 	// SUT
 	var dummySession = &session{
@@ -1710,9 +1392,6 @@ func TestSessionGetAttachment_Success(t *testing.T) {
 	// assert
 	assert.True(t, result)
 	assert.Equal(t, dummyValue, dummyDataTemplate)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetMethodName_UnknownCaller(t *testing.T) {
@@ -1723,52 +1402,52 @@ func TestSessionGetMethodName_UnknownCaller(t *testing.T) {
 	var dummyOK = false
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	runtimeCallerExpected = 1
-	runtimeCaller = func(skip int) (pc uintptr, file string, line int, ok bool) {
-		runtimeCallerCalled++
+	m.ExpectFunc(runtime.Caller, 1, func(skip int) (pc uintptr, file string, line int, ok bool) {
 		assert.Equal(t, 3, skip)
 		return dummyPC, dummyFile, dummyLine, dummyOK
-	}
+	})
 
 	// SUT + act
 	var result = getMethodName()
 
 	// assert
 	assert.Equal(t, "?", result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionGetMethodName_HappyPath(t *testing.T) {
+	// arrange
+	var dummyPC = uintptr(rand.Int())
+	var dummyFile = "some file"
+	var dummyLine = rand.Int()
+	var dummyOK = true
+	var dummyFn = &runtime.Func{}
+	var dummyName = "some name"
+
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// expect
-	runtimeCallerExpected = 1
-	runtimeCaller = func(skip int) (pc uintptr, file string, line int, ok bool) {
-		runtimeCallerCalled++
+	m.ExpectFunc(runtime.Caller, 1, func(skip int) (pc uintptr, file string, line int, ok bool) {
 		assert.Equal(t, 3, skip)
-		return runtime.Caller(2)
-	}
-	runtimeFuncForPCExpected = 1
-	runtimeFuncForPC = func(pc uintptr) *runtime.Func {
-		runtimeFuncForPCCalled++
-		assert.NotZero(t, pc)
-		return runtime.FuncForPC(pc)
-	}
+		return dummyPC, dummyFile, dummyLine, dummyOK
+	})
+	m.ExpectFunc(runtime.FuncForPC, 1, func(pc uintptr) *runtime.Func {
+		assert.Equal(t, dummyPC, pc)
+		return dummyFn
+	})
+	m.ExpectMethod(dummyFn, "Name", 1, func(self *runtime.Func) string {
+		assert.Equal(t, dummyFn, self)
+		return dummyName
+	})
 
 	// SUT + act
 	var result = getMethodName()
 
 	// assert
-	assert.Contains(t, result, "TestSessionGetMethodName_HappyPath")
-
-	// verify
-	verifyAll(t)
+	assert.Contains(t, dummyName, result)
 }
 
 func TestSessionLogMethodEnter(t *testing.T) {
@@ -1777,7 +1456,7 @@ func TestSessionLogMethodEnter(t *testing.T) {
 	var dummyMethodName = "some method name"
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// SUT
 	var dummySession = &session{
@@ -1785,26 +1464,19 @@ func TestSessionLogMethodEnter(t *testing.T) {
 	}
 
 	// expect
-	getMethodNameFuncExpected = 1
-	getMethodNameFunc = func() string {
-		getMethodNameFuncCalled++
+	m.ExpectFunc(getMethodName, 1, func() string {
 		return dummyMethodName
-	}
-	logMethodEnterFuncExpected = 1
-	logMethodEnterFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		logMethodEnterFuncCalled++
+	})
+	m.ExpectFunc(logMethodEnter, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyMethodName, category)
 		assert.Zero(t, subcategory)
 		assert.Zero(t, messageFormat)
 		assert.Empty(t, parameters)
-	}
+	})
 
 	// act
 	dummySession.LogMethodEnter()
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionLogMethodParameter(t *testing.T) {
@@ -1821,7 +1493,7 @@ func TestSessionLogMethodParameter(t *testing.T) {
 	var dummyMethodName = "some method name"
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// SUT
 	var dummySession = &session{
@@ -1829,26 +1501,31 @@ func TestSessionLogMethodParameter(t *testing.T) {
 	}
 
 	// expect
-	getMethodNameFuncExpected = 1
-	getMethodNameFunc = func() string {
-		getMethodNameFuncCalled++
+	m.ExpectFunc(getMethodName, 1, func() string {
 		return dummyMethodName
-	}
-	strconvItoaExpected = 3
-	strconvItoa = func(i int) string {
-		strconvItoaCalled++
-		return strconv.Itoa(i)
-	}
-	logMethodParameterFuncExpected = 3
-	logMethodParameterFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		logMethodParameterFuncCalled++
+	})
+	m.ExpectFunc(logMethodParameter, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyMethodName, category)
-		assert.Equal(t, strconv.Itoa(logMethodParameterFuncCalled-1), subcategory)
+		assert.Equal(t, "0", subcategory)
 		assert.Equal(t, "%v", messageFormat)
 		assert.Equal(t, 1, len(parameters))
-		assert.Equal(t, dummyParameters[logMethodParameterFuncCalled-1], parameters[0])
-	}
+		assert.Equal(t, dummyParameters[0], parameters[0])
+	}).ExpectFunc(logMethodParameter, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+		assert.Equal(t, dummySession, session)
+		assert.Equal(t, dummyMethodName, category)
+		assert.Equal(t, "1", subcategory)
+		assert.Equal(t, "%v", messageFormat)
+		assert.Equal(t, 1, len(parameters))
+		assert.Equal(t, dummyParameters[1], parameters[0])
+	}).ExpectFunc(logMethodParameter, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+		assert.Equal(t, dummySession, session)
+		assert.Equal(t, dummyMethodName, category)
+		assert.Equal(t, "2", subcategory)
+		assert.Equal(t, "%v", messageFormat)
+		assert.Equal(t, 1, len(parameters))
+		assert.Equal(t, dummyParameters[2], parameters[0])
+	})
 
 	// act
 	dummySession.LogMethodParameter(
@@ -1856,9 +1533,6 @@ func TestSessionLogMethodParameter(t *testing.T) {
 		dummyParameter2,
 		dummyParameter3,
 	)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionLogMethodLogic(t *testing.T) {
@@ -1873,7 +1547,7 @@ func TestSessionLogMethodLogic(t *testing.T) {
 	var dummyParameter3 = errors.New("test")
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// SUT
 	var dummySession = &session{
@@ -1881,9 +1555,7 @@ func TestSessionLogMethodLogic(t *testing.T) {
 	}
 
 	// expect
-	logMethodLogicFuncExpected = 1
-	logMethodLogicFunc = func(session *session, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		logMethodLogicFuncCalled++
+	m.ExpectFunc(logMethodLogic, 1, func(session *session, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyLogLevel, logLevel)
 		assert.Equal(t, dummyCategory, category)
@@ -1893,7 +1565,7 @@ func TestSessionLogMethodLogic(t *testing.T) {
 		assert.Equal(t, dummyParameter1, parameters[0])
 		assert.Equal(t, dummyParameter2, parameters[1])
 		assert.Equal(t, dummyParameter3, parameters[2])
-	}
+	})
 
 	// act
 	dummySession.LogMethodLogic(
@@ -1905,9 +1577,6 @@ func TestSessionLogMethodLogic(t *testing.T) {
 		dummyParameter2,
 		dummyParameter3,
 	)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionLogMethodReturn(t *testing.T) {
@@ -1924,7 +1593,7 @@ func TestSessionLogMethodReturn(t *testing.T) {
 	var dummyMethodName = "some method name"
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// SUT
 	var dummySession = &session{
@@ -1932,26 +1601,31 @@ func TestSessionLogMethodReturn(t *testing.T) {
 	}
 
 	// expect
-	getMethodNameFuncExpected = 1
-	getMethodNameFunc = func() string {
-		getMethodNameFuncCalled++
+	m.ExpectFunc(getMethodName, 1, func() string {
 		return dummyMethodName
-	}
-	strconvItoaExpected = 3
-	strconvItoa = func(i int) string {
-		strconvItoaCalled++
-		return strconv.Itoa(i)
-	}
-	logMethodReturnFuncExpected = 3
-	logMethodReturnFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		logMethodReturnFuncCalled++
+	})
+	m.ExpectFunc(logMethodReturn, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyMethodName, category)
-		assert.Equal(t, strconv.Itoa(logMethodReturnFuncCalled-1), subcategory)
+		assert.Equal(t, "0", subcategory)
 		assert.Equal(t, "%v", messageFormat)
 		assert.Equal(t, 1, len(parameters))
-		assert.Equal(t, dummyReturns[logMethodReturnFuncCalled-1], parameters[0])
-	}
+		assert.Equal(t, dummyReturns[0], parameters[0])
+	}).ExpectFunc(logMethodReturn, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+		assert.Equal(t, dummySession, session)
+		assert.Equal(t, dummyMethodName, category)
+		assert.Equal(t, "1", subcategory)
+		assert.Equal(t, "%v", messageFormat)
+		assert.Equal(t, 1, len(parameters))
+		assert.Equal(t, dummyReturns[1], parameters[0])
+	}).ExpectFunc(logMethodReturn, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+		assert.Equal(t, dummySession, session)
+		assert.Equal(t, dummyMethodName, category)
+		assert.Equal(t, "2", subcategory)
+		assert.Equal(t, "%v", messageFormat)
+		assert.Equal(t, 1, len(parameters))
+		assert.Equal(t, dummyReturns[2], parameters[0])
+	})
 
 	// act
 	dummySession.LogMethodReturn(
@@ -1959,9 +1633,6 @@ func TestSessionLogMethodReturn(t *testing.T) {
 		dummyReturn2,
 		dummyReturn3,
 	)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionLogMethodExit(t *testing.T) {
@@ -1970,7 +1641,7 @@ func TestSessionLogMethodExit(t *testing.T) {
 	var dummyMethodName = "some method name"
 
 	// mock
-	createMock(t)
+	var m = gomocker.NewMocker(t)
 
 	// SUT
 	var dummySession = &session{
@@ -1978,26 +1649,19 @@ func TestSessionLogMethodExit(t *testing.T) {
 	}
 
 	// expect
-	getMethodNameFuncExpected = 1
-	getMethodNameFunc = func() string {
-		getMethodNameFuncCalled++
+	m.ExpectFunc(getMethodName, 1, func() string {
 		return dummyMethodName
-	}
-	logMethodExitFuncExpected = 1
-	logMethodExitFunc = func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		logMethodExitFuncCalled++
+	})
+	m.ExpectFunc(logMethodExit, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
 		assert.Equal(t, dummySession, session)
 		assert.Equal(t, dummyMethodName, category)
 		assert.Zero(t, subcategory)
 		assert.Zero(t, messageFormat)
 		assert.Empty(t, parameters)
-	}
+	})
 
 	// act
 	dummySession.LogMethodExit()
-
-	// verify
-	verifyAll(t)
 }
 
 func TestSessionCreateWebcallRequest(t *testing.T) {
@@ -2007,9 +1671,6 @@ func TestSessionCreateWebcallRequest(t *testing.T) {
 	var dummyURL = "some URL"
 	var dummyPayload = "some payload"
 	var dummySendClientCert = rand.Intn(100) < 50
-
-	// mock
-	createMock(t)
 
 	// SUT
 	var dummySession = &session{
@@ -2040,7 +1701,4 @@ func TestSessionCreateWebcallRequest(t *testing.T) {
 	assert.Equal(t, dummySendClientCert, webrequest.sendClientCert)
 	assert.Zero(t, webrequest.retryDelay)
 	assert.Empty(t, webrequest.dataReceivers)
-
-	// verify
-	verifyAll(t)
 }

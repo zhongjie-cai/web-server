@@ -8,9 +8,6 @@ import (
 )
 
 func TestErrorCodeEnumHTTPStatusCode_GeneralFailure(t *testing.T) {
-	// mock
-	createMock(t)
-
 	// SUT
 	var dummyErrorCode = errorCodeGeneralFailure
 
@@ -19,15 +16,9 @@ func TestErrorCodeEnumHTTPStatusCode_GeneralFailure(t *testing.T) {
 
 	// assert
 	assert.Equal(t, http.StatusInternalServerError, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestErrorCodeEnumHTTPStatusCode_Unauthorized(t *testing.T) {
-	// mock
-	createMock(t)
-
 	// SUT
 	var dummyErrorCode = errorCodeUnauthorized
 
@@ -36,15 +27,9 @@ func TestErrorCodeEnumHTTPStatusCode_Unauthorized(t *testing.T) {
 
 	// assert
 	assert.Equal(t, http.StatusUnauthorized, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestErrorCodeEnumHTTPStatusCode_InvalidOperation(t *testing.T) {
-	// mock
-	createMock(t)
-
 	// SUT
 	var dummyErrorCode = errorCodeInvalidOperation
 
@@ -53,15 +38,9 @@ func TestErrorCodeEnumHTTPStatusCode_InvalidOperation(t *testing.T) {
 
 	// assert
 	assert.Equal(t, http.StatusMethodNotAllowed, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestErrorCodeEnumHTTPStatusCode_BadRequest(t *testing.T) {
-	// mock
-	createMock(t)
-
 	// SUT
 	var dummyErrorCode = errorCodeBadRequest
 
@@ -70,15 +49,9 @@ func TestErrorCodeEnumHTTPStatusCode_BadRequest(t *testing.T) {
 
 	// assert
 	assert.Equal(t, http.StatusBadRequest, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestErrorCodeEnumHTTPStatusCode_NotFound(t *testing.T) {
-	// mock
-	createMock(t)
-
 	// SUT
 	var dummyErrorCode = errorCodeNotFound
 
@@ -87,15 +60,9 @@ func TestErrorCodeEnumHTTPStatusCode_NotFound(t *testing.T) {
 
 	// assert
 	assert.Equal(t, http.StatusNotFound, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestErrorCodeEnumHTTPStatusCode_CircuitBreak(t *testing.T) {
-	// mock
-	createMock(t)
-
 	// SUT
 	var dummyErrorCode = errorCodeCircuitBreak
 
@@ -104,15 +71,9 @@ func TestErrorCodeEnumHTTPStatusCode_CircuitBreak(t *testing.T) {
 
 	// assert
 	assert.Equal(t, http.StatusForbidden, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestErrorCodeEnumHTTPStatusCode_OperationLock(t *testing.T) {
-	// mock
-	createMock(t)
-
 	// SUT
 	var dummyErrorCode = errorCodeOperationLock
 
@@ -121,15 +82,9 @@ func TestErrorCodeEnumHTTPStatusCode_OperationLock(t *testing.T) {
 
 	// assert
 	assert.Equal(t, http.StatusLocked, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestErrorCodeEnumHTTPStatusCode_AccessForbidden(t *testing.T) {
-	// mock
-	createMock(t)
-
 	// SUT
 	var dummyErrorCode = errorCodeAccessForbidden
 
@@ -138,15 +93,9 @@ func TestErrorCodeEnumHTTPStatusCode_AccessForbidden(t *testing.T) {
 
 	// assert
 	assert.Equal(t, http.StatusForbidden, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestErrorCodeEnumHTTPStatusCode_DataCorruption(t *testing.T) {
-	// mock
-	createMock(t)
-
 	// SUT
 	var dummyErrorCode = errorCodeDataCorruption
 
@@ -155,15 +104,9 @@ func TestErrorCodeEnumHTTPStatusCode_DataCorruption(t *testing.T) {
 
 	// assert
 	assert.Equal(t, http.StatusConflict, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestErrorCodeEnumHTTPStatusCode_NotImplemented(t *testing.T) {
-	// mock
-	createMock(t)
-
 	// SUT
 	var dummyErrorCode = errorCodeNotImplemented
 
@@ -172,15 +115,9 @@ func TestErrorCodeEnumHTTPStatusCode_NotImplemented(t *testing.T) {
 
 	// assert
 	assert.Equal(t, http.StatusNotImplemented, result)
-
-	// verify
-	verifyAll(t)
 }
 
 func TestErrorCodeEnumHTTPStatusCode_OtherErrorCode(t *testing.T) {
-	// mock
-	createMock(t)
-
 	// SUT
 	var dummyErrorCode = errorCode("some other error code")
 
@@ -189,7 +126,4 @@ func TestErrorCodeEnumHTTPStatusCode_OtherErrorCode(t *testing.T) {
 
 	// assert
 	assert.Equal(t, http.StatusInternalServerError, result)
-
-	// verify
-	verifyAll(t)
 }

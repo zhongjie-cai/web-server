@@ -1,8 +1,0 @@
-language: go
-
-matrix:
-  include:
-    - go: 1.15.x
-    - go: tip
-  allow_failures:
-    - go: tip

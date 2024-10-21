@@ -1,6 +1,8 @@
 package webserver
 
 import (
+	"bytes"
+	"io"
 	"net/http"
 )
 
@@ -13,14 +15,14 @@ func getRequestBody(
 	if httpRequest != nil &&
 		httpRequest.Body != nil {
 		defer httpRequest.Body.Close()
-		bodyBytes, bodyError = ioutilReadAll(
+		bodyBytes, bodyError = io.ReadAll(
 			httpRequest.Body,
 		)
 		if bodyError != nil {
 			return ""
 		}
-		httpRequest.Body = ioutilNopCloser(
-			bytesNewBuffer(
+		httpRequest.Body = io.NopCloser(
+			bytes.NewBuffer(
 				bodyBytes,
 			),
 		)

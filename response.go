@@ -1,6 +1,10 @@
 package webserver
 
-import "reflect"
+import (
+	"net/http"
+	"reflect"
+	"strconv"
+)
 
 // These are the constants used by the HTTP modules
 const (
@@ -23,7 +27,7 @@ func shouldSkipHandling(
 	if responseError != nil {
 		return false
 	}
-	var responseType = reflectTypeOf(responseObject)
+	var responseType = reflect.TypeOf(responseObject)
 	return responseType == typeOfSkipResponseHandling
 }
 
@@ -48,11 +52,11 @@ func writeResponse(
 	responseObject interface{},
 	responseError error,
 ) {
-	if shouldSkipHandlingFunc(
+	if shouldSkipHandling(
 		responseObject,
 		responseError,
 	) {
-		logEndpointResponseFunc(
+		logEndpointResponse(
 			session,
 			"None",
 			"-1",
@@ -60,15 +64,15 @@ func writeResponse(
 		)
 		return
 	}
-	var statusCode, responseMessage = constructResponseFunc(
+	var statusCode, responseMessage = constructResponse(
 		session,
 		responseObject,
 		responseError,
 	)
-	logEndpointResponseFunc(
+	logEndpointResponse(
 		session,
-		httpStatusText(statusCode),
-		strconvItoa(statusCode),
+		http.StatusText(statusCode),
+		strconv.Itoa(statusCode),
 		responseMessage,
 	)
 	var responseWriter = session.GetResponseWriter()

@@ -1,6 +1,9 @@
 package webserver
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/gorilla/mux"
 )
 
@@ -11,7 +14,7 @@ func doParameterReplacement(
 	parameterType ParameterType,
 ) string {
 	if parameterType == "" {
-		logAppRootFunc(
+		logAppRoot(
 			session,
 			"register",
 			"doParameterReplacement",
@@ -21,16 +24,16 @@ func doParameterReplacement(
 		)
 		return originalPath
 	}
-	var oldParameter = fmtSprintf(
+	var oldParameter = fmt.Sprintf(
 		"{%v}",
 		parameterName,
 	)
-	var newParameter = fmtSprintf(
+	var newParameter = fmt.Sprintf(
 		"{%v:%v}",
 		parameterName,
 		parameterType,
 	)
-	return stringsReplace(
+	return strings.Replace(
 		originalPath,
 		oldParameter,
 		newParameter,
@@ -45,7 +48,7 @@ func evaluatePathWithParameters(
 ) string {
 	var updatedPath = path
 	for parameterName, parameterType := range parameters {
-		updatedPath = doParameterReplacementFunc(
+		updatedPath = doParameterReplacement(
 			session,
 			updatedPath,
 			parameterName,
@@ -62,12 +65,12 @@ func evaluateQueries(
 	for key, value := range queries {
 		var queryParameter string
 		if value == "" {
-			queryParameter = fmtSprintf(
+			queryParameter = fmt.Sprintf(
 				"{%v}",
 				key,
 			)
 		} else {
-			queryParameter = fmtSprintf(
+			queryParameter = fmt.Sprintf(
 				"{%v:%v}",
 				key,
 				value,
@@ -89,7 +92,7 @@ func registerRoutes(
 ) {
 	var configuredRoutes = session.customization.Routes()
 	if len(configuredRoutes) == 0 {
-		logAppRootFunc(
+		logAppRoot(
 			session,
 			"register",
 			"registerRoutes",
@@ -98,15 +101,15 @@ func registerRoutes(
 		return
 	}
 	for _, configuredRoute := range configuredRoutes {
-		var evaluatedPath = evaluatePathWithParametersFunc(
+		var evaluatedPath = evaluatePathWithParameters(
 			session,
 			configuredRoute.Path,
 			configuredRoute.Parameters,
 		)
-		var queries = evaluateQueriesFunc(
+		var queries = evaluateQueries(
 			configuredRoute.Queries,
 		)
-		var name, _ = registerRouteFunc(
+		var name, _ = registerRoute(
 			router,
 			configuredRoute.Endpoint,
 			configuredRoute.Method,
@@ -125,7 +128,7 @@ func registerStatics(
 ) {
 	var statics = session.customization.Statics()
 	if len(statics) == 0 {
-		logAppRootFunc(
+		logAppRoot(
 			session,
 			"register",
 			"registerStatics",
@@ -134,7 +137,7 @@ func registerStatics(
 		return
 	}
 	for _, static := range statics {
-		registerStaticFunc(
+		registerStatic(
 			router,
 			static.Name,
 			static.PathPrefix,
@@ -149,7 +152,7 @@ func registerMiddlewares(
 ) {
 	var middlewares = session.customization.Middlewares()
 	if len(middlewares) == 0 {
-		logAppRootFunc(
+		logAppRoot(
 			session,
 			"register",
 			"registerMiddlewares",
@@ -158,7 +161,7 @@ func registerMiddlewares(
 		return
 	}
 	for _, middleware := range middlewares {
-		addMiddlewareFunc(
+		addMiddleware(
 			router,
 			middleware,
 		)
@@ -178,26 +181,26 @@ func instantiateRouter(
 	app *application,
 	session *session,
 ) (*mux.Router, error) {
-	var router = muxNewRouter()
-	registerRoutesFunc(
+	var router = mux.NewRouter()
+	registerRoutes(
 		app,
 		session,
 		router,
 	)
-	registerStaticsFunc(
+	registerStatics(
 		session,
 		router,
 	)
-	registerMiddlewaresFunc(
+	registerMiddlewares(
 		session,
 		router,
 	)
-	var routerError = walkRegisteredRoutesFunc(
+	var routerError = walkRegisteredRoutes(
 		session,
 		router,
 	)
 	if routerError != nil {
-		logAppRootFunc(
+		logAppRoot(
 			session,
 			"register",
 			"instantiateRouter",
@@ -205,13 +208,13 @@ func instantiateRouter(
 			routerError,
 		)
 		return router,
-			newAppErrorFunc(
+			newAppError(
 				errorCodeGeneralFailure,
 				errorMessageRouteRegistration,
 				[]error{routerError},
 			)
 	}
-	registerErrorHandlersFunc(
+	registerErrorHandlers(
 		session.customization,
 		router,
 	)

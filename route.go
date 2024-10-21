@@ -1,7 +1,9 @@
 package webserver
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
 )
@@ -34,17 +36,17 @@ func getPathRegexp(route *mux.Route) (string, error) {
 
 func getQueriesTemplates(route *mux.Route) string {
 	var queriesTemplates, _ = route.GetQueriesTemplates()
-	return stringsJoin(queriesTemplates, stringSeparator)
+	return strings.Join(queriesTemplates, stringSeparator)
 }
 
 func getQueriesRegexp(route *mux.Route) string {
 	var queriesRegexps, _ = route.GetQueriesRegexp()
-	return stringsJoin(queriesRegexps, stringSeparator)
+	return strings.Join(queriesRegexps, stringSeparator)
 }
 
 func getMethods(route *mux.Route) string {
 	var methods, _ = route.GetMethods()
-	return stringsJoin(methods, stringSeparator)
+	return strings.Join(methods, stringSeparator)
 }
 
 func evaluateRoute(
@@ -53,8 +55,8 @@ func evaluateRoute(
 	ancestors []*mux.Route,
 ) error {
 	var (
-		_, pathTemplateError = getPathTemplateFunc(route)
-		_, pathRegexpError   = getPathRegexpFunc(route)
+		_, pathTemplateError = getPathTemplate(route)
+		_, pathRegexpError   = getPathRegexp(route)
 	)
 	if pathTemplateError != nil {
 		return pathTemplateError
@@ -71,17 +73,17 @@ func walkRegisteredRoutes(
 	router *mux.Router,
 ) error {
 	var walkError = router.Walk(
-		evaluateRouteFunc,
+		evaluateRoute,
 	)
 	if walkError != nil {
-		logAppRootFunc(
+		logAppRoot(
 			session,
 			"route",
 			"walkRegisteredRoutes",
 			"Failure: %+v",
 			walkError,
 		)
-		return newAppErrorFunc(
+		return newAppError(
 			errorCodeGeneralFailure,
 			errorMessageRouteRegistration,
 			[]error{walkError},
@@ -100,7 +102,7 @@ func registerRoute(
 	handleFunc func(http.ResponseWriter, *http.Request),
 	actionFunc ActionFunc,
 ) (string, *mux.Route) {
-	var name = fmtSprintf(
+	var name = fmt.Sprintf(
 		"%v:%v",
 		endpoint,
 		method,
@@ -120,7 +122,7 @@ func registerRoute(
 
 func defaultActionFunc(session Session) (interface{}, error) {
 	return nil,
-		newAppErrorFunc(
+		newAppError(
 			errorCodeNotImplemented,
 			"No corresponding action function configured; falling back to default",
 			[]error{},
@@ -128,7 +130,7 @@ func defaultActionFunc(session Session) (interface{}, error) {
 }
 
 func getEndpointByName(name string) string {
-	var splitSubs = stringsSplit(
+	var splitSubs = strings.Split(
 		name,
 		":",
 	)
@@ -140,18 +142,18 @@ func getEndpointByName(name string) string {
 
 // getRouteInfo retrieves the registered name and action for the given route
 func getRouteInfo(httpRequest *http.Request, actionFuncMap map[string]ActionFunc) (string, ActionFunc, error) {
-	var route = muxCurrentRoute(httpRequest)
+	var route = mux.CurrentRoute(httpRequest)
 	if route == nil {
 		return "",
 			nil,
-			newAppErrorFunc(
+			newAppError(
 				errorCodeNotFound,
 				"No corresponding route configured for path",
 				[]error{},
 			)
 	}
-	var name = getNameFunc(route)
-	var endpoint = getEndpointByNameFunc(name)
+	var name = getName(route)
+	var endpoint = getEndpointByName(name)
 	var action, found = actionFuncMap[name]
 	if !found {
 		action = defaultActionFunc

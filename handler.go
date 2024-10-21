@@ -3,6 +3,8 @@ package webserver
 import (
 	"net/http"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 func initiateSession(
@@ -10,12 +12,12 @@ func initiateSession(
 	responseWriter http.ResponseWriter,
 	httpRequest *http.Request,
 ) (*session, ActionFunc, error) {
-	var endpoint, action, routeError = getRouteInfoFunc(
+	var endpoint, action, routeError = getRouteInfo(
 		httpRequest,
 		app.actionFuncMap,
 	)
 	return &session{
-		uuidNew(),
+		uuid.New(),
 		endpoint,
 		httpRequest,
 		responseWriter,
@@ -29,16 +31,16 @@ func finalizeSession(
 	startTime time.Time,
 	recoverResult interface{},
 ) {
-	handlePanicFunc(
+	handlePanic(
 		session,
 		recoverResult,
 	)
-	logEndpointExitFunc(
+	logEndpointExit(
 		session,
 		session.name,
 		session.request.Method,
 		"%s",
-		timeSince(startTime),
+		time.Since(startTime),
 	)
 }
 
@@ -50,7 +52,7 @@ func handleAction(
 		session,
 	)
 	if preActionError != nil {
-		writeResponseFunc(
+		writeResponse(
 			session,
 			nil,
 			preActionError,
@@ -61,7 +63,7 @@ func handleAction(
 		session,
 	)
 	if responseError != nil {
-		writeResponseFunc(
+		writeResponse(
 			session,
 			responseObject,
 			responseError,
@@ -71,7 +73,7 @@ func handleAction(
 	var postActionError = session.customization.PostAction(
 		session,
 	)
-	writeResponseFunc(
+	writeResponse(
 		session,
 		responseObject,
 		postActionError,
@@ -83,31 +85,31 @@ func (app *application) handleSession(
 	responseWriter http.ResponseWriter,
 	httpRequest *http.Request,
 ) {
-	var session, action, routeError = initiateSessionFunc(
+	var session, action, routeError = initiateSession(
 		app,
 		responseWriter,
 		httpRequest,
 	)
-	logEndpointEnterFunc(
+	logEndpointEnter(
 		session,
 		session.name,
 		httpRequest.Method,
 		"",
 	)
-	defer finalizeSessionFunc(
+	defer finalizeSession(
 		session,
-		getTimeNowUTCFunc(),
+		getTimeNowUTC(),
 		recover(),
 	)
 	if routeError != nil {
-		writeResponseFunc(
+		writeResponse(
 			session,
 			nil,
 			routeError,
 		)
 		return
 	}
-	handleActionFunc(
+	handleAction(
 		session,
 		action,
 	)

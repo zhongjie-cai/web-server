@@ -1,9 +1,14 @@
 package webserver
 
 import (
+	"encoding/json"
 	"net/http"
+	"net/textproto"
+	"runtime"
+	"strconv"
 
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
 var (
@@ -135,7 +140,7 @@ func (session *session) GetRequest() *http.Request {
 // GetResponseWriter returns the HTTP response writer object from session object for given session ID
 func (session *session) GetResponseWriter() http.ResponseWriter {
 	if session == nil ||
-		isInterfaceValueNilFunc(session.responseWriter) {
+		isInterfaceValueNil(session.responseWriter) {
 		return defaultResponseWriter
 	}
 	return session.responseWriter
@@ -144,42 +149,42 @@ func (session *session) GetResponseWriter() http.ResponseWriter {
 // GetRequestBody loads HTTP request body associated to session and unmarshals the content JSON to given data template
 func (session *session) GetRequestBody(dataTemplate interface{}) error {
 	if session == nil {
-		return newAppErrorFunc(
+		return newAppError(
 			errorCodeGeneralFailure,
 			errorMessageSessionNil,
 			[]error{},
 		)
 	}
 	var httpRequest = session.GetRequest()
-	var requestBody = getRequestBodyFunc(
+	var requestBody = getRequestBody(
 		httpRequest,
 	)
 	if requestBody == "" {
-		return newAppErrorFunc(
+		return newAppError(
 			errorCodeBadRequest,
 			errorMessageRequestBodyEmpty,
 			[]error{},
 		)
 	}
-	logEndpointRequestFunc(
+	logEndpointRequest(
 		session,
 		"Body",
 		"Content",
 		requestBody,
 	)
-	var unmarshalError = tryUnmarshalFunc(
+	var unmarshalError = tryUnmarshal(
 		requestBody,
 		dataTemplate,
 	)
 	if unmarshalError != nil {
-		logEndpointRequestFunc(
+		logEndpointRequest(
 			session,
 			"Body",
 			"UnmarshalError",
 			"%+v",
 			unmarshalError,
 		)
-		return newAppErrorFunc(
+		return newAppError(
 			errorCodeBadRequest,
 			errorMessageRequestBodyInvalid,
 			[]error{unmarshalError},
@@ -191,43 +196,43 @@ func (session *session) GetRequestBody(dataTemplate interface{}) error {
 // GetRequestParameter loads HTTP request parameter associated to session for given name and unmarshals the content to given data template
 func (session *session) GetRequestParameter(name string, dataTemplate interface{}) error {
 	if session == nil {
-		return newAppErrorFunc(
+		return newAppError(
 			errorCodeGeneralFailure,
 			errorMessageSessionNil,
 			[]error{},
 		)
 	}
 	var httpRequest = session.GetRequest()
-	var parameters = muxVars(
+	var parameters = mux.Vars(
 		httpRequest,
 	)
 	var value, found = parameters[name]
 	if !found {
-		return newAppErrorFunc(
+		return newAppError(
 			errorCodeBadRequest,
 			errorMessageParameterNotFound,
 			[]error{},
 		)
 	}
-	logEndpointRequestFunc(
+	logEndpointRequest(
 		session,
 		"Parameter",
 		name,
 		value,
 	)
-	var unmarshalError = tryUnmarshalFunc(
+	var unmarshalError = tryUnmarshal(
 		value,
 		dataTemplate,
 	)
 	if unmarshalError != nil {
-		logEndpointRequestFunc(
+		logEndpointRequest(
 			session,
 			"Parameter",
 			"UnmarshalError",
 			"%+v",
 			unmarshalError,
 		)
-		return newAppErrorFunc(
+		return newAppError(
 			errorCodeBadRequest,
 			errorMessageParameterInvalid,
 			[]error{unmarshalError},
@@ -251,43 +256,43 @@ func getAllQueries(session *session, name string) []string {
 // GetRequestQuery loads HTTP request single query string associated to session for given name and unmarshals the content to given data template
 func (session *session) GetRequestQuery(name string, index int, dataTemplate interface{}) error {
 	if session == nil {
-		return newAppErrorFunc(
+		return newAppError(
 			errorCodeGeneralFailure,
 			errorMessageSessionNil,
 			[]error{},
 		)
 	}
-	var queries = getAllQueriesFunc(
+	var queries = getAllQueries(
 		session,
 		name,
 	)
 	if len(queries) <= index {
-		return newAppErrorFunc(
+		return newAppError(
 			errorCodeBadRequest,
 			errorMessageQueryNotFound,
 			[]error{},
 		)
 	}
 	var value = queries[index]
-	logEndpointRequestFunc(
+	logEndpointRequest(
 		session,
 		"Query",
 		name,
 		value,
 	)
-	var unmarshalError = tryUnmarshalFunc(
+	var unmarshalError = tryUnmarshal(
 		value,
 		dataTemplate,
 	)
 	if unmarshalError != nil {
-		logEndpointRequestFunc(
+		logEndpointRequest(
 			session,
 			"Query",
 			"UnmarshalError",
 			"%+v",
 			unmarshalError,
 		)
-		return newAppErrorFunc(
+		return newAppError(
 			errorCodeBadRequest,
 			errorMessageQueryInvalid,
 			[]error{unmarshalError},
@@ -298,7 +303,7 @@ func (session *session) GetRequestQuery(name string, index int, dataTemplate int
 
 func getAllHeaders(session *session, name string) []string {
 	var httpRequest = session.GetRequest()
-	var canonicalName = textprotoCanonicalMIMEHeaderKey(name)
+	var canonicalName = textproto.CanonicalMIMEHeaderKey(name)
 	var headers, found = httpRequest.Header[canonicalName]
 	if !found {
 		return nil
@@ -309,43 +314,43 @@ func getAllHeaders(session *session, name string) []string {
 // GetRequestHeader loads HTTP request single header string associated to session for given name and unmarshals the content to given data template
 func (session *session) GetRequestHeader(name string, index int, dataTemplate interface{}) error {
 	if session == nil {
-		return newAppErrorFunc(
+		return newAppError(
 			errorCodeGeneralFailure,
 			errorMessageSessionNil,
 			[]error{},
 		)
 	}
-	var headers = getAllHeadersFunc(
+	var headers = getAllHeaders(
 		session,
 		name,
 	)
 	if len(headers) <= index {
-		return newAppErrorFunc(
+		return newAppError(
 			errorCodeBadRequest,
 			errorMessageHeaderNotFound,
 			[]error{},
 		)
 	}
 	var value = headers[index]
-	logEndpointRequestFunc(
+	logEndpointRequest(
 		session,
 		"Header",
 		name,
 		value,
 	)
-	var unmarshalError = tryUnmarshalFunc(
+	var unmarshalError = tryUnmarshal(
 		value,
 		dataTemplate,
 	)
 	if unmarshalError != nil {
-		logEndpointRequestFunc(
+		logEndpointRequest(
 			session,
 			"Header",
 			"UnmarshalError",
 			"%+v",
 			unmarshalError,
 		)
-		return newAppErrorFunc(
+		return newAppError(
 			errorCodeBadRequest,
 			errorMessageHeaderInvalid,
 			[]error{unmarshalError},
@@ -398,11 +403,11 @@ func (session *session) GetAttachment(name string, dataTemplate interface{}) boo
 	if !found {
 		return false
 	}
-	var bytes, marshalError = jsonMarshal(attachment)
+	var bytes, marshalError = json.Marshal(attachment)
 	if marshalError != nil {
 		return false
 	}
-	var unmarshalError = jsonUnmarshal(
+	var unmarshalError = json.Unmarshal(
 		bytes,
 		dataTemplate,
 	)
@@ -410,18 +415,18 @@ func (session *session) GetAttachment(name string, dataTemplate interface{}) boo
 }
 
 func getMethodName() string {
-	var pc, _, _, ok = runtimeCaller(3)
+	var pc, _, _, ok = runtime.Caller(3)
 	if !ok {
 		return "?"
 	}
-	var fn = runtimeFuncForPC(pc)
+	var fn = runtime.FuncForPC(pc)
 	return fn.Name()
 }
 
 // LogMethodEnter sends a logging entry of MethodEnter log type for the given session associated to the session ID
 func (session *session) LogMethodEnter() {
-	var methodName = getMethodNameFunc()
-	logMethodEnterFunc(
+	var methodName = getMethodName()
+	logMethodEnter(
 		session,
 		methodName,
 		"",
@@ -431,12 +436,12 @@ func (session *session) LogMethodEnter() {
 
 // LogMethodParameter sends a logging entry of MethodParameter log type for the given session associated to the session ID
 func (session *session) LogMethodParameter(parameters ...interface{}) {
-	var methodName = getMethodNameFunc()
+	var methodName = getMethodName()
 	for index, parameter := range parameters {
-		logMethodParameterFunc(
+		logMethodParameter(
 			session,
 			methodName,
-			strconvItoa(index),
+			strconv.Itoa(index),
 			"%v",
 			parameter,
 		)
@@ -445,7 +450,7 @@ func (session *session) LogMethodParameter(parameters ...interface{}) {
 
 // LogMethodLogic sends a logging entry of MethodLogic log type for the given session associated to the session ID
 func (session *session) LogMethodLogic(logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-	logMethodLogicFunc(
+	logMethodLogic(
 		session,
 		logLevel,
 		category,
@@ -457,12 +462,12 @@ func (session *session) LogMethodLogic(logLevel LogLevel, category string, subca
 
 // LogMethodReturn sends a logging entry of MethodReturn log type for the given session associated to the session ID
 func (session *session) LogMethodReturn(returns ...interface{}) {
-	var methodName = getMethodNameFunc()
+	var methodName = getMethodName()
 	for index, returnValue := range returns {
-		logMethodReturnFunc(
+		logMethodReturn(
 			session,
 			methodName,
-			strconvItoa(index),
+			strconv.Itoa(index),
 			"%v",
 			returnValue,
 		)
@@ -471,8 +476,8 @@ func (session *session) LogMethodReturn(returns ...interface{}) {
 
 // LogMethodExit sends a logging entry of MethodExit log type for the given session associated to the session ID
 func (session *session) LogMethodExit() {
-	var methodName = getMethodNameFunc()
-	logMethodExitFunc(
+	var methodName = getMethodName()
+	logMethodExit(
 		session,
 		methodName,
 		"",
