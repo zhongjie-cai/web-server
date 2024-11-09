@@ -4,14 +4,13 @@ import (
 	"crypto/tls"
 	"errors"
 	"math/rand"
-	"net/http"
 	"os"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"github.com/zhongjie-cai/gomocker"
+	"github.com/zhongjie-cai/gomocker/v2"
 )
 
 func TestNewApplication_NilCustomization(t *testing.T) {
@@ -26,13 +25,8 @@ func TestNewApplication_NilCustomization(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(isInterfaceValueNil, 1, func(i interface{}) bool {
-		assert.Equal(t, dummyCustomization, i)
-		return true
-	})
-	m.ExpectFunc(uuid.New, 1, func() uuid.UUID {
-		return dummySessionID
-	})
+	m.Mock(isInterfaceValueNil).Expects(dummyCustomization).Returns(true).Once()
+	m.Mock(uuid.New).Expects().Returns(dummySessionID).Once()
 
 	// SUT
 	var result = NewApplication(
@@ -75,13 +69,8 @@ func TestNewApplication_HasCustomization(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(isInterfaceValueNil, 1, func(i interface{}) bool {
-		assert.Equal(t, dummyCustomization, i)
-		return false
-	})
-	m.ExpectFunc(uuid.New, 1, func() uuid.UUID {
-		return dummySessionID
-	})
+	m.Mock(isInterfaceValueNil).Expects(dummyCustomization).Returns(false).Once()
+	m.Mock(uuid.New).Expects().Returns(dummySessionID).Once()
 
 	// SUT
 	var result = NewApplication(
@@ -122,9 +111,7 @@ func TestApplication_Start(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(startApplication, 1, func(app *application) {
-		assert.Equal(t, dummyApplication, app)
-	})
+	m.Mock(startApplication).Expects(dummyApplication).Returns().Once()
 
 	// SUT + act
 	dummyApplication.Start()
@@ -185,9 +172,7 @@ func TestApplication_Stop_HasStarted(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(haltServer, 1, func(shutdownSignal chan os.Signal) {
-		assert.Equal(t, dummyShutdownSignal, shutdownSignal)
-	})
+	m.Mock(haltServer).Expects(dummyShutdownSignal).Returns().Once()
 
 	// SUT + act
 	dummyApplication.Stop()
@@ -214,10 +199,7 @@ func TestStartApplication_PreBootstrapingFailure(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(preBootstraping, 1, func(app *application) bool {
-		assert.Equal(t, dummyApplication, app)
-		return false
-	})
+	m.Mock(preBootstraping).Expects(dummyApplication).Returns(false).Once()
 
 	// SUT + act
 	startApplication(dummyApplication)
@@ -233,17 +215,9 @@ func TestStartApplication_PostBootstrapingFailure(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(preBootstraping, 1, func(app *application) bool {
-		assert.Equal(t, dummyApplication, app)
-		return true
-	})
-	m.ExpectFunc(bootstrap, 1, func(app *application) {
-		assert.Equal(t, dummyApplication, app)
-	})
-	m.ExpectFunc(postBootstraping, 1, func(app *application) bool {
-		assert.Equal(t, dummyApplication, app)
-		return false
-	})
+	m.Mock(preBootstraping).Expects(dummyApplication).Returns(true).Once()
+	m.Mock(bootstrap).Expects(dummyApplication).Returns().Once()
+	m.Mock(postBootstraping).Expects(dummyApplication).Returns(false).Once()
 
 	// SUT + act
 	startApplication(dummyApplication)
@@ -259,23 +233,11 @@ func TestStartApplication_HappyPath(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(preBootstraping, 1, func(app *application) bool {
-		assert.Equal(t, dummyApplication, app)
-		return true
-	})
-	m.ExpectFunc(bootstrap, 1, func(app *application) {
-		assert.Equal(t, dummyApplication, app)
-	})
-	m.ExpectFunc(postBootstraping, 1, func(app *application) bool {
-		assert.Equal(t, dummyApplication, app)
-		return true
-	})
-	m.ExpectFunc(beginApplication, 1, func(app *application) {
-		assert.Equal(t, dummyApplication, app)
-	})
-	m.ExpectFunc(endApplication, 1, func(app *application) {
-		assert.Equal(t, dummyApplication, app)
-	})
+	m.Mock(preBootstraping).Expects(dummyApplication).Returns(true).Once()
+	m.Mock(bootstrap).Expects(dummyApplication).Returns().Once()
+	m.Mock(postBootstraping).Expects(dummyApplication).Returns(true).Once()
+	m.Mock(beginApplication).Expects(dummyApplication).Returns().Once()
+	m.Mock(endApplication).Expects(dummyApplication).Returns().Once()
 
 	// SUT + act
 	startApplication(dummyApplication)
@@ -298,17 +260,8 @@ func TestPreBootstraping_Error(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectMethod(dummyCustomization, "PreBootstrap", 1, func() error {
-		return dummyError
-	})
-	m.ExpectFunc(logAppRoot, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, "application", category)
-		assert.Equal(t, "preBootstraping", subcategory)
-		assert.Equal(t, dummyMessageFormat, messageFormat)
-		assert.Equal(t, 1, len(parameters))
-		assert.Equal(t, dummyError, parameters[0])
-	})
+	m.Mock((*DefaultCustomization).PreBootstrap).Expects(dummyCustomization).Returns(dummyError).Once()
+	m.Mock(logAppRoot).Expects(dummySession, "application", "preBootstraping", dummyMessageFormat, dummyError).Returns().Once()
 
 	// SUT + act
 	var result = preBootstraping(
@@ -335,16 +288,8 @@ func TestPreBootstraping_Success(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectMethod(dummyCustomization, "PreBootstrap", 1, func() error {
-		return nil
-	})
-	m.ExpectFunc(logAppRoot, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, "application", category)
-		assert.Equal(t, "preBootstraping", subcategory)
-		assert.Equal(t, dummyMessageFormat, messageFormat)
-		assert.Empty(t, parameters)
-	})
+	m.Mock((*DefaultCustomization).PreBootstrap).Expects(dummyCustomization).Returns(nil).Once()
+	m.Mock(logAppRoot).Expects(dummySession, "application", "preBootstraping", dummyMessageFormat).Returns().Once()
 
 	// SUT + act
 	var result = preBootstraping(
@@ -374,27 +319,11 @@ func TestBootstrap_HappyPath(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(initializeHTTPClients, 1, func(webcallTimeout time.Duration, skipServerCertVerification bool, clientCertificate *tls.Certificate, roundTripperWrapper func(originalTransport http.RoundTripper) http.RoundTripper) {
-		assert.Equal(t, dummyWebcallTimeout, webcallTimeout)
-		assert.Equal(t, dummySkipCertVerification, skipServerCertVerification)
-		assert.Equal(t, dummyClientCertificate, clientCertificate)
-	})
-	m.ExpectMethod(dummyCustomization, "DefaultTimeout", 1, func() time.Duration {
-		return dummyWebcallTimeout
-	})
-	m.ExpectMethod(dummyCustomization, "SkipServerCertVerification", 1, func() bool {
-		return dummySkipCertVerification
-	})
-	m.ExpectMethod(dummyCustomization, "ClientCert", 1, func() *tls.Certificate {
-		return dummyClientCertificate
-	})
-	m.ExpectFunc(logAppRoot, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, "application", category)
-		assert.Equal(t, "bootstrap", subcategory)
-		assert.Equal(t, dummyMessageFormat, messageFormat)
-		assert.Empty(t, parameters)
-	})
+	m.Mock(initializeHTTPClients).Expects(dummyWebcallTimeout, dummySkipCertVerification, dummyClientCertificate, gomocker.Anything()).Returns().Once()
+	m.Mock((*DefaultCustomization).DefaultTimeout).Expects(dummyCustomization).Returns(dummyWebcallTimeout).Once()
+	m.Mock((*DefaultCustomization).SkipServerCertVerification).Expects(dummyCustomization).Returns(dummySkipCertVerification).Once()
+	m.Mock((*DefaultCustomization).ClientCert).Expects(dummyCustomization).Returns(dummyClientCertificate).Once()
+	m.Mock(logAppRoot).Expects(dummySession, "application", "bootstrap", dummyMessageFormat).Returns().Once()
 
 	// SUT + act
 	bootstrap(
@@ -419,17 +348,8 @@ func TestPostBootstraping_Error(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectMethod(dummyCustomization, "PostBootstrap", 1, func() error {
-		return dummyError
-	})
-	m.ExpectFunc(logAppRoot, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, "application", category)
-		assert.Equal(t, "postBootstraping", subcategory)
-		assert.Equal(t, dummyMessageFormat, messageFormat)
-		assert.Equal(t, 1, len(parameters))
-		assert.Equal(t, dummyError, parameters[0])
-	})
+	m.Mock((*DefaultCustomization).PostBootstrap).Expects(dummyCustomization).Returns(dummyError).Once()
+	m.Mock(logAppRoot).Expects(dummySession, "application", "postBootstraping", dummyMessageFormat, dummyError).Returns().Once()
 
 	// SUT + act
 	var result = postBootstraping(
@@ -456,16 +376,8 @@ func TestPostBootstraping_Success(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectMethod(dummyCustomization, "PostBootstrap", 1, func() error {
-		return nil
-	})
-	m.ExpectFunc(logAppRoot, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, "application", category)
-		assert.Equal(t, "postBootstraping", subcategory)
-		assert.Equal(t, dummyMessageFormat, messageFormat)
-		assert.Empty(t, parameters)
-	})
+	m.Mock((*DefaultCustomization).PostBootstrap).Expects(dummyCustomization).Returns(nil).Once()
+	m.Mock(logAppRoot).Expects(dummySession, "application", "postBootstraping", dummyMessageFormat).Returns().Once()
 
 	// SUT + act
 	var result = postBootstraping(
@@ -500,29 +412,9 @@ func TestBeginApplication_HostError(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(logAppRoot, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, "application", category)
-		assert.Equal(t, "beginApplication", subcategory)
-		assert.Equal(t, "Trying to start server [%v] (v-%v)", messageFormat)
-		assert.Equal(t, 2, len(parameters))
-		assert.Equal(t, dummyName, parameters[0])
-		assert.Equal(t, dummyVersion, parameters[1])
-	}).ExpectFunc(logAppRoot, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, "application", category)
-		assert.Equal(t, "beginApplication", subcategory)
-		assert.Equal(t, "Failed to host server. Error: %+v", messageFormat)
-		assert.Equal(t, 1, len(parameters))
-		assert.Equal(t, dummyError, parameters[0])
-	})
-	m.ExpectFunc(hostServer, 1, func(app *application, session *session, shutdownSignal chan os.Signal, started *bool) error {
-		assert.Equal(t, dummyApplication, app)
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyShutdownSignal, shutdownSignal)
-		assert.Equal(t, &dummyStarted, started)
-		return dummyError
-	})
+	m.Mock(logAppRoot).Expects(dummySession, "application", "beginApplication", "Trying to start server [%v] (v-%v)", dummyName, dummyVersion).Returns().Once()
+	m.Mock(hostServer).Expects(dummyApplication, dummySession, dummyShutdownSignal, &dummyStarted).Returns(dummyError).Once()
+	m.Mock(logAppRoot).Expects(dummySession, "application", "beginApplication", "Failed to host server. Error: %+v", dummyError).Returns().Once()
 
 	// SUT + act
 	beginApplication(
@@ -553,28 +445,9 @@ func TestBeginApplication_HostSuccess(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(logAppRoot, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, "application", category)
-		assert.Equal(t, "beginApplication", subcategory)
-		assert.Equal(t, "Trying to start server [%v] (v-%v)", messageFormat)
-		assert.Equal(t, 2, len(parameters))
-		assert.Equal(t, dummyName, parameters[0])
-		assert.Equal(t, dummyVersion, parameters[1])
-	}).ExpectFunc(logAppRoot, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, "application", category)
-		assert.Equal(t, "beginApplication", subcategory)
-		assert.Equal(t, "Server hosting terminated", messageFormat)
-		assert.Empty(t, parameters)
-	})
-	m.ExpectFunc(hostServer, 1, func(app *application, session *session, shutdownSignal chan os.Signal, started *bool) error {
-		assert.Equal(t, dummyApplication, app)
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyShutdownSignal, shutdownSignal)
-		assert.Equal(t, &dummyStarted, started)
-		return nil
-	})
+	m.Mock(logAppRoot).Expects(dummySession, "application", "beginApplication", "Trying to start server [%v] (v-%v)", dummyName, dummyVersion).Returns().Once()
+	m.Mock(hostServer).Expects(dummyApplication, dummySession, dummyShutdownSignal, &dummyStarted).Returns(nil).Once()
+	m.Mock(logAppRoot).Expects(dummySession, "application", "beginApplication", "Server hosting terminated").Returns().Once()
 
 	// SUT + act
 	beginApplication(
@@ -599,17 +472,8 @@ func TestEndApplication_Error(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectMethod(dummyCustomization, "AppClosing", 1, func() error {
-		return dummyError
-	})
-	m.ExpectFunc(logAppRoot, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, "application", category)
-		assert.Equal(t, "endApplication", subcategory)
-		assert.Equal(t, dummyMessageFormat, messageFormat)
-		assert.Equal(t, 1, len(parameters))
-		assert.Equal(t, dummyError, parameters[0])
-	})
+	m.Mock((*DefaultCustomization).AppClosing).Expects(dummyCustomization).Returns(dummyError).Once()
+	m.Mock(logAppRoot).Expects(dummySession, "application", "endApplication", dummyMessageFormat, dummyError).Returns().Once()
 
 	// SUT + act
 	endApplication(
@@ -633,16 +497,8 @@ func TestEndApplication_Success(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectMethod(dummyCustomization, "AppClosing", 1, func() error {
-		return nil
-	})
-	m.ExpectFunc(logAppRoot, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, "application", category)
-		assert.Equal(t, "endApplication", subcategory)
-		assert.Equal(t, dummyMessageFormat, messageFormat)
-		assert.Empty(t, parameters)
-	})
+	m.Mock((*DefaultCustomization).AppClosing).Expects(dummyCustomization).Returns(nil).Once()
+	m.Mock(logAppRoot).Expects(dummySession, "application", "endApplication", dummyMessageFormat).Returns().Once()
 
 	// SUT + act
 	endApplication(

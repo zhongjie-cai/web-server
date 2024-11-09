@@ -10,7 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"github.com/zhongjie-cai/gomocker"
+	"github.com/zhongjie-cai/gomocker/v2"
 )
 
 func TestMarshalIgnoreError_Empty(t *testing.T) {
@@ -272,10 +272,7 @@ func TestTryUnmarshal_NilDataTemplate(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(isInterfaceValueNil, 1, func(i interface{}) bool {
-		assert.Equal(t, &dummyDataTemplate, i)
-		return true
-	})
+	m.Mock(isInterfaceValueNil).Expects(&dummyDataTemplate).Returns(true).Once()
 
 	// SUT + act
 	var err = tryUnmarshal(
@@ -350,15 +347,8 @@ func TestTryUnmarshal_WithQuoteJSONSuccess(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(isInterfaceValueNil, 1, func(i interface{}) bool {
-		assert.Equal(t, &dummyDataTemplate, i)
-		return false
-	})
-	m.ExpectFunc(tryUnmarshalPrimitiveTypes, 1, func(value string, dataTemplate interface{}) bool {
-		assert.Equal(t, dummyValue, value)
-		assert.Equal(t, &dummyDataTemplate, dataTemplate)
-		return false
-	})
+	m.Mock(isInterfaceValueNil).Expects(&dummyDataTemplate).Returns(false).Once()
+	m.Mock(tryUnmarshalPrimitiveTypes).Expects(dummyValue, &dummyDataTemplate).Returns(false).Once()
 
 	// SUT + act
 	var err = tryUnmarshal(
@@ -381,12 +371,7 @@ func TestTryUnmarshal_Failure(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(fmt.Errorf, 1, func(format string, a ...interface{}) error {
-		assert.Equal(t, "unable to unmarshal value [%v] into data template", format)
-		assert.Equal(t, 1, len(a))
-		assert.Equal(t, dummyValue, a[0])
-		return dummyError
-	})
+	m.Mock(fmt.Errorf).Expects("unable to unmarshal value [%v] into data template", dummyValue).Returns(dummyError).Once()
 
 	// SUT + act
 	var err = tryUnmarshal(

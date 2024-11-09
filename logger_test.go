@@ -7,8 +7,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
-	"github.com/zhongjie-cai/gomocker"
+	"github.com/zhongjie-cai/gomocker/v2"
 )
 
 func TestPrepareLoggingFunc_NilSession(t *testing.T) {
@@ -57,15 +56,8 @@ func TestPrepareLoggingFunc_HappyPath(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectMethod(dummyCustomization, "Log", 1, func(self *DefaultCustomization, session Session, logType LogType, logLevel LogLevel, category, subcategory, description string) {
-		assert.Equal(t, dummyCustomization, self)
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyLogType, logType)
-		assert.Equal(t, dummyLogLevel, logLevel)
-		assert.Equal(t, dummyCategory, category)
-		assert.Equal(t, dummySubcategory, subcategory)
-		assert.Equal(t, dummyDescription, description)
-	})
+	m.Mock((*DefaultCustomization).Log).Expects(dummyCustomization, dummySession, dummyLogType, dummyLogLevel,
+		dummyCategory, dummySubcategory, dummyDescription).Returns().Once()
 
 	// SUT + act
 	prepareLogging(
@@ -97,18 +89,9 @@ func TestLogAppRoot(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(prepareLogging, 1, func(session *session, logType LogType, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, LogTypeAppRoot, logType)
-		assert.Equal(t, LogLevelInfo, logLevel)
-		assert.Equal(t, dummyCategory, category)
-		assert.Equal(t, dummySubcategory, subcategory)
-		assert.Equal(t, dummyMessageFormat, messageFormat)
-		assert.Equal(t, 3, len(parameters))
-		assert.Equal(t, dummyParameter1, parameters[0])
-		assert.Equal(t, dummyParameter2, parameters[1])
-		assert.Equal(t, dummyParameter3, parameters[2])
-	})
+	m.Mock(prepareLogging).Expects(dummySession, LogTypeAppRoot, LogLevelInfo,
+		dummyCategory, dummySubcategory, dummyMessageFormat,
+		dummyParameter1, dummyParameter2, dummyParameter3).Returns().Once()
 
 	// SUT + act
 	logAppRoot(
@@ -138,18 +121,9 @@ func TestLogEndpointEnter(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(prepareLogging, 1, func(session *session, logType LogType, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, LogTypeEndpointEnter, logType)
-		assert.Equal(t, LogLevelInfo, logLevel)
-		assert.Equal(t, dummyCategory, category)
-		assert.Equal(t, dummySubcategory, subcategory)
-		assert.Equal(t, dummyMessageFormat, messageFormat)
-		assert.Equal(t, 3, len(parameters))
-		assert.Equal(t, dummyParameter1, parameters[0])
-		assert.Equal(t, dummyParameter2, parameters[1])
-		assert.Equal(t, dummyParameter3, parameters[2])
-	})
+	m.Mock(prepareLogging).Expects(dummySession, LogTypeEndpointEnter, LogLevelInfo,
+		dummyCategory, dummySubcategory, dummyMessageFormat,
+		dummyParameter1, dummyParameter2, dummyParameter3).Returns().Once()
 
 	// SUT + act
 	logEndpointEnter(
@@ -179,18 +153,9 @@ func TestLogEndpointRequest(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(prepareLogging, 1, func(session *session, logType LogType, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, LogTypeEndpointRequest, logType)
-		assert.Equal(t, LogLevelInfo, logLevel)
-		assert.Equal(t, dummyCategory, category)
-		assert.Equal(t, dummySubcategory, subcategory)
-		assert.Equal(t, dummyMessageFormat, messageFormat)
-		assert.Equal(t, 3, len(parameters))
-		assert.Equal(t, dummyParameter1, parameters[0])
-		assert.Equal(t, dummyParameter2, parameters[1])
-		assert.Equal(t, dummyParameter3, parameters[2])
-	})
+	m.Mock(prepareLogging).Expects(dummySession, LogTypeEndpointRequest, LogLevelInfo,
+		dummyCategory, dummySubcategory, dummyMessageFormat,
+		dummyParameter1, dummyParameter2, dummyParameter3).Returns().Once()
 
 	// SUT + act
 	logEndpointRequest(
@@ -220,18 +185,9 @@ func TestLogMethodEnter(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(prepareLogging, 1, func(session *session, logType LogType, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, LogTypeMethodEnter, logType)
-		assert.Equal(t, LogLevelInfo, logLevel)
-		assert.Equal(t, dummyCategory, category)
-		assert.Equal(t, dummySubcategory, subcategory)
-		assert.Equal(t, dummyMessageFormat, messageFormat)
-		assert.Equal(t, 3, len(parameters))
-		assert.Equal(t, dummyParameter1, parameters[0])
-		assert.Equal(t, dummyParameter2, parameters[1])
-		assert.Equal(t, dummyParameter3, parameters[2])
-	})
+	m.Mock(prepareLogging).Expects(dummySession, LogTypeMethodEnter, LogLevelInfo,
+		dummyCategory, dummySubcategory, dummyMessageFormat,
+		dummyParameter1, dummyParameter2, dummyParameter3).Returns().Once()
 
 	// SUT + act
 	logMethodEnter(
@@ -261,18 +217,9 @@ func TestLogMethodParameter(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(prepareLogging, 1, func(session *session, logType LogType, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, LogTypeMethodParameter, logType)
-		assert.Equal(t, LogLevelInfo, logLevel)
-		assert.Equal(t, dummyCategory, category)
-		assert.Equal(t, dummySubcategory, subcategory)
-		assert.Equal(t, dummyMessageFormat, messageFormat)
-		assert.Equal(t, 3, len(parameters))
-		assert.Equal(t, dummyParameter1, parameters[0])
-		assert.Equal(t, dummyParameter2, parameters[1])
-		assert.Equal(t, dummyParameter3, parameters[2])
-	})
+	m.Mock(prepareLogging).Expects(dummySession, LogTypeMethodParameter, LogLevelInfo,
+		dummyCategory, dummySubcategory, dummyMessageFormat,
+		dummyParameter1, dummyParameter2, dummyParameter3).Returns().Once()
 
 	// SUT + act
 	logMethodParameter(
@@ -303,18 +250,9 @@ func TestLogMethodLogic(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(prepareLogging, 1, func(session *session, logType LogType, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, LogTypeMethodLogic, logType)
-		assert.Equal(t, dummyLogLevel, logLevel)
-		assert.Equal(t, dummyCategory, category)
-		assert.Equal(t, dummySubcategory, subcategory)
-		assert.Equal(t, dummyMessageFormat, messageFormat)
-		assert.Equal(t, 3, len(parameters))
-		assert.Equal(t, dummyParameter1, parameters[0])
-		assert.Equal(t, dummyParameter2, parameters[1])
-		assert.Equal(t, dummyParameter3, parameters[2])
-	})
+	m.Mock(prepareLogging).Expects(dummySession, LogTypeMethodLogic, dummyLogLevel,
+		dummyCategory, dummySubcategory, dummyMessageFormat,
+		dummyParameter1, dummyParameter2, dummyParameter3).Returns().Once()
 
 	// SUT + act
 	logMethodLogic(
@@ -345,18 +283,9 @@ func TestLogWebcallStart(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(prepareLogging, 1, func(session *session, logType LogType, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, LogTypeWebcallStart, logType)
-		assert.Equal(t, LogLevelInfo, logLevel)
-		assert.Equal(t, dummyCategory, category)
-		assert.Equal(t, dummySubcategory, subcategory)
-		assert.Equal(t, dummyMessageFormat, messageFormat)
-		assert.Equal(t, 3, len(parameters))
-		assert.Equal(t, dummyParameter1, parameters[0])
-		assert.Equal(t, dummyParameter2, parameters[1])
-		assert.Equal(t, dummyParameter3, parameters[2])
-	})
+	m.Mock(prepareLogging).Expects(dummySession, LogTypeWebcallStart, LogLevelInfo,
+		dummyCategory, dummySubcategory, dummyMessageFormat,
+		dummyParameter1, dummyParameter2, dummyParameter3).Returns().Once()
 
 	// SUT + act
 	logWebcallStart(
@@ -386,18 +315,9 @@ func TestLogWebcallRequest(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(prepareLogging, 1, func(session *session, logType LogType, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, LogTypeWebcallRequest, logType)
-		assert.Equal(t, LogLevelInfo, logLevel)
-		assert.Equal(t, dummyCategory, category)
-		assert.Equal(t, dummySubcategory, subcategory)
-		assert.Equal(t, dummyMessageFormat, messageFormat)
-		assert.Equal(t, 3, len(parameters))
-		assert.Equal(t, dummyParameter1, parameters[0])
-		assert.Equal(t, dummyParameter2, parameters[1])
-		assert.Equal(t, dummyParameter3, parameters[2])
-	})
+	m.Mock(prepareLogging).Expects(dummySession, LogTypeWebcallRequest, LogLevelInfo,
+		dummyCategory, dummySubcategory, dummyMessageFormat,
+		dummyParameter1, dummyParameter2, dummyParameter3).Returns().Once()
 
 	// SUT + act
 	logWebcallRequest(
@@ -427,18 +347,9 @@ func TestLogWebcallResponse(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(prepareLogging, 1, func(session *session, logType LogType, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, LogTypeWebcallResponse, logType)
-		assert.Equal(t, LogLevelInfo, logLevel)
-		assert.Equal(t, dummyCategory, category)
-		assert.Equal(t, dummySubcategory, subcategory)
-		assert.Equal(t, dummyMessageFormat, messageFormat)
-		assert.Equal(t, 3, len(parameters))
-		assert.Equal(t, dummyParameter1, parameters[0])
-		assert.Equal(t, dummyParameter2, parameters[1])
-		assert.Equal(t, dummyParameter3, parameters[2])
-	})
+	m.Mock(prepareLogging).Expects(dummySession, LogTypeWebcallResponse, LogLevelInfo,
+		dummyCategory, dummySubcategory, dummyMessageFormat,
+		dummyParameter1, dummyParameter2, dummyParameter3).Returns().Once()
 
 	// SUT + act
 	logWebcallResponse(
@@ -468,18 +379,9 @@ func TestLogWebcallFinish(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(prepareLogging, 1, func(session *session, logType LogType, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, LogTypeWebcallFinish, logType)
-		assert.Equal(t, LogLevelInfo, logLevel)
-		assert.Equal(t, dummyCategory, category)
-		assert.Equal(t, dummySubcategory, subcategory)
-		assert.Equal(t, dummyMessageFormat, messageFormat)
-		assert.Equal(t, 3, len(parameters))
-		assert.Equal(t, dummyParameter1, parameters[0])
-		assert.Equal(t, dummyParameter2, parameters[1])
-		assert.Equal(t, dummyParameter3, parameters[2])
-	})
+	m.Mock(prepareLogging).Expects(dummySession, LogTypeWebcallFinish, LogLevelInfo,
+		dummyCategory, dummySubcategory, dummyMessageFormat,
+		dummyParameter1, dummyParameter2, dummyParameter3).Returns().Once()
 
 	// SUT + act
 	logWebcallFinish(
@@ -509,18 +411,9 @@ func TestLogMethodReturn(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(prepareLogging, 1, func(session *session, logType LogType, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, LogTypeMethodReturn, logType)
-		assert.Equal(t, LogLevelInfo, logLevel)
-		assert.Equal(t, dummyCategory, category)
-		assert.Equal(t, dummySubcategory, subcategory)
-		assert.Equal(t, dummyMessageFormat, messageFormat)
-		assert.Equal(t, 3, len(parameters))
-		assert.Equal(t, dummyParameter1, parameters[0])
-		assert.Equal(t, dummyParameter2, parameters[1])
-		assert.Equal(t, dummyParameter3, parameters[2])
-	})
+	m.Mock(prepareLogging).Expects(dummySession, LogTypeMethodReturn, LogLevelInfo,
+		dummyCategory, dummySubcategory, dummyMessageFormat,
+		dummyParameter1, dummyParameter2, dummyParameter3).Returns().Once()
 
 	// SUT + act
 	logMethodReturn(
@@ -550,18 +443,9 @@ func TestLogMethodExit(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(prepareLogging, 1, func(session *session, logType LogType, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, LogTypeMethodExit, logType)
-		assert.Equal(t, LogLevelInfo, logLevel)
-		assert.Equal(t, dummyCategory, category)
-		assert.Equal(t, dummySubcategory, subcategory)
-		assert.Equal(t, dummyMessageFormat, messageFormat)
-		assert.Equal(t, 3, len(parameters))
-		assert.Equal(t, dummyParameter1, parameters[0])
-		assert.Equal(t, dummyParameter2, parameters[1])
-		assert.Equal(t, dummyParameter3, parameters[2])
-	})
+	m.Mock(prepareLogging).Expects(dummySession, LogTypeMethodExit, LogLevelInfo,
+		dummyCategory, dummySubcategory, dummyMessageFormat,
+		dummyParameter1, dummyParameter2, dummyParameter3).Returns().Once()
 
 	// SUT + act
 	logMethodExit(
@@ -591,18 +475,9 @@ func TestLogEndpointResponse(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(prepareLogging, 1, func(session *session, logType LogType, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, LogTypeEndpointResponse, logType)
-		assert.Equal(t, LogLevelInfo, logLevel)
-		assert.Equal(t, dummyCategory, category)
-		assert.Equal(t, dummySubcategory, subcategory)
-		assert.Equal(t, dummyMessageFormat, messageFormat)
-		assert.Equal(t, 3, len(parameters))
-		assert.Equal(t, dummyParameter1, parameters[0])
-		assert.Equal(t, dummyParameter2, parameters[1])
-		assert.Equal(t, dummyParameter3, parameters[2])
-	})
+	m.Mock(prepareLogging).Expects(dummySession, LogTypeEndpointResponse, LogLevelInfo,
+		dummyCategory, dummySubcategory, dummyMessageFormat,
+		dummyParameter1, dummyParameter2, dummyParameter3).Returns().Once()
 
 	// SUT + act
 	logEndpointResponse(
@@ -632,18 +507,9 @@ func TestLogEndpointExit(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(prepareLogging, 1, func(session *session, logType LogType, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, LogTypeEndpointExit, logType)
-		assert.Equal(t, LogLevelInfo, logLevel)
-		assert.Equal(t, dummyCategory, category)
-		assert.Equal(t, dummySubcategory, subcategory)
-		assert.Equal(t, dummyMessageFormat, messageFormat)
-		assert.Equal(t, 3, len(parameters))
-		assert.Equal(t, dummyParameter1, parameters[0])
-		assert.Equal(t, dummyParameter2, parameters[1])
-		assert.Equal(t, dummyParameter3, parameters[2])
-	})
+	m.Mock(prepareLogging).Expects(dummySession, LogTypeEndpointExit, LogLevelInfo,
+		dummyCategory, dummySubcategory, dummyMessageFormat,
+		dummyParameter1, dummyParameter2, dummyParameter3).Returns().Once()
 
 	// SUT + act
 	logEndpointExit(

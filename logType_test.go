@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/zhongjie-cai/gomocker"
+	"github.com/zhongjie-cai/gomocker/v2"
 )
 
 func TestString_AppRoot(t *testing.T) {
@@ -131,11 +131,7 @@ func TestNewLogType_NoMatchFound(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(strings.Split, 1, func(s, sep string) []string {
-		assert.Equal(t, dummyValue, s)
-		assert.Equal(t, "|", sep)
-		return []string{dummyValue}
-	})
+	m.Mock(strings.Split).Expects(dummyValue, "|").Returns([]string{dummyValue}).Once()
 
 	// SUT + act
 	var result = NewLogType(dummyValue)
@@ -152,11 +148,7 @@ func TestNewLogType_AppRoot(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(strings.Split, 1, func(s, sep string) []string {
-		assert.Equal(t, dummyValue, s)
-		assert.Equal(t, "|", sep)
-		return []string{dummyValue}
-	})
+	m.Mock(strings.Split).Expects(dummyValue, "|").Returns([]string{dummyValue}).Once()
 
 	// SUT + act
 	var result = NewLogType(dummyValue)
@@ -171,11 +163,7 @@ func TestNewLogType_HappyPath(t *testing.T) {
 		var m = gomocker.NewMocker(t)
 
 		// expect
-		m.ExpectFunc(strings.Split, 1, func(s, sep string) []string {
-			assert.Equal(t, key, s)
-			assert.Equal(t, "|", sep)
-			return []string{key}
-		})
+		m.Mock(strings.Split).Expects(key, "|").Returns([]string{key}).Once()
 
 		// SUT + act
 		var result = NewLogType(key)

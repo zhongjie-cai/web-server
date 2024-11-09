@@ -17,7 +17,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
-	"github.com/zhongjie-cai/gomocker"
+	"github.com/zhongjie-cai/gomocker/v2"
 )
 
 func TestHostServer_ErrorRegisterRoutes(t *testing.T) {
@@ -36,11 +36,7 @@ func TestHostServer_ErrorRegisterRoutes(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(instantiateRouter, 1, func(app *application, session *session) (*mux.Router, error) {
-		assert.Equal(t, dummyApplication, app)
-		assert.Equal(t, dummySession, session)
-		return dummyRouter, dummyError
-	})
+	m.Mock(instantiateRouter).Expects(dummyApplication, dummySession).Returns(dummyRouter, dummyError).Once()
 
 	// SUT + act
 	var err = hostServer(
@@ -70,38 +66,11 @@ func TestHostServer_RunServerFailure(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(instantiateRouter, 1, func(app *application, session *session) (*mux.Router, error) {
-		assert.Equal(t, dummyApplication, app)
-		assert.Equal(t, dummySession, session)
-		return dummyRouter, nil
-	})
-	m.ExpectFunc(logAppRoot, 2, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, "server", category)
-		assert.Equal(t, "hostServer", subcategory)
-		if m.FuncCalledCount(logAppRoot) == 1 {
-			assert.Equal(t, "Targeting address [%v]", messageFormat)
-			assert.Equal(t, 1, len(parameters))
-			assert.Equal(t, dummyAddress, parameters[0])
-		} else if m.FuncCalledCount(logAppRoot) == 2 {
-			assert.Equal(t, "Server terminated", messageFormat)
-			assert.Empty(t, parameters)
-		}
-	})
-	m.ExpectFunc(runServer, 1, func(address string, session *session, router *mux.Router, shutdownSignal chan os.Signal, started *bool) bool {
-		assert.Equal(t, dummyAddress, address)
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyRouter, router)
-		assert.Equal(t, dummyShutdownSignal, shutdownSignal)
-		assert.Equal(t, &dummyStarted, started)
-		return false
-	})
-	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		assert.Equal(t, errorCodeGeneralFailure, errorCode)
-		assert.Equal(t, errorMessageHostServer, errorMessage)
-		assert.Empty(t, innerErrors)
-		return dummyAppError
-	})
+	m.Mock(instantiateRouter).Expects(dummyApplication, dummySession).Returns(dummyRouter, nil).Once()
+	m.Mock(logAppRoot).Expects(dummySession, "server", "hostServer", "Targeting address [%v]", dummyAddress).Returns().Once()
+	m.Mock(logAppRoot).Expects(dummySession, "server", "hostServer", "Server terminated").Returns().Once()
+	m.Mock(runServer).Expects(dummyAddress, dummySession, dummyRouter, dummyShutdownSignal, &dummyStarted).Returns(false).Once()
+	m.Mock(newAppError).Expects(errorCodeGeneralFailure, errorMessageHostServer, []error{}).Returns(dummyAppError).Once()
 
 	// SUT + act
 	var err = hostServer(
@@ -130,32 +99,10 @@ func TestHostServer_RunServerSuccess(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(instantiateRouter, 1, func(app *application, session *session) (*mux.Router, error) {
-		assert.Equal(t, dummyApplication, app)
-		assert.Equal(t, dummySession, session)
-		return dummyRouter, nil
-	})
-	m.ExpectFunc(logAppRoot, 2, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, "server", category)
-		assert.Equal(t, "hostServer", subcategory)
-		if m.FuncCalledCount(logAppRoot) == 1 {
-			assert.Equal(t, "Targeting address [%v]", messageFormat)
-			assert.Equal(t, 1, len(parameters))
-			assert.Equal(t, dummyAddress, parameters[0])
-		} else if m.FuncCalledCount(logAppRoot) == 2 {
-			assert.Equal(t, "Server closed", messageFormat)
-			assert.Empty(t, parameters)
-		}
-	})
-	m.ExpectFunc(runServer, 1, func(address string, session *session, router *mux.Router, shutdownSignal chan os.Signal, started *bool) bool {
-		assert.Equal(t, dummyAddress, address)
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyRouter, router)
-		assert.Equal(t, dummyShutdownSignal, shutdownSignal)
-		assert.Equal(t, &dummyStarted, started)
-		return true
-	})
+	m.Mock(instantiateRouter).Expects(dummyApplication, dummySession).Returns(dummyRouter, nil).Once()
+	m.Mock(logAppRoot).Expects(dummySession, "server", "hostServer", "Targeting address [%v]", dummyAddress).Returns().Once()
+	m.Mock(logAppRoot).Expects(dummySession, "server", "hostServer", "Server closed").Returns().Once()
+	m.Mock(runServer).Expects(dummyAddress, dummySession, dummyRouter, dummyShutdownSignal, &dummyStarted).Returns(true).Once()
 
 	// SUT + act
 	var err = hostServer(
@@ -184,14 +131,8 @@ func TestCreateServer_NoServerCert(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectMethod(dummyCustomization, "ServerCert", 1, func() *tls.Certificate {
-		return dummyServerCert
-	})
-	m.ExpectMethod(dummyCustomization, "WrapHandler", 1, func(self *DefaultCustomization, handler http.Handler) http.Handler {
-		assert.Equal(t, dummyCustomization, self)
-		assert.Equal(t, dummyRouter, handler)
-		return dummyRouter
-	})
+	m.Mock((*DefaultCustomization).ServerCert).Expects(dummyCustomization).Returns(dummyServerCert).Once()
+	m.Mock((*DefaultCustomization).WrapHandler).Expects(dummyCustomization, dummyRouter).Returns(dummyRouter).Once()
 
 	// SUT + act
 	var server, https = createServer(
@@ -231,17 +172,9 @@ func TestCreateServer_WithServerCert_NoCaCertPool(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectMethod(dummyCustomization, "ServerCert", 1, func() *tls.Certificate {
-		return dummyServerCert
-	})
-	m.ExpectMethod(dummyCustomization, "CaCertPool", 1, func() *x509.CertPool {
-		return dummyCaCertPool
-	})
-	m.ExpectMethod(dummyCustomization, "WrapHandler", 1, func(self *DefaultCustomization, handler http.Handler) http.Handler {
-		assert.Equal(t, dummyCustomization, self)
-		assert.Equal(t, dummyRouter, handler)
-		return dummyRouter
-	})
+	m.Mock((*DefaultCustomization).ServerCert).Expects(dummyCustomization).Returns(dummyServerCert).Once()
+	m.Mock((*DefaultCustomization).CaCertPool).Expects(dummyCustomization).Returns(dummyCaCertPool).Once()
+	m.Mock((*DefaultCustomization).WrapHandler).Expects(dummyCustomization, dummyRouter).Returns(dummyRouter).Once()
 
 	// SUT + act
 	var server, https = createServer(
@@ -282,17 +215,9 @@ func TestCreateServer_WithServerCert_WithCaCertPool(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectMethod(dummyCustomization, "ServerCert", 1, func() *tls.Certificate {
-		return dummyServerCert
-	})
-	m.ExpectMethod(dummyCustomization, "CaCertPool", 1, func() *x509.CertPool {
-		return dummyCaCertPool
-	})
-	m.ExpectMethod(dummyCustomization, "WrapHandler", 1, func(self *DefaultCustomization, handler http.Handler) http.Handler {
-		assert.Equal(t, dummyCustomization, self)
-		assert.Equal(t, dummyRouter, handler)
-		return dummyRouter
-	})
+	m.Mock((*DefaultCustomization).ServerCert).Expects(dummyCustomization).Returns(dummyServerCert).Once()
+	m.Mock((*DefaultCustomization).CaCertPool).Expects(dummyCustomization).Returns(dummyCaCertPool).Once()
+	m.Mock((*DefaultCustomization).WrapHandler).Expects(dummyCustomization, dummyRouter).Returns(dummyRouter).Once()
 
 	// SUT + act
 	var server, https = createServer(
@@ -332,16 +257,8 @@ func TestListenAndServe_NoListener_HTTPS(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectMethod(dummyCustomization, "Listener", 1, func(self *DefaultCustomization) net.Listener {
-		assert.Equal(t, dummyCustomization, self)
-		return nil
-	})
-	m.ExpectMethod(dummyServer, "ListenAndServeTLS", 1, func(self *http.Server, certFile string, keyFile string) error {
-		assert.Equal(t, dummyServer, self)
-		assert.Equal(t, "", certFile)
-		assert.Equal(t, "", keyFile)
-		return dummyError
-	})
+	m.Mock((*DefaultCustomization).Listener).Expects(dummyCustomization).Returns(nil).Once()
+	m.Mock((*http.Server).ListenAndServeTLS).Expects(dummyServer, "", "").Returns(dummyError).Once()
 
 	// SUT + act
 	var err = listenAndServe(
@@ -369,14 +286,8 @@ func TestListenAndServe_NoListener_HTTP(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectMethod(dummyCustomization, "Listener", 1, func(self *DefaultCustomization) net.Listener {
-		assert.Equal(t, dummyCustomization, self)
-		return nil
-	})
-	m.ExpectMethod(dummyServer, "ListenAndServe", 1, func(self *http.Server) error {
-		assert.Equal(t, dummyServer, self)
-		return dummyError
-	})
+	m.Mock((*DefaultCustomization).Listener).Expects(dummyCustomization).Returns(nil).Once()
+	m.Mock((*http.Server).ListenAndServe).Expects(dummyServer).Returns(dummyError).Once()
 
 	// SUT + act
 	var err = listenAndServe(
@@ -405,17 +316,8 @@ func TestListenAndServe_WithListener_HTTPS(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectMethod(dummyCustomization, "Listener", 1, func(self *DefaultCustomization) net.Listener {
-		assert.Equal(t, dummyCustomization, self)
-		return dummyListener
-	})
-	m.ExpectMethod(dummyServer, "ServeTLS", 1, func(self *http.Server, listener net.Listener, certFile string, keyFile string) error {
-		assert.Equal(t, dummyServer, self)
-		assert.Equal(t, dummyListener, listener)
-		assert.Equal(t, "", certFile)
-		assert.Equal(t, "", keyFile)
-		return dummyError
-	})
+	m.Mock((*DefaultCustomization).Listener).Expects(dummyCustomization).Returns(dummyListener).Once()
+	m.Mock((*http.Server).ServeTLS).Expects(dummyServer, dummyListener, "", "").Returns(dummyError).Once()
 
 	// SUT + act
 	var err = listenAndServe(
@@ -444,15 +346,8 @@ func TestListenAndServe_WithListener_HTTP(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectMethod(dummyCustomization, "Listener", 1, func(self *DefaultCustomization) net.Listener {
-		assert.Equal(t, dummyCustomization, self)
-		return dummyListener
-	})
-	m.ExpectMethod(dummyServer, "Serve", 1, func(self *http.Server, listener net.Listener) error {
-		assert.Equal(t, dummyServer, self)
-		assert.Equal(t, dummyListener, listener)
-		return dummyError
-	})
+	m.Mock((*DefaultCustomization).Listener).Expects(dummyCustomization).Returns(dummyListener).Once()
+	m.Mock((*http.Server).Serve).Expects(dummyServer, dummyListener).Returns(dummyError).Once()
 
 	// SUT + act
 	var err = listenAndServe(
@@ -524,19 +419,8 @@ func TestEvaluateServerErrors_OtherErrors(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(logAppRoot, 2, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, "server", category)
-		assert.Equal(t, "runServer", subcategory)
-		assert.Equal(t, 1, len(parameters))
-		if m.FuncCalledCount(logAppRoot) == 1 {
-			assert.Equal(t, "Host error found: %+v", messageFormat)
-			assert.Equal(t, dummyHostError, parameters[0])
-		} else if m.FuncCalledCount(logAppRoot) == 2 {
-			assert.Equal(t, "Shutdown error found: %+v", messageFormat)
-			assert.Equal(t, dummyShutDownError, parameters[0])
-		}
-	})
+	m.Mock(logAppRoot).Expects(dummySession, "server", "runServer", "Host error found: %+v", dummyHostError).Returns().Once()
+	m.Mock(logAppRoot).Expects(dummySession, "server", "runServer", "Shutdown error found: %+v", dummyShutDownError).Returns().Once()
 
 	// SUT + act
 	var result = evaluateServerErrors(
@@ -560,13 +444,12 @@ func TestRunServer_HappyPath(t *testing.T) {
 	var dummyRouter = &mux.Router{}
 	var dummyShutdownSignal = make(chan os.Signal)
 	var dummyStarted = false
-	var cancelCallbackExpected = 1
-	var cancelCallbackCalled = 0
 	var dummyServer = &http.Server{}
 	var dummyHTTPS = rand.Intn(100) > 50
 	var dummyHostError = errors.New("some host error message")
 	var dummyBackgroundContext = context.Background()
 	var dummyRuntimeContext = context.TODO()
+	var dummyCallback = func() {}
 	var dummyGraceShutdownWaitTime = time.Duration(rand.Intn(100)) * time.Second
 	var dummyShutDownError = errors.New("some shut down error message")
 	var dummyResult = rand.Intn(100) > 50
@@ -575,60 +458,19 @@ func TestRunServer_HappyPath(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(createServer, 1, func(address string, session *session, router *mux.Router) (*http.Server, bool) {
-		assert.Equal(t, dummyAddress, address)
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyRouter, router)
-		return dummyServer, dummyHTTPS
-	})
-	m.ExpectFunc(signal.Notify, 1, func(c chan<- os.Signal, sig ...os.Signal) {
-		assert.Equal(t, 2, len(sig))
-		assert.Equal(t, os.Interrupt, sig[0])
-		assert.Equal(t, syscall.SIGTERM, sig[1])
-	})
-	m.ExpectFunc(listenAndServe, 1, func(session *session, server *http.Server, serveHTTPS bool) error {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyServer, server)
-		assert.Equal(t, dummyHTTPS, serveHTTPS)
-		assert.True(t, dummyStarted)
-		return dummyHostError
-	})
-	m.ExpectFunc(haltServer, 1, func(shutdownSignal chan os.Signal) {
-		shutdownSignal <- os.Interrupt
-	})
-	m.ExpectFunc(logAppRoot, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, "server", category)
-		assert.Equal(t, "runServer", subcategory)
-		assert.Equal(t, "Interrupt signal received: Terminating server", messageFormat)
-		assert.Empty(t, parameters)
-		assert.False(t, dummyStarted)
-	})
-	m.ExpectFunc(context.Background, 1, func() context.Context {
-		return dummyBackgroundContext
-	})
-	var cancelCallback = func() {
-		cancelCallbackCalled++
-	}
-	m.ExpectMethod(dummyCustomization, "GraceShutdownWaitTime", 1, func() time.Duration {
-		return dummyGraceShutdownWaitTime
-	})
-	m.ExpectFunc(context.WithTimeout, 1, func(parent context.Context, timeout time.Duration) (context.Context, context.CancelFunc) {
-		assert.Equal(t, dummyBackgroundContext, parent)
-		assert.Equal(t, dummyGraceShutdownWaitTime, timeout)
-		return dummyRuntimeContext, cancelCallback
-	})
-	m.ExpectFunc(shutdownServer, 1, func(runtimeContext context.Context, server *http.Server) error {
-		assert.Equal(t, dummyRuntimeContext, runtimeContext)
-		assert.Equal(t, dummyServer, server)
-		return dummyShutDownError
-	})
-	m.ExpectFunc(evaluateServerErrors, 1, func(session *session, hostError error, shutdownError error) bool {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyHostError, hostError)
-		assert.Equal(t, dummyShutDownError, shutdownError)
-		return dummyResult
-	})
+	m.Mock(createServer).Expects(dummyAddress, dummySession, dummyRouter).Returns(dummyServer, dummyHTTPS).Once()
+	m.Mock(signal.Notify).Expects(gomocker.Anything(), os.Interrupt, syscall.SIGTERM).Returns().Once()
+	m.Mock(listenAndServe).Expects(dummySession, dummyServer, dummyHTTPS).Returns(dummyHostError).Once()
+	m.Mock(haltServer).Expects(gomocker.Anything()).Returns().SideEffect(func(index int, params ...interface{}) {
+		dummyShutdownSignal <- os.Interrupt
+	}).Once()
+	m.Mock(logAppRoot).Expects(dummySession, "server", "runServer", "Interrupt signal received: Terminating server").Returns().Once()
+	m.Mock(context.Background).Expects().Returns(dummyBackgroundContext).Once()
+	m.Mock((*DefaultCustomization).GraceShutdownWaitTime).Expects(dummyCustomization).Returns(dummyGraceShutdownWaitTime).Once()
+	m.Mock(context.WithTimeout).Expects(dummyBackgroundContext, dummyGraceShutdownWaitTime).Returns(dummyRuntimeContext, dummyCallback).Once()
+	m.Mock(shutdownServer).Expects(dummyRuntimeContext, dummyServer).Returns(dummyShutDownError).Once()
+	m.Mock(evaluateServerErrors).Expects(dummySession, dummyHostError, dummyShutDownError).Returns(dummyResult).Once()
+	m.Mock(dummyCallback).Expects().Returns().Once()
 
 	// SUT + act
 	var result = runServer(
@@ -642,7 +484,6 @@ func TestRunServer_HappyPath(t *testing.T) {
 	// assert
 	assert.Equal(t, dummyResult, result)
 	assert.False(t, dummyStarted)
-	assert.Equal(t, cancelCallbackExpected, cancelCallbackCalled)
 }
 
 func TestHaltServer(t *testing.T) {

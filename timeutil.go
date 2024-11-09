@@ -4,7 +4,7 @@ import "time"
 
 const (
 	dateFormat     string = "2006-01-02"
-	timeFormat     string = "15:04:05"
+	timeFormat     string = "15:04:05.999"
 	dateTimeFormat string = dateFormat + "T" + timeFormat
 )
 

@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/zhongjie-cai/gomocker"
+	"github.com/zhongjie-cai/gomocker/v2"
 )
 
 func TestSkipResponseHandling(t *testing.T) {
@@ -80,11 +80,7 @@ func TestConstructResponse_ResponseError(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectMethod(dummyCustomization, "InterpretError", 1, func(self *DefaultCustomization, err error) (int, string) {
-		assert.Equal(t, dummyCustomization, self)
-		assert.Equal(t, dummyResponseError, err)
-		return dummyCode, dummyMessage
-	})
+	m.Mock((*DefaultCustomization).InterpretError).Expects(dummyCustomization, dummyResponseError).Returns(dummyCode, dummyMessage).Once()
 
 	// SUT + act
 	var code, message = constructResponse(
@@ -112,11 +108,7 @@ func TestConstructResponse_Success(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectMethod(dummyCustomization, "InterpretSuccess", 1, func(self *DefaultCustomization, responseObject interface{}) (int, string) {
-		assert.Equal(t, dummyCustomization, self)
-		assert.Equal(t, dummyResponseObject, responseObject)
-		return dummyCode, dummyMessage
-	})
+	m.Mock((*DefaultCustomization).InterpretSuccess).Expects(dummyCustomization, dummyResponseObject).Returns(dummyCode, dummyMessage).Once()
 
 	// SUT + act
 	var code, message = constructResponse(
@@ -143,18 +135,8 @@ func TestWriteResponse_SkipHandling(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(shouldSkipHandling, 1, func(responseObject interface{}, responseError error) bool {
-		assert.Equal(t, dummyResponseObject, responseObject)
-		assert.Equal(t, dummyResponseError, responseError)
-		return true
-	})
-	m.ExpectFunc(logEndpointResponse, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, "None", category)
-		assert.Equal(t, "-1", subcategory)
-		assert.Equal(t, "Skipped response handling", messageFormat)
-		assert.Empty(t, parameters)
-	})
+	m.Mock(shouldSkipHandling).Expects(dummyResponseObject, dummyResponseError).Returns(true).Once()
+	m.Mock(logEndpointResponse).Expects(dummySession, "None", "-1", "Skipped response handling").Returns().Once()
 
 	// SUT + act
 	writeResponse(
@@ -182,49 +164,15 @@ func TestWriteResponse_HappyPath(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(shouldSkipHandling, 1, func(responseObject interface{}, responseError error) bool {
-		assert.Equal(t, dummyResponseObject, responseObject)
-		assert.Equal(t, dummyResponseError, responseError)
-		return false
-	})
-	m.ExpectFunc(constructResponse, 1, func(session *session, responseObject interface{}, responseError error) (int, string) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyResponseObject, responseObject)
-		assert.Equal(t, dummyResponseError, responseError)
-		return dummyCode, dummyMessage
-	})
-	m.ExpectFunc(http.StatusText, 1, func(code int) string {
-		assert.Equal(t, dummyCode, code)
-		return dummyStatusText
-	})
-	m.ExpectFunc(strconv.Itoa, 1, func(i int) string {
-		assert.Equal(t, dummyCode, i)
-		return dummyCodeString
-	})
-	m.ExpectFunc(logEndpointResponse, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyStatusText, category)
-		assert.Equal(t, dummyCodeString, subcategory)
-		assert.Equal(t, dummyMessage, messageFormat)
-		assert.Empty(t, parameters)
-	})
-	m.ExpectFunc(isInterfaceValueNil, 1, func(i interface{}) bool {
-		assert.Equal(t, dummyResponseWriterInstance, i)
-		return false
-	})
-	m.ExpectMethod(dummyResponseWriterInstance, "Header", 1, func(self *dummyResponseWriter) http.Header {
-		assert.Equal(t, dummyResponseWriterInstance, self)
-		return dummyHeader
-	})
-	m.ExpectMethod(dummyResponseWriterInstance, "WriteHeader", 1, func(self *dummyResponseWriter, statusCode int) {
-		assert.Equal(t, dummyResponseWriterInstance, self)
-		assert.Equal(t, dummyCode, statusCode)
-	})
-	m.ExpectMethod(dummyResponseWriterInstance, "Write", 1, func(self *dummyResponseWriter, bytes []byte) (int, error) {
-		assert.Equal(t, dummyResponseWriterInstance, self)
-		assert.Equal(t, []byte(dummyMessage), bytes)
-		return rand.Int(), errors.New("some error")
-	})
+	m.Mock(shouldSkipHandling).Expects(dummyResponseObject, dummyResponseError).Returns(false).Once()
+	m.Mock(constructResponse).Expects(dummySession, dummyResponseObject, dummyResponseError).Returns(dummyCode, dummyMessage).Once()
+	m.Mock(http.StatusText).Expects(dummyCode).Returns(dummyStatusText).Once()
+	m.Mock(strconv.Itoa).Expects(dummyCode).Returns(dummyCodeString).Once()
+	m.Mock(logEndpointResponse).Expects(dummySession, dummyStatusText, dummyCodeString, dummyMessage).Returns().Once()
+	m.Mock(isInterfaceValueNil).Expects(dummyResponseWriterInstance).Returns(false).Once()
+	m.Mock((*dummyResponseWriter).Header).Expects(dummyResponseWriterInstance).Returns(dummyHeader).Once()
+	m.Mock((*dummyResponseWriter).WriteHeader).Expects(dummyResponseWriterInstance, dummyCode).Returns().Once()
+	m.Mock((*dummyResponseWriter).Write).Expects(dummyResponseWriterInstance, []byte(dummyMessage)).Returns(rand.Int(), errors.New("some error")).Once()
 
 	// SUT + act
 	writeResponse(

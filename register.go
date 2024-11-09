@@ -116,7 +116,6 @@ func registerRoutes(
 			evaluatedPath,
 			queries,
 			app.handleSession,
-			configuredRoute.ActionFunc,
 		)
 		app.actionFuncMap[name] = configuredRoute.ActionFunc
 	}

@@ -140,11 +140,9 @@ func (customization *DefaultCustomization) AppClosing() error {
 
 // Log is to customize the logging backend for the whole application
 func (customization *DefaultCustomization) Log(session Session, logType LogType, logLevel LogLevel, category, subcategory, description string) {
-	if isInterfaceValueNil(session) {
-		return
-	}
 	fmt.Printf(
-		"<%v|%v> (%v|%v) [%v|%v] %v\n",
+		"[%v] <%v|%v> (%v|%v) [%v|%v] %v\n",
+		formatDateTime(time.Now()),
 		session.GetID(),
 		session.GetName(),
 		logType,

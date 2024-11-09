@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/zhongjie-cai/gomocker"
+	"github.com/zhongjie-cai/gomocker/v2"
 )
 
 func TestNewAppError(t *testing.T) {
@@ -31,10 +31,7 @@ func TestNewAppError(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(cleanupInnerErrors, 1, func(innerErrors []error) []*appError {
-		assert.Equal(t, dummyInnerErrors, innerErrors)
-		return dummyCleanedUpErrors
-	})
+	m.Mock(cleanupInnerErrors).Expects(dummyInnerErrors).Returns(dummyCleanedUpErrors).Once()
 
 	// SUT + act
 	var result = newAppError(
@@ -114,16 +111,10 @@ func TestPrintInnerErrors_ValidInnerErrors(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(getErrorMessage, len(dummyInnerErrors), func(err error) string {
-		var count = m.FuncCalledCount(getErrorMessage)
-		assert.Equal(t, dummyInnerErrors[count-1], err)
-		return dummyErrorMessages[count-1]
-	})
-	m.ExpectFunc(strings.Join, 1, func(a []string, sep string) string {
-		assert.ElementsMatch(t, dummyErrorMessages, a)
-		assert.Equal(t, errorSeparator, sep)
-		return dummyJoinedMessage
-	})
+	for i, dummyInnerError := range dummyInnerErrors {
+		m.Mock(getErrorMessage).Expects(dummyInnerError).Returns(dummyErrorMessages[i]).Once()
+	}
+	m.Mock(strings.Join).Expects(dummyErrorMessages, errorSeparator).Returns(dummyJoinedMessage).Once()
 
 	// SUT + act
 	var result = printInnerErrors(
@@ -156,16 +147,8 @@ func TestAppError_Error(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(printInnerErrors, 1, func(innerErrors []*appError) string {
-		assert.Equal(t, dummyInnerErrors, innerErrors)
-		return dummyInnerErrorMessage
-	})
-	m.ExpectFunc(fmt.Sprint, 1, func(a ...interface{}) string {
-		assert.Equal(t, 2, len(a))
-		assert.Equal(t, dummyBaseErrorMessage, a[0])
-		assert.Equal(t, dummyInnerErrorMessage, a[1])
-		return dummyResult
-	})
+	m.Mock(printInnerErrors).Expects(dummyInnerErrors).Returns(dummyInnerErrorMessage).Once()
+	m.Mock(fmt.Sprint).Expects(dummyBaseErrorMessage, dummyInnerErrorMessage).Returns(dummyResult).Once()
 
 	// SUT + act
 	var result = dummyAppError.Error()
@@ -232,10 +215,7 @@ func TestAppError_HTTPResponseMessage(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(json.Marshal, 1, func(v interface{}) ([]byte, error) {
-		assert.Equal(t, dummyAppError, v)
-		return dummyBytes, dummyError
-	})
+	m.Mock(json.Marshal).Expects(dummyAppError).Returns(dummyBytes, dummyError).Once()
 
 	// SUT
 	var sut = dummyAppError
@@ -287,9 +267,7 @@ func TestEqualsError_ErrorIs(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(errors.Is, 1, func(err, target error) bool {
-		return dummyResult
-	})
+	m.Mock(errors.Is).Expects(dummyError, dummyTarget).Returns(dummyResult).Once()
 
 	// SUT + act
 	var result = equalsError(
@@ -313,11 +291,7 @@ func TestAppErrorContains_HappyPath(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(equalsError, 1, func(err, target error) bool {
-		assert.Equal(t, dummyappError, err)
-		assert.Equal(t, dummyError, target)
-		return true
-	})
+	m.Mock(equalsError).Expects(dummyappError, dummyError).Returns(true).Once()
 
 	// SUT + act
 	var result = appErrorContains(
@@ -374,11 +348,7 @@ func TestInnerErrorContains_ValidInnerError(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(appErrorContains, 1, func(appError AppError, err error) bool {
-		assert.Equal(t, dummyInnerError, appError)
-		assert.Equal(t, dummyError, err)
-		return true
-	})
+	m.Mock(appErrorContains).Expects(dummyInnerError, dummyError).Returns(true).Once()
 
 	// SUT + act
 	var result = innerErrorContains(
@@ -410,15 +380,8 @@ func TestInnerErrorContains_NoMatchingErrors(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(appErrorContains, 2, func(appError AppError, err error) bool {
-		assert.Equal(t, dummyError, err)
-		if m.FuncCalledCount(appErrorContains) == 1 {
-			assert.Equal(t, dummyInnerError1, appError)
-		} else if m.FuncCalledCount(appErrorContains) == 2 {
-			assert.Equal(t, dummyInnerError2, appError)
-		}
-		return false
-	})
+	m.Mock(appErrorContains).Expects(dummyInnerError1, dummyError).Returns(false).Once()
+	m.Mock(appErrorContains).Expects(dummyInnerError2, dummyError).Returns(false).Once()
 
 	// SUT + act
 	var result = innerErrorContains(
@@ -442,11 +405,7 @@ func TestAppError_Contains_ErrorEqual(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(equalsError, 1, func(err, target error) bool {
-		assert.Equal(t, dummyappError, err)
-		assert.Equal(t, dummyError, target)
-		return true
-	})
+	m.Mock(equalsError).Expects(dummyappError, dummyError).Returns(true).Once()
 
 	// SUT
 	var sut = dummyappError
@@ -479,15 +438,8 @@ func TestAppError_Contains_InnerErrorEqual(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(equalsError, 1, func(err, target error) bool {
-		assert.Equal(t, dummyappError, err)
-		assert.Equal(t, dummyError, target)
-		return false
-	})
-	m.ExpectFunc(innerErrorContains, 1, func(innerErrors []*appError, err error) bool {
-		assert.Equal(t, dummyInnerErrors, innerErrors)
-		return dummyResult
-	})
+	m.Mock(equalsError).Expects(dummyappError, dummyError).Returns(false).Once()
+	m.Mock(innerErrorContains).Expects(dummyInnerErrors, dummyError).Returns(dummyResult).Once()
 
 	// SUT
 	var sut = dummyappError
@@ -599,13 +551,7 @@ func TestAppErrorWrap_NoInnerError(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(cleanupInnerErrors, 1, func(innerErrors []error) []*appError {
-		assert.Equal(t, 3, len(innerErrors))
-		assert.NoError(t, innerErrors[0])
-		assert.NoError(t, innerErrors[1])
-		assert.NoError(t, innerErrors[2])
-		return dummyCleanedInnerErrors
-	})
+	m.Mock(cleanupInnerErrors).Expects([]error{nil, nil, nil}).Returns(dummyCleanedInnerErrors).Once()
 
 	// SUT
 	var appError = &appError{
@@ -669,10 +615,7 @@ func TestAppErrorWrap_HasInnerError(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(cleanupInnerErrors, 1, func(innerErrors []error) []*appError {
-		assert.Equal(t, dummyNewInnerErrors, innerErrors)
-		return dummyCleanedInnerErrors
-	})
+	m.Mock(cleanupInnerErrors).Expects(dummyNewInnerErrors).Returns(dummyCleanedInnerErrors).Once()
 
 	// SUT
 	var appError = &appError{
@@ -708,15 +651,15 @@ func TestGetGeneralFailure(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		assert.Equal(t, errorCodeGeneralFailure, errorCode)
-		assert.Equal(t, dummyErrorMessage, errorMessage)
-		assert.Equal(t, 3, len(innerErrors))
-		assert.Equal(t, dummyInnerError1, innerErrors[0])
-		assert.Equal(t, dummyInnerError2, innerErrors[1])
-		assert.Equal(t, dummyInnerError3, innerErrors[2])
-		return dummyResult
-	})
+	m.Mock(newAppError).Expects(
+		errorCodeGeneralFailure,
+		dummyErrorMessage,
+		[]error{
+			dummyInnerError1,
+			dummyInnerError2,
+			dummyInnerError3,
+		},
+	).Returns(dummyResult).Once()
 
 	// SUT + act
 	var appError, ok = GetGeneralFailure(
@@ -743,15 +686,15 @@ func TestGetUnauthorized(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		assert.Equal(t, errorCodeUnauthorized, errorCode)
-		assert.Equal(t, dummyErrorMessage, errorMessage)
-		assert.Equal(t, 3, len(innerErrors))
-		assert.Equal(t, dummyInnerError1, innerErrors[0])
-		assert.Equal(t, dummyInnerError2, innerErrors[1])
-		assert.Equal(t, dummyInnerError3, innerErrors[2])
-		return dummyResult
-	})
+	m.Mock(newAppError).Expects(
+		errorCodeUnauthorized,
+		dummyErrorMessage,
+		[]error{
+			dummyInnerError1,
+			dummyInnerError2,
+			dummyInnerError3,
+		},
+	).Returns(dummyResult).Once()
 
 	// SUT + act
 	var appError, ok = GetUnauthorized(
@@ -778,15 +721,15 @@ func TestGetInvalidOperation(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		assert.Equal(t, errorCodeInvalidOperation, errorCode)
-		assert.Equal(t, dummyErrorMessage, errorMessage)
-		assert.Equal(t, 3, len(innerErrors))
-		assert.Equal(t, dummyInnerError1, innerErrors[0])
-		assert.Equal(t, dummyInnerError2, innerErrors[1])
-		assert.Equal(t, dummyInnerError3, innerErrors[2])
-		return dummyResult
-	})
+	m.Mock(newAppError).Expects(
+		errorCodeInvalidOperation,
+		dummyErrorMessage,
+		[]error{
+			dummyInnerError1,
+			dummyInnerError2,
+			dummyInnerError3,
+		},
+	).Returns(dummyResult).Once()
 
 	// SUT + act
 	var appError, ok = GetInvalidOperation(
@@ -813,15 +756,15 @@ func TestGetBadRequest(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		assert.Equal(t, errorCodeBadRequest, errorCode)
-		assert.Equal(t, dummyErrorMessage, errorMessage)
-		assert.Equal(t, 3, len(innerErrors))
-		assert.Equal(t, dummyInnerError1, innerErrors[0])
-		assert.Equal(t, dummyInnerError2, innerErrors[1])
-		assert.Equal(t, dummyInnerError3, innerErrors[2])
-		return dummyResult
-	})
+	m.Mock(newAppError).Expects(
+		errorCodeBadRequest,
+		dummyErrorMessage,
+		[]error{
+			dummyInnerError1,
+			dummyInnerError2,
+			dummyInnerError3,
+		},
+	).Returns(dummyResult).Once()
 
 	// SUT + act
 	var appError, ok = GetBadRequest(
@@ -848,15 +791,15 @@ func TestGetNotFound(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		assert.Equal(t, errorCodeNotFound, errorCode)
-		assert.Equal(t, dummyErrorMessage, errorMessage)
-		assert.Equal(t, 3, len(innerErrors))
-		assert.Equal(t, dummyInnerError1, innerErrors[0])
-		assert.Equal(t, dummyInnerError2, innerErrors[1])
-		assert.Equal(t, dummyInnerError3, innerErrors[2])
-		return dummyResult
-	})
+	m.Mock(newAppError).Expects(
+		errorCodeNotFound,
+		dummyErrorMessage,
+		[]error{
+			dummyInnerError1,
+			dummyInnerError2,
+			dummyInnerError3,
+		},
+	).Returns(dummyResult).Once()
 
 	// SUT + act
 	var appError, ok = GetNotFound(
@@ -883,15 +826,15 @@ func TestGetCircuitBreak(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		assert.Equal(t, errorCodeCircuitBreak, errorCode)
-		assert.Equal(t, dummyErrorMessage, errorMessage)
-		assert.Equal(t, 3, len(innerErrors))
-		assert.Equal(t, dummyInnerError1, innerErrors[0])
-		assert.Equal(t, dummyInnerError2, innerErrors[1])
-		assert.Equal(t, dummyInnerError3, innerErrors[2])
-		return dummyResult
-	})
+	m.Mock(newAppError).Expects(
+		errorCodeCircuitBreak,
+		dummyErrorMessage,
+		[]error{
+			dummyInnerError1,
+			dummyInnerError2,
+			dummyInnerError3,
+		},
+	).Returns(dummyResult).Once()
 
 	// SUT + act
 	var appError, ok = GetCircuitBreak(
@@ -918,15 +861,15 @@ func TestGetOperationLock(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		assert.Equal(t, errorCodeOperationLock, errorCode)
-		assert.Equal(t, dummyErrorMessage, errorMessage)
-		assert.Equal(t, 3, len(innerErrors))
-		assert.Equal(t, dummyInnerError1, innerErrors[0])
-		assert.Equal(t, dummyInnerError2, innerErrors[1])
-		assert.Equal(t, dummyInnerError3, innerErrors[2])
-		return dummyResult
-	})
+	m.Mock(newAppError).Expects(
+		errorCodeOperationLock,
+		dummyErrorMessage,
+		[]error{
+			dummyInnerError1,
+			dummyInnerError2,
+			dummyInnerError3,
+		},
+	).Returns(dummyResult).Once()
 
 	// SUT + act
 	var appError, ok = GetOperationLock(
@@ -953,15 +896,15 @@ func TestGetAccessForbidden(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		assert.Equal(t, errorCodeAccessForbidden, errorCode)
-		assert.Equal(t, dummyErrorMessage, errorMessage)
-		assert.Equal(t, 3, len(innerErrors))
-		assert.Equal(t, dummyInnerError1, innerErrors[0])
-		assert.Equal(t, dummyInnerError2, innerErrors[1])
-		assert.Equal(t, dummyInnerError3, innerErrors[2])
-		return dummyResult
-	})
+	m.Mock(newAppError).Expects(
+		errorCodeAccessForbidden,
+		dummyErrorMessage,
+		[]error{
+			dummyInnerError1,
+			dummyInnerError2,
+			dummyInnerError3,
+		},
+	).Returns(dummyResult).Once()
 
 	// SUT + act
 	var appError, ok = GetAccessForbidden(
@@ -988,15 +931,15 @@ func TestGetDataCorruption(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		assert.Equal(t, errorCodeDataCorruption, errorCode)
-		assert.Equal(t, dummyErrorMessage, errorMessage)
-		assert.Equal(t, 3, len(innerErrors))
-		assert.Equal(t, dummyInnerError1, innerErrors[0])
-		assert.Equal(t, dummyInnerError2, innerErrors[1])
-		assert.Equal(t, dummyInnerError3, innerErrors[2])
-		return dummyResult
-	})
+	m.Mock(newAppError).Expects(
+		errorCodeDataCorruption,
+		dummyErrorMessage,
+		[]error{
+			dummyInnerError1,
+			dummyInnerError2,
+			dummyInnerError3,
+		},
+	).Returns(dummyResult).Once()
 
 	// SUT + act
 	var appError, ok = GetDataCorruption(
@@ -1023,15 +966,15 @@ func TestGetNotImplemented(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		assert.Equal(t, errorCodeNotImplemented, errorCode)
-		assert.Equal(t, dummyErrorMessage, errorMessage)
-		assert.Equal(t, 3, len(innerErrors))
-		assert.Equal(t, dummyInnerError1, innerErrors[0])
-		assert.Equal(t, dummyInnerError2, innerErrors[1])
-		assert.Equal(t, dummyInnerError3, innerErrors[2])
-		return dummyResult
-	})
+	m.Mock(newAppError).Expects(
+		errorCodeNotImplemented,
+		dummyErrorMessage,
+		[]error{
+			dummyInnerError1,
+			dummyInnerError2,
+			dummyInnerError3,
+		},
+	).Returns(dummyResult).Once()
 
 	// SUT + act
 	var appError, ok = GetNotImplemented(
@@ -1058,15 +1001,15 @@ func TestWrapError_NormalError(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		assert.Equal(t, errorCodeGeneralFailure, errorCode)
-		assert.Equal(t, dummySourceError.Error(), errorMessage)
-		assert.Equal(t, 3, len(innerErrors))
-		assert.Equal(t, dummyInnerError1, innerErrors[0])
-		assert.Equal(t, dummyInnerError2, innerErrors[1])
-		assert.Equal(t, dummyInnerError3, innerErrors[2])
-		return dummyAppError
-	})
+	m.Mock(newAppError).Expects(
+		errorCodeGeneralFailure,
+		dummySourceError.Error(),
+		[]error{
+			dummyInnerError1,
+			dummyInnerError2,
+			dummyInnerError3,
+		},
+	).Returns(dummyAppError).Once()
 
 	// SUT + act
 	var err = WrapError(
@@ -1092,14 +1035,7 @@ func TestWrapError_AppError(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectMethod(dummySourceError, "Wrap", 1, func(self *appError, innerErrors ...error) AppError {
-		assert.Equal(t, dummySourceError, self)
-		assert.Equal(t, 3, len(innerErrors))
-		assert.Equal(t, dummyInnerError1, innerErrors[0])
-		assert.Equal(t, dummyInnerError2, innerErrors[1])
-		assert.Equal(t, dummyInnerError3, innerErrors[2])
-		return dummyAppError
-	})
+	m.Mock((*appError).Wrap).Expects(dummySourceError, dummyInnerError1, dummyInnerError2, dummyInnerError3).Returns(dummyAppError).Once()
 
 	// SUT + act
 	var err = WrapError(

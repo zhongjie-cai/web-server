@@ -8,7 +8,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/stretchr/testify v1.9.0
-	github.com/zhongjie-cai/gomocker v1.1.0
+	github.com/zhongjie-cai/gomocker/v2 v2.0.6
 )
 
 require (

@@ -12,7 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
-	"github.com/zhongjie-cai/gomocker"
+	"github.com/zhongjie-cai/gomocker/v2"
 )
 
 func TestDefaultCustomization_PreBootstrap(t *testing.T) {
@@ -39,38 +39,11 @@ func TestDefaultCustomization_AppClosing(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestDefaultCustomization_Log_NilSession(t *testing.T) {
-	// arrange
-	var dummySession *session
-	var dummyLogType = LogType(rand.Intn(100))
-	var dummyLogLevel = LogLevel(rand.Intn(100))
-	var dummyCategory = "some category"
-	var dummySubcategory = "some subcategory"
-	var dummyDescription = "some description"
-
-	// mock
-	var m = gomocker.NewMocker(t)
-
-	// expect
-	m.ExpectFunc(isInterfaceValueNil, 1, func(i interface{}) bool {
-		assert.Equal(t, dummySession, i)
-		return true
-	})
-
-	// SUT + act
-	customizationDefault.Log(
-		dummySession,
-		dummyLogType,
-		dummyLogLevel,
-		dummyCategory,
-		dummySubcategory,
-		dummyDescription,
-	)
-}
-
 func TestDefaultCustomization_Log_HappyPath(t *testing.T) {
 	// arrange
 	var dummySession = &session{}
+	var dummyTime = time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	var dummyTimeString = "some time string"
 	var dummyLogType = LogType(rand.Intn(100))
 	var dummyLogLevel = LogLevel(rand.Intn(100))
 	var dummyCategory = "some category"
@@ -78,34 +51,20 @@ func TestDefaultCustomization_Log_HappyPath(t *testing.T) {
 	var dummyDescription = "some description"
 	var dummySessionID = uuid.New()
 	var dummySessionName = "some session name"
-	var dummyFormat = "<%v|%v> (%v|%v) [%v|%v] %v\n"
+	var dummyFormat = "[%v] <%v|%v> (%v|%v) [%v|%v] %v\n"
 
 	// mock
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(isInterfaceValueNil, 1, func(i interface{}) bool {
-		assert.Equal(t, dummySession, i)
-		return false
-	})
-	m.ExpectMethod(dummySession, "GetID", 1, func() uuid.UUID {
-		return dummySessionID
-	})
-	m.ExpectMethod(dummySession, "GetName", 1, func() string {
-		return dummySessionName
-	})
-	m.ExpectFunc(fmt.Printf, 1, func(format string, a ...interface{}) (n int, err error) {
-		assert.Equal(t, dummyFormat, format)
-		assert.Equal(t, 7, len(a))
-		assert.Equal(t, dummySessionID, a[0])
-		assert.Equal(t, dummySessionName, a[1])
-		assert.Equal(t, dummyLogType, a[2])
-		assert.Equal(t, dummyLogLevel, a[3])
-		assert.Equal(t, dummyCategory, a[4])
-		assert.Equal(t, dummySubcategory, a[5])
-		assert.Equal(t, dummyDescription, a[6])
-		return rand.Int(), errors.New("some error")
-	})
+	m.Mock(time.Now).Expects().Returns(dummyTime).Once()
+	m.Mock(formatDateTime).Expects(dummyTime).Returns(dummyTimeString).Once()
+	m.Mock((*session).GetID).Expects(dummySession).Returns(dummySessionID).Once()
+	m.Mock((*session).GetName).Expects(dummySession).Returns(dummySessionName).Once()
+	m.Mock(fmt.Printf).Expects(dummyFormat, dummyTimeString, dummySessionID,
+		dummySessionName, dummyLogType, dummyLogLevel,
+		dummyCategory, dummySubcategory, dummyDescription).
+		Returns(rand.Int(), errors.New("some error")).Once()
 
 	// SUT + act
 	customizationDefault.Log(
@@ -226,10 +185,7 @@ func TestDefaultCustomization_InterpretSuccess_NilResponseContent(t *testing.T) 
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(isInterfaceValueNil, 1, func(i interface{}) bool {
-		assert.Equal(t, dummyResponseContent, i)
-		return true
-	})
+	m.Mock(isInterfaceValueNil).Expects(dummyResponseContent).Returns(true).Once()
 
 	// SUT + act
 	var code, message = customizationDefault.InterpretSuccess(
@@ -250,14 +206,8 @@ func TestDefaultCustomization_InterpretSuccess_EmptyResponseContent(t *testing.T
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(isInterfaceValueNil, 1, func(i interface{}) bool {
-		assert.Equal(t, dummyResponseContent, i)
-		return false
-	})
-	m.ExpectFunc(marshalIgnoreError, 1, func(v interface{}) string {
-		assert.Equal(t, dummyResponseContent, v)
-		return dummyContent
-	})
+	m.Mock(isInterfaceValueNil).Expects(dummyResponseContent).Returns(false).Once()
+	m.Mock(marshalIgnoreError).Expects(dummyResponseContent).Returns(dummyContent).Once()
 
 	// SUT + act
 	var code, message = customizationDefault.InterpretSuccess(
@@ -278,14 +228,8 @@ func TestDefaultCustomization_InterpretSuccess_HappyPath(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(isInterfaceValueNil, 1, func(i interface{}) bool {
-		assert.Equal(t, dummyResponseContent, i)
-		return false
-	})
-	m.ExpectFunc(marshalIgnoreError, 1, func(v interface{}) string {
-		assert.Equal(t, dummyResponseContent, v)
-		return dummyContent
-	})
+	m.Mock(isInterfaceValueNil).Expects(dummyResponseContent).Returns(false).Once()
+	m.Mock(marshalIgnoreError).Expects(dummyResponseContent).Returns(dummyContent).Once()
 
 	// SUT + act
 	var code, message = customizationDefault.InterpretSuccess(
@@ -322,12 +266,8 @@ func TestDefaultCustomization_InterpretError_AppError(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectMethod(dummyAppError, "HTTPStatusCode", 1, func() int {
-		return dummyStatusCode
-	})
-	m.ExpectMethod(dummyAppError, "HTTPResponseMessage", 1, func() string {
-		return dummyResponseMessage
-	})
+	m.Mock((*appError).HTTPStatusCode).Expects(dummyAppError).Returns(dummyStatusCode).Once()
+	m.Mock((*appError).HTTPResponseMessage).Expects(dummyAppError).Returns(dummyResponseMessage).Once()
 
 	// SUT + act
 	var code, message = customizationDefault.InterpretError(
@@ -361,12 +301,7 @@ func TestGetRecoverError_NonError(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(fmt.Errorf, 1, func(format string, a ...interface{}) error {
-		assert.Equal(t, "endpoint panic: %v", format)
-		assert.Equal(t, 1, len(a))
-		assert.Equal(t, dummyRecoverResult, a[0])
-		return dummyError
-	})
+	m.Mock(fmt.Errorf).Expects("endpoint panic: %v", dummyRecoverResult).Returns(dummyError).Once()
 
 	// SUT + act
 	var result = getRecoverError(
@@ -390,27 +325,12 @@ func TestDefaultCustomization_RecoverPanic(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(getRecoverError, 1, func(recoverResult interface{}) error {
-		assert.Equal(t, dummyRecoverResult, recoverResult)
-		return dummyError
-	})
-	m.ExpectFunc(debug.Stack, 1, func() []byte {
-		return dummyDebugStack
-	})
-	m.ExpectMethod(dummySession, "GetName", 1, func(self *session) string {
-		assert.Equal(t, dummySession, self)
-		return dummyName
-	})
-	m.ExpectMethod(dummySession, "LogMethodLogic", 1, func(self *session, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, self)
-		assert.Equal(t, LogLevelError, logLevel)
-		assert.Equal(t, "RecoverPanic", category)
-		assert.Equal(t, dummyName, subcategory)
-		assert.Equal(t, "Error: %+v\nCallstack: %v", messageFormat)
-		assert.Equal(t, 2, len(parameters))
-		assert.Equal(t, dummyError, parameters[0])
-		assert.Equal(t, dummyDebugStackString, parameters[1])
-	})
+	m.Mock(getRecoverError).Expects(dummyRecoverResult).Returns(dummyError).Once()
+	m.Mock(debug.Stack).Expects().Returns(dummyDebugStack).Once()
+	m.Mock((*session).GetName).Expects(dummySession).Returns(dummyName).Once()
+	m.Mock((*session).LogMethodLogic).Expects(dummySession, LogLevelError,
+		"RecoverPanic", dummyName, "Error: %+v\nCallstack: %v",
+		dummyError, dummyDebugStackString).Returns().Once()
 
 	// SUT + act
 	var result, err = customizationDefault.RecoverPanic(

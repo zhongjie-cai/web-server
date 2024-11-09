@@ -11,13 +11,17 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"github.com/zhongjie-cai/gomocker"
+	"github.com/zhongjie-cai/gomocker/v2"
 )
 
-func functionPointerEquals(t *testing.T, expectFunc interface{}, actualFunc interface{}) {
+func functionPointerEquals(expectFunc interface{}, actualFunc interface{}) bool {
 	var expectValue = fmt.Sprintf("%v", reflect.ValueOf(expectFunc))
 	var actualValue = fmt.Sprintf("%v", reflect.ValueOf(actualFunc))
-	assert.Equal(t, expectValue, actualValue)
+	return expectValue == actualValue
+}
+
+func assertFunctionEquals(t *testing.T, expectFunc interface{}, actualFunc interface{}) {
+	assert.True(t, functionPointerEquals(expectFunc, actualFunc))
 }
 
 type dummyResponseWriter struct {
@@ -45,14 +49,9 @@ func TestInitiateSession(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(uuid.New, 1, func() uuid.UUID {
-		return dummySessionID
-	})
-	m.ExpectFunc(getRouteInfo, 1, func(httpRequest *http.Request, actionFuncMap map[string]ActionFunc) (string, ActionFunc, error) {
-		assert.Equal(t, dummyHTTPRequest, httpRequest)
-		assert.Equal(t, dummyActionFuncMap, actionFuncMap)
-		return dummyEndpoint, dummyAction, dummyRouteError
-	})
+	m.Mock(uuid.New).Expects().Returns(dummySessionID).Once()
+	m.Mock(getRouteInfo).Expects(dummyHTTPRequest, dummyActionFuncMap).
+		Returns(dummyEndpoint, dummyAction, dummyRouteError).Once()
 
 	// SUT + act
 	var session, action, err = initiateSession(
@@ -69,7 +68,7 @@ func TestInitiateSession(t *testing.T) {
 	assert.Equal(t, dummyResponseWriter, session.responseWriter)
 	assert.Empty(t, session.attachment)
 	assert.Equal(t, dummyCustomization, session.customization)
-	functionPointerEquals(t, dummyAction, action)
+	assertFunctionEquals(t, dummyAction, action)
 	assert.Equal(t, dummyRouteError, err)
 }
 
@@ -92,22 +91,10 @@ func TestFinalizeSession(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(handlePanic, 1, func(session *session, recoverResult interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyRecoverResult, recoverResult)
-	})
-	m.ExpectFunc(logEndpointExit, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyName, category)
-		assert.Equal(t, dummyMethod, subcategory)
-		assert.Equal(t, "%s", messageFormat)
-		assert.Equal(t, 1, len(parameters))
-		assert.Equal(t, dummyDuration, parameters[0])
-	})
-	m.ExpectFunc(time.Since, 1, func(tm time.Time) time.Duration {
-		assert.Equal(t, dummyStartTime, tm)
-		return dummyDuration
-	})
+	m.Mock(handlePanic).Expects(dummySession, dummyRecoverResult).Returns().Once()
+	m.Mock(logEndpointExit).Expects(dummySession, dummyName, dummyMethod,
+		"%s", dummyDuration).Returns().Once()
+	m.Mock(time.Since).Expects(dummyStartTime).Returns(dummyDuration).Once()
 
 	// SUT + act
 	finalizeSession(
@@ -133,16 +120,8 @@ func TestHandleAction_PreActionError(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectMethod(dummyCustomization, "PreAction", 1, func(self *DefaultCustomization, session Session) error {
-		assert.Equal(t, dummyCustomization, self)
-		assert.Equal(t, dummySession, session)
-		return dummyError
-	})
-	m.ExpectFunc(writeResponse, 1, func(session *session, responseObject interface{}, responseError error) {
-		assert.Equal(t, dummySession, session)
-		assert.Nil(t, responseObject)
-		assert.Equal(t, dummyError, responseError)
-	})
+	m.Mock((*DefaultCustomization).PreAction).Expects(dummyCustomization, dummySession).Returns(dummyError).Once()
+	m.Mock(writeResponse).Expects(dummySession, nil, dummyError).Returns().Once()
 
 	// SUT + act
 	handleAction(
@@ -164,20 +143,9 @@ func TestHandleAction_ResponseError(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectMethod(dummyCustomization, "PreAction", 1, func(self *DefaultCustomization, session Session) error {
-		assert.Equal(t, dummyCustomization, self)
-		assert.Equal(t, dummySession, session)
-		return nil
-	})
-	m.ExpectFunc(dummyAction, 1, func(session Session) (interface{}, error) {
-		assert.Equal(t, dummySession, session)
-		return dummyResponseObject, dummyError
-	})
-	m.ExpectFunc(writeResponse, 1, func(session *session, responseObject interface{}, responseError error) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyResponseObject, responseObject)
-		assert.Equal(t, dummyError, responseError)
-	})
+	m.Mock((*DefaultCustomization).PreAction).Expects(dummyCustomization, dummySession).Returns(nil).Once()
+	m.Mock(dummyAction).Expects(dummySession).Returns(dummyResponseObject, dummyError).Once()
+	m.Mock(writeResponse).Expects(dummySession, dummyResponseObject, dummyError).Returns().Once()
 
 	// SUT + act
 	handleAction(
@@ -199,25 +167,10 @@ func TestHandleAction_HappyPath(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectMethod(dummyCustomization, "PreAction", 1, func(self *DefaultCustomization, session Session) error {
-		assert.Equal(t, dummyCustomization, self)
-		assert.Equal(t, dummySession, session)
-		return nil
-	})
-	m.ExpectFunc(dummyAction, 1, func(session Session) (interface{}, error) {
-		assert.Equal(t, dummySession, session)
-		return dummyResponseObject, nil
-	})
-	m.ExpectMethod(dummyCustomization, "PostAction", 1, func(self *DefaultCustomization, session Session) error {
-		assert.Equal(t, dummyCustomization, self)
-		assert.Equal(t, dummySession, session)
-		return dummyError
-	})
-	m.ExpectFunc(writeResponse, 1, func(session *session, responseObject interface{}, responseError error) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyResponseObject, responseObject)
-		assert.Equal(t, dummyError, responseError)
-	})
+	m.Mock((*DefaultCustomization).PreAction).Expects(dummyCustomization, dummySession).Returns(nil).Once()
+	m.Mock(dummyAction).Expects(dummySession).Returns(dummyResponseObject, nil).Once()
+	m.Mock((*DefaultCustomization).PostAction).Expects(dummyCustomization, dummySession).Returns(dummyError).Once()
+	m.Mock(writeResponse).Expects(dummySession, dummyResponseObject, dummyError).Returns().Once()
 
 	// SUT + act
 	handleAction(
@@ -246,32 +199,11 @@ func TestHandleSession_RouteError(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(initiateSession, 1, func(app *application, responseWriter http.ResponseWriter, httpRequest *http.Request) (*session, ActionFunc, error) {
-		assert.Equal(t, dummyApplication, app)
-		assert.Equal(t, dummyResponseWriter, responseWriter)
-		assert.Equal(t, dummyHTTPRequest, httpRequest)
-		return dummySession, dummyAction, dummyRouteError
-	})
-	m.ExpectFunc(logEndpointEnter, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyName, category)
-		assert.Equal(t, dummyMethod, subcategory)
-		assert.Zero(t, messageFormat)
-		assert.Empty(t, parameters)
-	})
-	m.ExpectFunc(getTimeNowUTC, 1, func() time.Time {
-		return dummyStartTime
-	})
-	m.ExpectFunc(finalizeSession, 1, func(session *session, startTime time.Time, recoverResult interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyStartTime, startTime)
-		assert.Equal(t, recover(), recoverResult)
-	})
-	m.ExpectFunc(writeResponse, 1, func(session *session, responseObject interface{}, responseError error) {
-		assert.Equal(t, dummySession, session)
-		assert.Nil(t, responseObject)
-		assert.Equal(t, dummyRouteError, responseError)
-	})
+	m.Mock(initiateSession).Expects(dummyApplication, dummyResponseWriter, dummyHTTPRequest).Returns(dummySession, dummyAction, dummyRouteError).Once()
+	m.Mock(logEndpointEnter).Expects(dummySession, dummyName, dummyMethod, "").Returns().Once()
+	m.Mock(getTimeNowUTC).Expects().Returns(dummyStartTime).Once()
+	m.Mock(finalizeSession).Expects(dummySession, dummyStartTime, recover()).Returns().Once()
+	m.Mock(writeResponse).Expects(dummySession, nil, dummyRouteError).Returns().Once()
 
 	// SUT + act
 	dummyApplication.handleSession(
@@ -299,31 +231,13 @@ func TestHandleSession_Success(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(initiateSession, 1, func(app *application, responseWriter http.ResponseWriter, httpRequest *http.Request) (*session, ActionFunc, error) {
-		assert.Equal(t, dummyApplication, app)
-		assert.Equal(t, dummyResponseWriter, responseWriter)
-		assert.Equal(t, dummyHTTPRequest, httpRequest)
-		return dummySession, dummyAction, nil
-	})
-	m.ExpectFunc(logEndpointEnter, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyName, category)
-		assert.Equal(t, dummyMethod, subcategory)
-		assert.Zero(t, messageFormat)
-		assert.Empty(t, parameters)
-	})
-	m.ExpectFunc(getTimeNowUTC, 1, func() time.Time {
-		return dummyStartTime
-	})
-	m.ExpectFunc(finalizeSession, 1, func(session *session, startTime time.Time, recoverResult interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyStartTime, startTime)
-		assert.Equal(t, recover(), recoverResult)
-	})
-	m.ExpectFunc(handleAction, 1, func(session *session, action ActionFunc) {
-		assert.Equal(t, dummySession, session)
-		functionPointerEquals(t, dummyAction, action)
-	})
+	m.Mock(initiateSession).Expects(dummyApplication, dummyResponseWriter, dummyHTTPRequest).Returns(dummySession, dummyAction, nil).Once()
+	m.Mock(logEndpointEnter).Expects(dummySession, dummyName, dummyMethod, "").Returns().Once()
+	m.Mock(getTimeNowUTC).Expects().Returns(dummyStartTime).Once()
+	m.Mock(finalizeSession).Expects(dummySession, dummyStartTime, recover()).Returns().Once()
+	m.Mock(handleAction).Expects(dummySession, gomocker.Matches(func(value interface{}) bool {
+		return functionPointerEquals(dummyAction, value)
+	})).Returns().Once()
 
 	// SUT + act
 	dummyApplication.handleSession(

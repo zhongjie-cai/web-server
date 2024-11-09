@@ -13,7 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
-	"github.com/zhongjie-cai/gomocker"
+	"github.com/zhongjie-cai/gomocker/v2"
 )
 
 func TestSessionGetID_NilSessionObject(t *testing.T) {
@@ -136,10 +136,7 @@ func TestSessionGetResponseWriter_NilResponseWriter(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(isInterfaceValueNil, 1, func(i interface{}) bool {
-		assert.Equal(t, dummyResponseWriterObject, i)
-		return true
-	})
+	m.Mock(isInterfaceValueNil).Expects(dummyResponseWriterObject).Returns(true).Once()
 
 	// SUT
 	var dummySession = &session{
@@ -161,10 +158,7 @@ func TestSessionGetResponseWriter_ValidResponseWriter(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(isInterfaceValueNil, 1, func(i interface{}) bool {
-		assert.Equal(t, dummyResponseWriterObject, i)
-		return false
-	})
+	m.Mock(isInterfaceValueNil).Expects(dummyResponseWriterObject).Returns(false).Once()
 
 	// SUT
 	var dummySession = &session{
@@ -187,12 +181,7 @@ func TestSessionGetRequestBody_NilSession(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		assert.Equal(t, errorCodeGeneralFailure, errorCode)
-		assert.Equal(t, errorMessageSessionNil, errorMessage)
-		assert.Empty(t, innerErrors)
-		return dummyAppError
-	})
+	m.Mock(newAppError).Expects(errorCodeGeneralFailure, errorMessageSessionNil, []error{}).Returns(dummyAppError).Once()
 
 	// SUT
 	var dummySession *session
@@ -223,16 +212,8 @@ func TestSessionGetRequestBody_BodyEmpty(t *testing.T) {
 	}
 
 	// expect
-	m.ExpectFunc(getRequestBody, 1, func(httpRequest *http.Request) string {
-		assert.Equal(t, dummyHTTPRequest, httpRequest)
-		return dummyRequestBody
-	})
-	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		assert.Equal(t, errorCodeBadRequest, errorCode)
-		assert.Equal(t, errorMessageRequestBodyEmpty, errorMessage)
-		assert.Empty(t, innerErrors)
-		return dummyAppError
-	})
+	m.Mock(getRequestBody).Expects(dummyHTTPRequest).Returns(dummyRequestBody).Once()
+	m.Mock(newAppError).Expects(errorCodeBadRequest, errorMessageRequestBodyEmpty, []error{}).Returns(dummyAppError).Once()
 
 	// act
 	var err = dummySession.GetRequestBody(
@@ -262,36 +243,13 @@ func TestSessionGetRequestBody_BodyInvalid(t *testing.T) {
 	}
 
 	// expect
-	m.ExpectFunc(getRequestBody, 1, func(httpRequest *http.Request) string {
-		assert.Equal(t, dummyHTTPRequest, httpRequest)
-		return dummyRequestBody
-	})
-	m.ExpectFunc(logEndpointRequest, 2, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, "Body", category)
-		if m.FuncCalledCount(logEndpointRequest) == 1 {
-			assert.Equal(t, "Content", subcategory)
-			assert.Equal(t, dummyRequestBody, messageFormat)
-			assert.Empty(t, parameters)
-		} else if m.FuncCalledCount(logEndpointRequest) == 2 {
-			assert.Equal(t, "UnmarshalError", subcategory)
-			assert.Equal(t, "%+v", messageFormat)
-			assert.Equal(t, 1, len(parameters))
-			assert.Equal(t, dummyError, parameters[0])
-		}
-	})
-	m.ExpectFunc(tryUnmarshal, 1, func(value string, dataTemplate interface{}) error {
-		assert.Equal(t, dummyRequestBody, value)
-		*(dataTemplate.(*int)) = dummyResult
-		return dummyError
-	})
-	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		assert.Equal(t, errorCodeBadRequest, errorCode)
-		assert.Equal(t, errorMessageRequestBodyInvalid, errorMessage)
-		assert.Equal(t, 1, len(innerErrors))
-		assert.Equal(t, dummyError, innerErrors[0])
-		return dummyAppError
-	})
+	m.Mock(getRequestBody).Expects(dummyHTTPRequest).Returns(dummyRequestBody).Once()
+	m.Mock(logEndpointRequest).Expects(dummySession, "Body", "Content", dummyRequestBody).Returns().Once()
+	m.Mock(logEndpointRequest).Expects(dummySession, "Body", "UnmarshalError", "%+v", dummyError).Returns().Once()
+	m.Mock(tryUnmarshal).Expects(dummyRequestBody, gomocker.Anything()).Returns(dummyError).SideEffect(func(index int, params ...interface{}) {
+		*(params[1].(*int)) = dummyResult
+	}).Once()
+	m.Mock(newAppError).Expects(errorCodeBadRequest, errorMessageRequestBodyInvalid, []error{dummyError}).Returns(dummyAppError).Once()
 
 	// act
 	var err = dummySession.GetRequestBody(
@@ -319,22 +277,11 @@ func TestSessionGetRequestBody_BodyValid(t *testing.T) {
 	}
 
 	// expect
-	m.ExpectFunc(getRequestBody, 1, func(httpRequest *http.Request) string {
-		assert.Equal(t, dummyHTTPRequest, httpRequest)
-		return dummyRequestBody
-	})
-	m.ExpectFunc(logEndpointRequest, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, "Body", category)
-		assert.Equal(t, "Content", subcategory)
-		assert.Equal(t, dummyRequestBody, messageFormat)
-		assert.Empty(t, parameters)
-	})
-	m.ExpectFunc(tryUnmarshal, 1, func(value string, dataTemplate interface{}) error {
-		assert.Equal(t, dummyRequestBody, value)
-		*(dataTemplate.(*int)) = dummyResult
-		return nil
-	})
+	m.Mock(getRequestBody).Expects(dummyHTTPRequest).Returns(dummyRequestBody).Once()
+	m.Mock(logEndpointRequest).Expects(dummySession, "Body", "Content", dummyRequestBody).Returns().Once()
+	m.Mock(tryUnmarshal).Expects(dummyRequestBody, gomocker.Anything()).Returns(nil).SideEffect(func(index int, params ...interface{}) {
+		*(params[1].(*int)) = dummyResult
+	}).Once()
 
 	// act
 	var err = dummySession.GetRequestBody(
@@ -356,12 +303,7 @@ func TestSessionGetRequestParameter_NilSession(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		assert.Equal(t, errorCodeGeneralFailure, errorCode)
-		assert.Equal(t, errorMessageSessionNil, errorMessage)
-		assert.Empty(t, innerErrors)
-		return dummyAppError
-	})
+	m.Mock(newAppError).Expects(errorCodeGeneralFailure, errorMessageSessionNil, []error{}).Returns(dummyAppError).Once()
 
 	// SUT
 	var dummySession *session
@@ -396,16 +338,8 @@ func TestSessionGetRequestParameter_ParameterNotFound(t *testing.T) {
 	}
 
 	// expect
-	m.ExpectFunc(mux.Vars, 1, func(r *http.Request) map[string]string {
-		assert.Equal(t, dummyHTTPRequest, r)
-		return dummyParameters
-	})
-	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		assert.Equal(t, errorCodeBadRequest, errorCode)
-		assert.Equal(t, errorMessageParameterNotFound, errorMessage)
-		assert.Empty(t, innerErrors)
-		return dummyAppError
-	})
+	m.Mock(mux.Vars).Expects(dummyHTTPRequest).Returns(dummyParameters).Once()
+	m.Mock(newAppError).Expects(errorCodeBadRequest, errorMessageParameterNotFound, []error{}).Returns(dummyAppError).Once()
 
 	// act
 	var err = dummySession.GetRequestParameter(
@@ -441,36 +375,13 @@ func TestSessionGetRequestParameter_ParameterInvalid(t *testing.T) {
 	}
 
 	// expect
-	m.ExpectFunc(mux.Vars, 1, func(r *http.Request) map[string]string {
-		assert.Equal(t, dummyHTTPRequest, r)
-		return dummyParameters
-	})
-	m.ExpectFunc(logEndpointRequest, 2, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, "Parameter", category)
-		if m.FuncCalledCount(logEndpointRequest) == 1 {
-			assert.Equal(t, dummyName, subcategory)
-			assert.Equal(t, dummyValue, messageFormat)
-			assert.Empty(t, parameters)
-		} else if m.FuncCalledCount(logEndpointRequest) == 2 {
-			assert.Equal(t, "UnmarshalError", subcategory)
-			assert.Equal(t, "%+v", messageFormat)
-			assert.Equal(t, 1, len(parameters))
-			assert.Equal(t, dummyError, parameters[0])
-		}
-	})
-	m.ExpectFunc(tryUnmarshal, 1, func(value string, dataTemplate interface{}) error {
-		assert.Equal(t, dummyValue, value)
-		*(dataTemplate.(*int)) = dummyResult
-		return dummyError
-	})
-	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		assert.Equal(t, errorCodeBadRequest, errorCode)
-		assert.Equal(t, errorMessageParameterInvalid, errorMessage)
-		assert.Equal(t, 1, len(innerErrors))
-		assert.Equal(t, dummyError, innerErrors[0])
-		return dummyAppError
-	})
+	m.Mock(mux.Vars).Expects(dummyHTTPRequest).Returns(dummyParameters).Once()
+	m.Mock(logEndpointRequest).Expects(dummySession, "Parameter", dummyName, dummyValue).Returns().Once()
+	m.Mock(logEndpointRequest).Expects(dummySession, "Parameter", "UnmarshalError", "%+v", dummyError).Returns().Once()
+	m.Mock(tryUnmarshal).Expects(dummyValue, gomocker.Anything()).Returns(dummyError).SideEffect(func(index int, params ...interface{}) {
+		*(params[1].(*int)) = dummyResult
+	}).Once()
+	m.Mock(newAppError).Expects(errorCodeBadRequest, errorMessageParameterInvalid, []error{dummyError}).Returns(dummyAppError).Once()
 
 	// act
 	var err = dummySession.GetRequestParameter(
@@ -505,22 +416,11 @@ func TestSessionGetRequestParameter_ParameterValid(t *testing.T) {
 	}
 
 	// expect
-	m.ExpectFunc(mux.Vars, 1, func(r *http.Request) map[string]string {
-		assert.Equal(t, dummyHTTPRequest, r)
-		return dummyParameters
-	})
-	m.ExpectFunc(logEndpointRequest, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, "Parameter", category)
-		assert.Equal(t, dummyName, subcategory)
-		assert.Equal(t, dummyValue, messageFormat)
-		assert.Empty(t, parameters)
-	})
-	m.ExpectFunc(tryUnmarshal, 1, func(value string, dataTemplate interface{}) error {
-		assert.Equal(t, dummyValue, value)
-		*(dataTemplate.(*int)) = dummyResult
-		return nil
-	})
+	m.Mock(mux.Vars).Expects(dummyHTTPRequest).Returns(dummyParameters).Once()
+	m.Mock(logEndpointRequest).Expects(dummySession, "Parameter", dummyName, dummyValue).Returns().Once()
+	m.Mock(tryUnmarshal).Expects(dummyValue, gomocker.Anything()).Returns(nil).SideEffect(func(index int, params ...interface{}) {
+		*(params[1].(*int)) = dummyResult
+	}).Once()
 
 	// act
 	var err = dummySession.GetRequestParameter(
@@ -608,12 +508,7 @@ func TestSessionGetRequestQuery_NilSession(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		assert.Equal(t, errorCodeGeneralFailure, errorCode)
-		assert.Equal(t, errorMessageSessionNil, errorMessage)
-		assert.Empty(t, innerErrors)
-		return dummyAppError
-	})
+	m.Mock(newAppError).Expects(errorCodeGeneralFailure, errorMessageSessionNil, []error{}).Returns(dummyAppError).Once()
 
 	// SUT
 	var dummySession *session
@@ -652,17 +547,8 @@ func TestSessionGetRequestQuery_QueryNotFound(t *testing.T) {
 	}
 
 	// expect
-	m.ExpectFunc(getAllQueries, 1, func(session *session, name string) []string {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyName, name)
-		return dummyQueries
-	})
-	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		assert.Equal(t, errorCodeBadRequest, errorCode)
-		assert.Equal(t, errorMessageQueryNotFound, errorMessage)
-		assert.Empty(t, innerErrors)
-		return dummyAppError
-	})
+	m.Mock(getAllQueries).Expects(dummySession, dummyName).Returns(dummyQueries).Once()
+	m.Mock(newAppError).Expects(errorCodeBadRequest, errorMessageQueryNotFound, []error{}).Returns(dummyAppError).Once()
 
 	// act
 	var err = dummySession.GetRequestQuery(
@@ -700,37 +586,13 @@ func TestSessionGetRequestQuery_QueryInvalid(t *testing.T) {
 	}
 
 	// expect
-	m.ExpectFunc(getAllQueries, 1, func(session *session, name string) []string {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyName, name)
-		return dummyQueries
-	})
-	m.ExpectFunc(logEndpointRequest, 2, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, "Query", category)
-		if m.FuncCalledCount(logEndpointRequest) == 1 {
-			assert.Equal(t, dummyName, subcategory)
-			assert.Equal(t, dummyQueries[dummyIndex], messageFormat)
-			assert.Empty(t, parameters)
-		} else if m.FuncCalledCount(logEndpointRequest) == 2 {
-			assert.Equal(t, "UnmarshalError", subcategory)
-			assert.Equal(t, "%+v", messageFormat)
-			assert.Equal(t, 1, len(parameters))
-			assert.Equal(t, dummyError, parameters[0])
-		}
-	})
-	m.ExpectFunc(tryUnmarshal, 1, func(value string, dataTemplate interface{}) error {
-		assert.Equal(t, dummyQueries[dummyIndex], value)
-		*(dataTemplate.(*int)) = dummyResult
-		return dummyError
-	})
-	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		assert.Equal(t, errorCodeBadRequest, errorCode)
-		assert.Equal(t, errorMessageQueryInvalid, errorMessage)
-		assert.Equal(t, 1, len(innerErrors))
-		assert.Equal(t, dummyError, innerErrors[0])
-		return dummyAppError
-	})
+	m.Mock(getAllQueries).Expects(dummySession, dummyName).Returns(dummyQueries).Once()
+	m.Mock(logEndpointRequest).Expects(dummySession, "Query", dummyName, dummyQueries[dummyIndex]).Returns().Once()
+	m.Mock(logEndpointRequest).Expects(dummySession, "Query", "UnmarshalError", "%+v", dummyError).Returns().Once()
+	m.Mock(tryUnmarshal).Expects(dummyQueries[dummyIndex], gomocker.Anything()).Returns(dummyError).SideEffect(func(index int, params ...interface{}) {
+		*(params[1].(*int)) = dummyResult
+	}).Once()
+	m.Mock(newAppError).Expects(errorCodeBadRequest, errorMessageQueryInvalid, []error{dummyError}).Returns(dummyAppError).Once()
 
 	// act
 	var err = dummySession.GetRequestQuery(
@@ -766,23 +628,11 @@ func TestSessionGetRequestQuery_QueryValid(t *testing.T) {
 	}
 
 	// expect
-	m.ExpectFunc(getAllQueries, 1, func(session *session, name string) []string {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyName, name)
-		return dummyQueries
-	})
-	m.ExpectFunc(logEndpointRequest, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, "Query", category)
-		assert.Equal(t, dummyName, subcategory)
-		assert.Equal(t, dummyQueries[dummyIndex], messageFormat)
-		assert.Empty(t, parameters)
-	})
-	m.ExpectFunc(tryUnmarshal, 1, func(value string, dataTemplate interface{}) error {
-		assert.Equal(t, dummyQueries[dummyIndex], value)
-		*(dataTemplate.(*int)) = dummyResult
-		return nil
-	})
+	m.Mock(getAllQueries).Expects(dummySession, dummyName).Returns(dummyQueries).Once()
+	m.Mock(logEndpointRequest).Expects(dummySession, "Query", dummyName, dummyQueries[dummyIndex]).Returns().Once()
+	m.Mock(tryUnmarshal).Expects(dummyQueries[dummyIndex], gomocker.Anything()).Returns(nil).SideEffect(func(index int, params ...interface{}) {
+		*(params[1].(*int)) = dummyResult
+	}).Once()
 
 	// act
 	var err = dummySession.GetRequestQuery(
@@ -815,10 +665,7 @@ func TestSessionGetAllHeaders_NotFound(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(textproto.CanonicalMIMEHeaderKey, 1, func(s string) string {
-		assert.Equal(t, dummyName, s)
-		return dummyCanonicalName
-	})
+	m.Mock(textproto.CanonicalMIMEHeaderKey).Expects(dummyName).Returns(dummyCanonicalName).Once()
 
 	// SUT + act
 	var result = getAllHeaders(
@@ -849,10 +696,7 @@ func TestSessionGetAllHeaders_HappyPath(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(textproto.CanonicalMIMEHeaderKey, 1, func(s string) string {
-		assert.Equal(t, dummyName, s)
-		return dummyCanonicalName
-	})
+	m.Mock(textproto.CanonicalMIMEHeaderKey).Expects(dummyName).Returns(dummyCanonicalName).Once()
 
 	// SUT + act
 	var result = getAllHeaders(
@@ -877,12 +721,7 @@ func TestSessionGetRequestHeader_NilSession(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		assert.Equal(t, errorCodeGeneralFailure, errorCode)
-		assert.Equal(t, errorMessageSessionNil, errorMessage)
-		assert.Empty(t, innerErrors)
-		return dummyAppError
-	})
+	m.Mock(newAppError).Expects(errorCodeGeneralFailure, errorMessageSessionNil, []error{}).Returns(dummyAppError).Once()
 
 	// SUT
 	var dummySession *session
@@ -921,17 +760,8 @@ func TestSessionGetRequestHeader_HeaderNotFound(t *testing.T) {
 	}
 
 	// expect
-	m.ExpectFunc(getAllHeaders, 1, func(session *session, name string) []string {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyName, name)
-		return dummyHeaders
-	})
-	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		assert.Equal(t, errorCodeBadRequest, errorCode)
-		assert.Equal(t, errorMessageHeaderNotFound, errorMessage)
-		assert.Empty(t, innerErrors)
-		return dummyAppError
-	})
+	m.Mock(getAllHeaders).Expects(dummySession, dummyName).Returns(dummyHeaders).Once()
+	m.Mock(newAppError).Expects(errorCodeBadRequest, errorMessageHeaderNotFound, []error{}).Returns(dummyAppError).Once()
 
 	// act
 	var err = dummySession.GetRequestHeader(
@@ -969,37 +799,13 @@ func TestSessionGetRequestHeader_HeaderInvalid(t *testing.T) {
 	}
 
 	// expect
-	m.ExpectFunc(getAllHeaders, 1, func(session *session, name string) []string {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyName, name)
-		return dummyHeaders
-	})
-	m.ExpectFunc(logEndpointRequest, 2, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, "Header", category)
-		if m.FuncCalledCount(logEndpointRequest) == 1 {
-			assert.Equal(t, dummyName, subcategory)
-			assert.Equal(t, dummyHeaders[dummyIndex], messageFormat)
-			assert.Empty(t, parameters)
-		} else if m.FuncCalledCount(logEndpointRequest) == 2 {
-			assert.Equal(t, "UnmarshalError", subcategory)
-			assert.Equal(t, "%+v", messageFormat)
-			assert.Equal(t, 1, len(parameters))
-			assert.Equal(t, dummyError, parameters[0])
-		}
-	})
-	m.ExpectFunc(tryUnmarshal, 1, func(value string, dataTemplate interface{}) error {
-		assert.Equal(t, dummyHeaders[dummyIndex], value)
-		*(dataTemplate.(*int)) = dummyResult
-		return dummyError
-	})
-	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		assert.Equal(t, errorCodeBadRequest, errorCode)
-		assert.Equal(t, errorMessageHeaderInvalid, errorMessage)
-		assert.Equal(t, 1, len(innerErrors))
-		assert.Equal(t, dummyError, innerErrors[0])
-		return dummyAppError
-	})
+	m.Mock(getAllHeaders).Expects(dummySession, dummyName).Returns(dummyHeaders).Once()
+	m.Mock(logEndpointRequest).Expects(dummySession, "Header", dummyName, dummyHeaders[dummyIndex]).Returns().Once()
+	m.Mock(logEndpointRequest).Expects(dummySession, "Header", "UnmarshalError", "%+v", dummyError).Returns().Once()
+	m.Mock(tryUnmarshal).Expects(dummyHeaders[dummyIndex], gomocker.Anything()).Returns(dummyError).SideEffect(func(index int, params ...interface{}) {
+		*(params[1].(*int)) = dummyResult
+	}).Once()
+	m.Mock(newAppError).Expects(errorCodeBadRequest, errorMessageHeaderInvalid, []error{dummyError}).Returns(dummyAppError).Once()
 
 	// act
 	var err = dummySession.GetRequestHeader(
@@ -1035,23 +841,11 @@ func TestSessionGetRequestHeader_HeaderValid(t *testing.T) {
 	}
 
 	// expect
-	m.ExpectFunc(getAllHeaders, 1, func(session *session, name string) []string {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyName, name)
-		return dummyHeaders
-	})
-	m.ExpectFunc(logEndpointRequest, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, "Header", category)
-		assert.Equal(t, dummyName, subcategory)
-		assert.Equal(t, dummyHeaders[dummyIndex], messageFormat)
-		assert.Empty(t, parameters)
-	})
-	m.ExpectFunc(tryUnmarshal, 1, func(value string, dataTemplate interface{}) error {
-		assert.Equal(t, dummyHeaders[dummyIndex], value)
-		*(dataTemplate.(*int)) = dummyResult
-		return nil
-	})
+	m.Mock(getAllHeaders).Expects(dummySession, dummyName).Returns(dummyHeaders).Once()
+	m.Mock(logEndpointRequest).Expects(dummySession, "Header", dummyName, dummyHeaders[dummyIndex]).Returns().Once()
+	m.Mock(tryUnmarshal).Expects(dummyHeaders[dummyIndex], gomocker.Anything()).Returns(nil).SideEffect(func(index int, params ...interface{}) {
+		*(params[1].(*int)) = dummyResult
+	}).Once()
 
 	// act
 	var err = dummySession.GetRequestHeader(
@@ -1315,10 +1109,7 @@ func TestSessionGetAttachment_MarshalError(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(json.Marshal, 1, func(v interface{}) ([]byte, error) {
-		assert.Equal(t, dummyValue, v)
-		return nil, errors.New("some marshal error")
-	})
+	m.Mock(json.Marshal).Expects(dummyValue).Returns(nil, errors.New("some marshal error")).Once()
 
 	// SUT
 	var dummySession = &session{
@@ -1405,10 +1196,7 @@ func TestSessionGetMethodName_UnknownCaller(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(runtime.Caller, 1, func(skip int) (pc uintptr, file string, line int, ok bool) {
-		assert.Equal(t, 3, skip)
-		return dummyPC, dummyFile, dummyLine, dummyOK
-	})
+	m.Mock(runtime.Caller).Expects(3).Returns(dummyPC, dummyFile, dummyLine, dummyOK).Once()
 
 	// SUT + act
 	var result = getMethodName()
@@ -1419,29 +1207,7 @@ func TestSessionGetMethodName_UnknownCaller(t *testing.T) {
 
 func TestSessionGetMethodName_HappyPath(t *testing.T) {
 	// arrange
-	var dummyPC = uintptr(rand.Int())
-	var dummyFile = "some file"
-	var dummyLine = rand.Int()
-	var dummyOK = true
-	var dummyFn = &runtime.Func{}
-	var dummyName = "some name"
-
-	// mock
-	var m = gomocker.NewMocker(t)
-
-	// expect
-	m.ExpectFunc(runtime.Caller, 1, func(skip int) (pc uintptr, file string, line int, ok bool) {
-		assert.Equal(t, 3, skip)
-		return dummyPC, dummyFile, dummyLine, dummyOK
-	})
-	m.ExpectFunc(runtime.FuncForPC, 1, func(pc uintptr) *runtime.Func {
-		assert.Equal(t, dummyPC, pc)
-		return dummyFn
-	})
-	m.ExpectMethod(dummyFn, "Name", 1, func(self *runtime.Func) string {
-		assert.Equal(t, dummyFn, self)
-		return dummyName
-	})
+	var dummyName = "runtime.goexit"
 
 	// SUT + act
 	var result = getMethodName()
@@ -1464,16 +1230,8 @@ func TestSessionLogMethodEnter(t *testing.T) {
 	}
 
 	// expect
-	m.ExpectFunc(getMethodName, 1, func() string {
-		return dummyMethodName
-	})
-	m.ExpectFunc(logMethodEnter, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyMethodName, category)
-		assert.Zero(t, subcategory)
-		assert.Zero(t, messageFormat)
-		assert.Empty(t, parameters)
-	})
+	m.Mock(getMethodName).Expects().Returns(dummyMethodName).Once()
+	m.Mock(logMethodEnter).Expects(dummySession, dummyMethodName, "", "").Returns().Once()
 
 	// act
 	dummySession.LogMethodEnter()
@@ -1501,31 +1259,10 @@ func TestSessionLogMethodParameter(t *testing.T) {
 	}
 
 	// expect
-	m.ExpectFunc(getMethodName, 1, func() string {
-		return dummyMethodName
-	})
-	m.ExpectFunc(logMethodParameter, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyMethodName, category)
-		assert.Equal(t, "0", subcategory)
-		assert.Equal(t, "%v", messageFormat)
-		assert.Equal(t, 1, len(parameters))
-		assert.Equal(t, dummyParameters[0], parameters[0])
-	}).ExpectFunc(logMethodParameter, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyMethodName, category)
-		assert.Equal(t, "1", subcategory)
-		assert.Equal(t, "%v", messageFormat)
-		assert.Equal(t, 1, len(parameters))
-		assert.Equal(t, dummyParameters[1], parameters[0])
-	}).ExpectFunc(logMethodParameter, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyMethodName, category)
-		assert.Equal(t, "2", subcategory)
-		assert.Equal(t, "%v", messageFormat)
-		assert.Equal(t, 1, len(parameters))
-		assert.Equal(t, dummyParameters[2], parameters[0])
-	})
+	m.Mock(getMethodName).Expects().Returns(dummyMethodName).Once()
+	m.Mock(logMethodParameter).Expects(dummySession, dummyMethodName, "0", "%v", dummyParameters[0]).Returns().Once()
+	m.Mock(logMethodParameter).Expects(dummySession, dummyMethodName, "1", "%v", dummyParameters[1]).Returns().Once()
+	m.Mock(logMethodParameter).Expects(dummySession, dummyMethodName, "2", "%v", dummyParameters[2]).Returns().Once()
 
 	// act
 	dummySession.LogMethodParameter(
@@ -1555,17 +1292,9 @@ func TestSessionLogMethodLogic(t *testing.T) {
 	}
 
 	// expect
-	m.ExpectFunc(logMethodLogic, 1, func(session *session, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyLogLevel, logLevel)
-		assert.Equal(t, dummyCategory, category)
-		assert.Equal(t, dummySubcategory, subcategory)
-		assert.Equal(t, dummyMessageFormat, messageFormat)
-		assert.Equal(t, 3, len(parameters))
-		assert.Equal(t, dummyParameter1, parameters[0])
-		assert.Equal(t, dummyParameter2, parameters[1])
-		assert.Equal(t, dummyParameter3, parameters[2])
-	})
+	m.Mock(logMethodLogic).Expects(dummySession, dummyLogLevel,
+		dummyCategory, dummySubcategory, dummyMessageFormat,
+		dummyParameter1, dummyParameter2, dummyParameter3).Returns().Once()
 
 	// act
 	dummySession.LogMethodLogic(
@@ -1601,31 +1330,10 @@ func TestSessionLogMethodReturn(t *testing.T) {
 	}
 
 	// expect
-	m.ExpectFunc(getMethodName, 1, func() string {
-		return dummyMethodName
-	})
-	m.ExpectFunc(logMethodReturn, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyMethodName, category)
-		assert.Equal(t, "0", subcategory)
-		assert.Equal(t, "%v", messageFormat)
-		assert.Equal(t, 1, len(parameters))
-		assert.Equal(t, dummyReturns[0], parameters[0])
-	}).ExpectFunc(logMethodReturn, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyMethodName, category)
-		assert.Equal(t, "1", subcategory)
-		assert.Equal(t, "%v", messageFormat)
-		assert.Equal(t, 1, len(parameters))
-		assert.Equal(t, dummyReturns[1], parameters[0])
-	}).ExpectFunc(logMethodReturn, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyMethodName, category)
-		assert.Equal(t, "2", subcategory)
-		assert.Equal(t, "%v", messageFormat)
-		assert.Equal(t, 1, len(parameters))
-		assert.Equal(t, dummyReturns[2], parameters[0])
-	})
+	m.Mock(getMethodName).Expects().Returns(dummyMethodName).Once()
+	m.Mock(logMethodReturn).Expects(dummySession, dummyMethodName, "0", "%v", dummyReturns[0]).Returns().Once()
+	m.Mock(logMethodReturn).Expects(dummySession, dummyMethodName, "1", "%v", dummyReturns[1]).Returns().Once()
+	m.Mock(logMethodReturn).Expects(dummySession, dummyMethodName, "2", "%v", dummyReturns[2]).Returns().Once()
 
 	// act
 	dummySession.LogMethodReturn(
@@ -1649,16 +1357,8 @@ func TestSessionLogMethodExit(t *testing.T) {
 	}
 
 	// expect
-	m.ExpectFunc(getMethodName, 1, func() string {
-		return dummyMethodName
-	})
-	m.ExpectFunc(logMethodExit, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyMethodName, category)
-		assert.Zero(t, subcategory)
-		assert.Zero(t, messageFormat)
-		assert.Empty(t, parameters)
-	})
+	m.Mock(getMethodName).Expects().Returns(dummyMethodName).Once()
+	m.Mock(logMethodExit).Expects(dummySession, dummyMethodName, "", "").Returns().Once()
 
 	// act
 	dummySession.LogMethodExit()

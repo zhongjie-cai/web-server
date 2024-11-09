@@ -100,7 +100,6 @@ func registerRoute(
 	path string,
 	queries []string,
 	handleFunc func(http.ResponseWriter, *http.Request),
-	actionFunc ActionFunc,
 ) (string, *mux.Route) {
 	var name = fmt.Sprintf(
 		"%v:%v",

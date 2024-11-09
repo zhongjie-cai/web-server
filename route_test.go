@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
-	"github.com/zhongjie-cai/gomocker"
+	"github.com/zhongjie-cai/gomocker/v2"
 )
 
 func TestGetName_Undefined(t *testing.T) {
@@ -240,14 +240,8 @@ func TestPrintRegisteredRouteDetails_TemplateError(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(getPathTemplate, 1, func(route *mux.Route) (string, error) {
-		assert.Equal(t, dummyRoute, route)
-		return dummyPathTemplate, dummyPathTemplateError
-	})
-	m.ExpectFunc(getPathRegexp, 1, func(route *mux.Route) (string, error) {
-		assert.Equal(t, dummyRoute, route)
-		return dummyPathRegexp, dummyPathRegexpError
-	})
+	m.Mock(getPathTemplate).Expects(dummyRoute).Returns(dummyPathTemplate, dummyPathTemplateError).Once()
+	m.Mock(getPathRegexp).Expects(dummyRoute).Returns(dummyPathRegexp, dummyPathRegexpError).Once()
 
 	// SUT + act
 	var err = evaluateRoute(
@@ -273,14 +267,8 @@ func TestPrintRegisteredRouteDetails_RegexpError(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(getPathTemplate, 1, func(route *mux.Route) (string, error) {
-		assert.Equal(t, dummyRoute, route)
-		return dummyPathTemplate, nil
-	})
-	m.ExpectFunc(getPathRegexp, 1, func(route *mux.Route) (string, error) {
-		assert.Equal(t, dummyRoute, route)
-		return dummyPathRegexp, dummyPathRegexpError
-	})
+	m.Mock(getPathTemplate).Expects(dummyRoute).Returns(dummyPathTemplate, nil).Once()
+	m.Mock(getPathRegexp).Expects(dummyRoute).Returns(dummyPathRegexp, dummyPathRegexpError).Once()
 
 	// SUT + act
 	var err = evaluateRoute(
@@ -305,14 +293,8 @@ func TestPrintRegisteredRouteDetails_Success(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(getPathTemplate, 1, func(route *mux.Route) (string, error) {
-		assert.Equal(t, dummyRoute, route)
-		return dummyPathTemplate, nil
-	})
-	m.ExpectFunc(getPathRegexp, 1, func(route *mux.Route) (string, error) {
-		assert.Equal(t, dummyRoute, route)
-		return dummyPathRegexp, nil
-	})
+	m.Mock(getPathTemplate).Expects(dummyRoute).Returns(dummyPathTemplate, nil).Once()
+	m.Mock(getPathRegexp).Expects(dummyRoute).Returns(dummyPathRegexp, nil).Once()
 
 	// SUT + act
 	var err = evaluateRoute(
@@ -339,24 +321,11 @@ func TestWalkRegisteredRoutes_Error(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(evaluateRoute, 1, func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
-		return dummyError
-	})
-	m.ExpectFunc(logAppRoot, 1, func(session *session, category string, subcategory string, messageFormat string, parameters ...interface{}) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, "route", category)
-		assert.Equal(t, "walkRegisteredRoutes", subcategory)
-		assert.Equal(t, "Failure: %+v", messageFormat)
-		assert.Equal(t, 1, len(parameters))
-		assert.Equal(t, dummyError, parameters[0])
-	})
-	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		assert.Equal(t, errorCodeGeneralFailure, errorCode)
-		assert.Equal(t, errorMessageRouteRegistration, errorMessage)
-		assert.Equal(t, 1, len(innerErrors))
-		assert.Equal(t, dummyError, innerErrors[0])
-		return dummyAppError
-	})
+	m.Mock((*mux.Router).Walk).Expects(dummyRouter, gomocker.Matches(func(value interface{}) bool {
+		return functionPointerEquals(evaluateRoute, value)
+	})).Returns(dummyError).Once()
+	m.Mock(logAppRoot).Expects(dummySession, "route", "walkRegisteredRoutes", "Failure: %+v", dummyError).Returns().Once()
+	m.Mock(newAppError).Expects(errorCodeGeneralFailure, errorMessageRouteRegistration, []error{dummyError}).Returns(dummyAppError).Once()
 
 	// SUT + act
 	var err = walkRegisteredRoutes(
@@ -380,9 +349,9 @@ func TestWalkRegisteredRoutes_Success(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(evaluateRoute, 1, func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
-		return nil
-	})
+	m.Mock((*mux.Router).Walk).Expects(dummyRouter, gomocker.Matches(func(value interface{}) bool {
+		return functionPointerEquals(evaluateRoute, value)
+	})).Returns(nil).Once()
 
 	// SUT + act
 	var err = walkRegisteredRoutes(
@@ -410,39 +379,17 @@ func TestRegisterRoute(t *testing.T) {
 	var dummyHandlerFunc = func(http.ResponseWriter, *http.Request) {
 		dummyHandlerFuncCalled++
 	}
-	var dummyActionFuncExpected = 0
-	var dummyActionFuncCalled = 0
-	var dummyActionFunc = func(Session) (interface{}, error) {
-		dummyActionFuncCalled++
-		return nil, nil
-	}
 
 	// mock
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectMethod(dummyRouter, "HandleFunc", 1, func(self *mux.Router, path string, f func(http.ResponseWriter, *http.Request)) *mux.Route {
-		assert.Equal(t, dummyRouter, self)
-		assert.Equal(t, dummyPath, path)
-		functionPointerEquals(t, dummyHandlerFunc, f)
-		return dummyRoute
-	})
-	m.ExpectMethod(dummyRoute, "Methods", 1, func(self *mux.Route, methods ...string) *mux.Route {
-		assert.Equal(t, dummyRoute, self)
-		assert.Equal(t, 1, len(methods))
-		assert.Equal(t, dummyMethod, methods[0])
-		return dummyRoute
-	})
-	m.ExpectMethod(dummyRoute, "Queries", 1, func(self *mux.Route, pairs ...string) *mux.Route {
-		assert.Equal(t, dummyRoute, self)
-		assert.Equal(t, dummyQueries, pairs)
-		return dummyRoute
-	})
-	m.ExpectMethod(dummyRoute, "Name", 1, func(self *mux.Route, name string) *mux.Route {
-		assert.Equal(t, dummyRoute, self)
-		assert.Equal(t, dummyName, name)
-		return dummyRoute
-	})
+	m.Mock((*mux.Router).HandleFunc).Expects(dummyRouter, dummyPath, gomocker.Matches(func(value interface{}) bool {
+		return functionPointerEquals(dummyHandlerFunc, value)
+	})).Returns(dummyRoute).Once()
+	m.Mock((*mux.Route).Methods).Expects(dummyRoute, dummyMethod).Returns(dummyRoute).Once()
+	m.Mock((*mux.Route).Queries).Expects(dummyRoute, "test", "{test}").Returns(dummyRoute).Once()
+	m.Mock((*mux.Route).Name).Expects(dummyRoute, dummyName).Returns(dummyRoute).Once()
 
 	// SUT + act
 	var name, route = registerRoute(
@@ -452,14 +399,12 @@ func TestRegisterRoute(t *testing.T) {
 		dummyPath,
 		dummyQueries,
 		dummyHandlerFunc,
-		dummyActionFunc,
 	)
 
 	// assert
 	assert.Equal(t, dummyName, name)
 	assert.Equal(t, dummyRoute, route)
 	assert.Equal(t, dummyHandlerFuncExpected, dummyHandlerFuncCalled)
-	assert.Equal(t, dummyActionFuncExpected, dummyActionFuncCalled)
 }
 
 func TestDefaultActionFunc(t *testing.T) {
@@ -471,12 +416,7 @@ func TestDefaultActionFunc(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		assert.Equal(t, errorCodeNotImplemented, errorCode)
-		assert.Equal(t, "No corresponding action function configured; falling back to default", errorMessage)
-		assert.Empty(t, innerErrors)
-		return dummyAppError
-	})
+	m.Mock(newAppError).Expects(errorCodeNotImplemented, "No corresponding action function configured; falling back to default", []error{}).Returns(dummyAppError).Once()
 
 	// SUT + act
 	var result, err = defaultActionFunc(
@@ -530,16 +470,8 @@ func TestGetRouteInfo_NilRoute(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(mux.CurrentRoute, 1, func(httpRequest *http.Request) *mux.Route {
-		assert.Equal(t, dummyHTTPRequest, httpRequest)
-		return dummyRoute
-	})
-	m.ExpectFunc(newAppError, 1, func(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
-		assert.Equal(t, errorCodeNotFound, errorCode)
-		assert.Equal(t, "No corresponding route configured for path", errorMessage)
-		assert.Empty(t, innerErrors)
-		return dummyAppError
-	})
+	m.Mock(mux.CurrentRoute).Expects(dummyHTTPRequest).Returns(dummyRoute).Once()
+	m.Mock(newAppError).Expects(errorCodeNotFound, "No corresponding route configured for path", []error{}).Returns(dummyAppError).Once()
 
 	// SUT + act
 	var name, action, err = getRouteInfo(
@@ -569,18 +501,9 @@ func TestGetRouteInfo_RouteNotFound(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(mux.CurrentRoute, 1, func(httpRequest *http.Request) *mux.Route {
-		assert.Equal(t, dummyHTTPRequest, httpRequest)
-		return dummyRoute
-	})
-	m.ExpectFunc(getName, 1, func(route *mux.Route) string {
-		assert.Equal(t, dummyRoute, route)
-		return dummyName
-	})
-	m.ExpectFunc(getEndpointByName, 1, func(name string) string {
-		assert.Equal(t, dummyName, name)
-		return dummyEndpoint
-	})
+	m.Mock(mux.CurrentRoute).Expects(dummyHTTPRequest).Returns(dummyRoute).Once()
+	m.Mock(getName).Expects(dummyRoute).Returns(dummyName).Once()
+	m.Mock(getEndpointByName).Expects(dummyName).Returns(dummyEndpoint).Once()
 
 	// SUT + act
 	var endpoint, action, err = getRouteInfo(
@@ -590,7 +513,7 @@ func TestGetRouteInfo_RouteNotFound(t *testing.T) {
 
 	// assert
 	assert.Equal(t, dummyEndpoint, endpoint)
-	functionPointerEquals(t, defaultActionFunc, action)
+	assertFunctionEquals(t, defaultActionFunc, action)
 	assert.NoError(t, err)
 }
 
@@ -619,18 +542,9 @@ func TestGetRouteInfo_ValidRoute(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(mux.CurrentRoute, 1, func(httpRequest *http.Request) *mux.Route {
-		assert.Equal(t, dummyHTTPRequest, httpRequest)
-		return dummyRoute
-	})
-	m.ExpectFunc(getName, 1, func(route *mux.Route) string {
-		assert.Equal(t, dummyRoute, route)
-		return dummyName
-	})
-	m.ExpectFunc(getEndpointByName, 1, func(name string) string {
-		assert.Equal(t, dummyName, name)
-		return dummyEndpoint
-	})
+	m.Mock(mux.CurrentRoute).Expects(dummyHTTPRequest).Returns(dummyRoute).Once()
+	m.Mock(getName).Expects(dummyRoute).Returns(dummyName).Once()
+	m.Mock(getEndpointByName).Expects(dummyName).Returns(dummyEndpoint).Once()
 
 	// SUT + act
 	var endpoint, action, err = getRouteInfo(
@@ -640,7 +554,7 @@ func TestGetRouteInfo_ValidRoute(t *testing.T) {
 
 	// assert
 	assert.Equal(t, dummyEndpoint, endpoint)
-	functionPointerEquals(t, dummyAction, action)
+	assertFunctionEquals(t, dummyAction, action)
 	assert.NoError(t, err)
 	assert.Equal(t, dummyActionExpected, dummyActionCalled, "Unexpected number of calls to dummyAction")
 }

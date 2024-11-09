@@ -6,8 +6,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
-	"github.com/zhongjie-cai/gomocker"
+	"github.com/zhongjie-cai/gomocker/v2"
 )
 
 func TestHandlePanic_NilRecoverResult(t *testing.T) {
@@ -37,17 +36,9 @@ func TestHandlePanic_HappyPath(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectMethod(dummyCustomization, "RecoverPanic", 1, func(self *DefaultCustomization, session Session, recoverResult interface{}) (interface{}, error) {
-		assert.Equal(t, dummyCustomization, self)
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyRecoverResult, recoverResult)
-		return dummyResponseObject, dummyResponseError
-	})
-	m.ExpectFunc(writeResponse, 1, func(session *session, responseObject interface{}, responseError error) {
-		assert.Equal(t, dummySession, session)
-		assert.Equal(t, dummyResponseObject, responseObject)
-		assert.Equal(t, dummyResponseError, responseError)
-	})
+	m.Mock((*DefaultCustomization).RecoverPanic).Expects(dummyCustomization, dummySession, dummyRecoverResult).
+		Returns(dummyResponseObject, dummyResponseError).Once()
+	m.Mock(writeResponse).Expects(dummySession, dummyResponseObject, dummyResponseError).Returns().Once()
 
 	// SUT + act
 	handlePanic(

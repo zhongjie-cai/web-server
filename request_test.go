@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/zhongjie-cai/gomocker"
+	"github.com/zhongjie-cai/gomocker/v2"
 )
 
 func TestGetRequestBody_NilRequest(t *testing.T) {
@@ -57,10 +57,7 @@ func TestGetRequestBody_ErrorBody(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(io.ReadAll, 1, func(r io.Reader) ([]byte, error) {
-		assert.Equal(t, dummyRequest.Body, r)
-		return nil, dummyError
-	})
+	m.Mock(io.ReadAll).Expects(dummyRequest.Body).Returns(nil, dummyError).Once()
 
 	// SUT + act
 	var result = getRequestBody(
@@ -88,18 +85,9 @@ func TestGetRequestBody_Success(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.ExpectFunc(io.ReadAll, 1, func(r io.Reader) ([]byte, error) {
-		assert.Equal(t, dummyRequest.Body, r)
-		return dummyReadAll, dummyError
-	})
-	m.ExpectFunc(bytes.NewBuffer, 1, func(buf []byte) *bytes.Buffer {
-		assert.Equal(t, []byte(bodyContent), buf)
-		return dummyBuffer
-	})
-	m.ExpectFunc(io.NopCloser, 1, func(r io.Reader) io.ReadCloser {
-		assert.Equal(t, dummyBuffer, r)
-		return dummyReadCloser
-	})
+	m.Mock(io.ReadAll).Expects(dummyRequest.Body).Returns(dummyReadAll, dummyError).Once()
+	m.Mock(bytes.NewBuffer).Expects([]byte(bodyContent)).Returns(dummyBuffer).Once()
+	m.Mock(io.NopCloser).Expects(dummyBuffer).Returns(dummyReadCloser).Once()
 
 	// SUT + act
 	var result = getRequestBody(

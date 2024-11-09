@@ -24,15 +24,6 @@ func getClientForRequest(sendClientCert bool) *http.Client {
 	return httpClientNoCert
 }
 
-func clientDo(
-	httpClient *http.Client,
-	httpRequest *http.Request,
-) (*http.Response, error) {
-	return httpClient.Do(
-		httpRequest,
-	)
-}
-
 func clientDoWithRetry(
 	httpClient *http.Client,
 	httpRequest *http.Request,
@@ -43,8 +34,7 @@ func clientDoWithRetry(
 	var responseObject *http.Response
 	var responseError error
 	for {
-		responseObject, responseError = clientDo(
-			httpClient,
+		responseObject, responseError = httpClient.Do(
 			httpRequest,
 		)
 		if responseError != nil {
