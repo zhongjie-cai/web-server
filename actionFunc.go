@@ -4,6 +4,6 @@ package webserver
 type ActionFunc func(
 	session Session,
 ) (
-	responseObject interface{},
+	responseObject any,
 	responseError error,
 )

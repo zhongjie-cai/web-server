@@ -164,7 +164,7 @@ func TestRegisterRoutes_ValidRoutes(t *testing.T) {
 	var dummyQueries1 = map[string]ParameterType{
 		"test1": ParameterType("me1"),
 	}
-	var dummyActionFunc1 = func(Session) (interface{}, error) {
+	var dummyActionFunc1 = func(Session) (any, error) {
 		return nil, nil
 	}
 	var dummyEndpoint2 = "some endpoint 2"
@@ -176,7 +176,7 @@ func TestRegisterRoutes_ValidRoutes(t *testing.T) {
 	var dummyQueries2 = map[string]ParameterType{
 		"test2": ParameterType("me2"),
 	}
-	var dummyActionFunc2 = func(Session) (interface{}, error) {
+	var dummyActionFunc2 = func(Session) (any, error) {
 		return nil, nil
 	}
 	var dummyRoutes = []Route{
@@ -212,11 +212,11 @@ func TestRegisterRoutes_ValidRoutes(t *testing.T) {
 	m.Mock(evaluatePathWithParameters).Expects(dummySession, dummyPath1, dummyParameters1).Returns(dummyEvaluatedPath1).Once()
 	m.Mock(evaluateQueries).Expects(dummyQueries1).Returns(dummyEvaluatedQueries1).Once()
 	m.Mock(registerRoute).Expects(dummyRouter, dummyEndpoint1, dummyMethod1, dummyEvaluatedPath1, dummyEvaluatedQueries1,
-		gomocker.Matches(func(value interface{}) bool { return functionPointerEquals(dummyApplication.handleSession, value) })).Returns(dummyName1, nil).Once()
+		gomocker.Matches(func(value any) bool { return functionPointerEquals(dummyApplication.handleSession, value) })).Returns(dummyName1, nil).Once()
 	m.Mock(evaluatePathWithParameters).Expects(dummySession, dummyPath2, dummyParameters2).Returns(dummyEvaluatedPath2).Once()
 	m.Mock(evaluateQueries).Expects(dummyQueries2).Returns(dummyEvaluatedQueries2).Once()
 	m.Mock(registerRoute).Expects(dummyRouter, dummyEndpoint2, dummyMethod2, dummyEvaluatedPath2, dummyEvaluatedQueries2,
-		gomocker.Matches(func(value interface{}) bool { return functionPointerEquals(dummyApplication.handleSession, value) })).Returns(dummyName2, nil).Once()
+		gomocker.Matches(func(value any) bool { return functionPointerEquals(dummyApplication.handleSession, value) })).Returns(dummyName2, nil).Once()
 
 	// SUT + act
 	registerRoutes(
@@ -289,10 +289,10 @@ func TestRegisterStatics_ValidStatics(t *testing.T) {
 
 	// expect
 	m.Mock((*DefaultCustomization).Statics).Expects(dummyCustomization).Returns(dummyStatics).Once()
-	m.Mock(registerStatic).Expects(dummyRouter, dummyName1, dummyPathPrefix1, gomocker.Matches(func(value interface{}) bool {
+	m.Mock(registerStatic).Expects(dummyRouter, dummyName1, dummyPathPrefix1, gomocker.Matches(func(value any) bool {
 		return functionPointerEquals(dummyHandler1, value)
 	})).Returns(nil).Once()
-	m.Mock(registerStatic).Expects(dummyRouter, dummyName2, dummyPathPrefix2, gomocker.Matches(func(value interface{}) bool {
+	m.Mock(registerStatic).Expects(dummyRouter, dummyName2, dummyPathPrefix2, gomocker.Matches(func(value any) bool {
 		return functionPointerEquals(dummyHandler2, value)
 	})).Returns(nil).Once()
 
@@ -346,10 +346,10 @@ func TestRegisterMiddlewares_ValidMiddlewares(t *testing.T) {
 
 	// expect
 	m.Mock((*DefaultCustomization).Middlewares).Expects(dummyCustomization).Returns(dummyMiddlewares).Once()
-	m.Mock(addMiddleware).Expects(dummyRouter, gomocker.Matches(func(value interface{}) bool {
+	m.Mock(addMiddleware).Expects(dummyRouter, gomocker.Matches(func(value any) bool {
 		return functionPointerEquals(dummyMiddleware1, value)
 	})).Returns().Once()
-	m.Mock(addMiddleware).Expects(dummyRouter, gomocker.Matches(func(value interface{}) bool {
+	m.Mock(addMiddleware).Expects(dummyRouter, gomocker.Matches(func(value any) bool {
 		return functionPointerEquals(dummyMiddleware2, value)
 	})).Returns().Once()
 

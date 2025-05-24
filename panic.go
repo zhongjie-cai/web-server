@@ -3,7 +3,7 @@ package webserver
 // handlePanic prevents the application from halting when service handler panics unexpectedly
 func handlePanic(
 	session *session,
-	recoverResult interface{},
+	recoverResult any,
 ) {
 	if recoverResult == nil {
 		return

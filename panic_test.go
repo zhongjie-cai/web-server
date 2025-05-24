@@ -12,7 +12,7 @@ import (
 func TestHandlePanic_NilRecoverResult(t *testing.T) {
 	// arrange
 	var dummySession = &session{id: uuid.New()}
-	var dummyRecoverResult interface{}
+	var dummyRecoverResult any
 
 	// SUT + act
 	handlePanic(
@@ -28,7 +28,7 @@ func TestHandlePanic_HappyPath(t *testing.T) {
 		id:            uuid.New(),
 		customization: dummyCustomization,
 	}
-	var dummyRecoverResult = errors.New("some error").(interface{})
+	var dummyRecoverResult = errors.New("some error").(any)
 	var dummyResponseObject = rand.Int()
 	var dummyResponseError = errors.New("some response error")
 

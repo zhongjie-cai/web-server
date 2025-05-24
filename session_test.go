@@ -1,7 +1,6 @@
 package webserver
 
 import (
-	"encoding/json"
 	"errors"
 	"math/rand"
 	"net/http"
@@ -172,6 +171,29 @@ func TestSessionGetResponseWriter_ValidResponseWriter(t *testing.T) {
 	assert.Equal(t, dummyResponseWriterObject, result)
 }
 
+func TestGetRequestBodyFromSession_HappyPath(t *testing.T) {
+	// arrange
+	var dummyResult = rand.Int()
+	var dummyError = errors.New("some error")
+
+	// mock
+	var m = gomocker.NewMocker(t)
+
+	// SUT
+	var sut = &session{}
+
+	// expect
+	m.Mock((*session).GetRequestBody).Expects(sut, gomocker.Anything()).Returns(dummyError).SideEffects(
+		gomocker.ParamSideEffect(1, 2, func(value *int) { *value = dummyResult })).Once()
+
+	//  act
+	var result, err = GetRequestBodyFromSession[int](sut)
+
+	// assert
+	assert.Equal(t, dummyResult, *result)
+	assert.Equal(t, dummyError, err)
+}
+
 func TestSessionGetRequestBody_NilSession(t *testing.T) {
 	// arrange
 	var dummyDataTemplate int
@@ -246,9 +268,8 @@ func TestSessionGetRequestBody_BodyInvalid(t *testing.T) {
 	m.Mock(getRequestBody).Expects(dummyHTTPRequest).Returns(dummyRequestBody).Once()
 	m.Mock(logEndpointRequest).Expects(dummySession, "Body", "Content", dummyRequestBody).Returns().Once()
 	m.Mock(logEndpointRequest).Expects(dummySession, "Body", "UnmarshalError", "%+v", dummyError).Returns().Once()
-	m.Mock(tryUnmarshal).Expects(dummyRequestBody, gomocker.Anything()).Returns(dummyError).SideEffect(func(index int, params ...interface{}) {
-		*(params[1].(*int)) = dummyResult
-	}).Once()
+	m.Mock(tryUnmarshal).Expects(dummyRequestBody, gomocker.Anything()).Returns(dummyError).SideEffects(
+		gomocker.ParamSideEffect(1, 2, func(value *int) { *value = dummyResult })).Once()
 	m.Mock(newAppError).Expects(errorCodeBadRequest, errorMessageRequestBodyInvalid, []error{dummyError}).Returns(dummyAppError).Once()
 
 	// act
@@ -279,9 +300,8 @@ func TestSessionGetRequestBody_BodyValid(t *testing.T) {
 	// expect
 	m.Mock(getRequestBody).Expects(dummyHTTPRequest).Returns(dummyRequestBody).Once()
 	m.Mock(logEndpointRequest).Expects(dummySession, "Body", "Content", dummyRequestBody).Returns().Once()
-	m.Mock(tryUnmarshal).Expects(dummyRequestBody, gomocker.Anything()).Returns(nil).SideEffect(func(index int, params ...interface{}) {
-		*(params[1].(*int)) = dummyResult
-	}).Once()
+	m.Mock(tryUnmarshal).Expects(dummyRequestBody, gomocker.Anything()).Returns(nil).SideEffects(
+		gomocker.ParamSideEffect(1, 2, func(value *int) { *value = dummyResult })).Once()
 
 	// act
 	var err = dummySession.GetRequestBody(
@@ -291,6 +311,30 @@ func TestSessionGetRequestBody_BodyValid(t *testing.T) {
 	// assert
 	assert.NoError(t, err)
 	assert.Equal(t, dummyResult, dummyDataTemplate)
+}
+
+func TestGetRequestParameterFromSession_HappyPath(t *testing.T) {
+	// arrange
+	var dummyName = "some name"
+	var dummyResult = rand.Int()
+	var dummyError = errors.New("some error")
+
+	// mock
+	var m = gomocker.NewMocker(t)
+
+	// SUT
+	var sut = &session{}
+
+	// expect
+	m.Mock((*session).GetRequestParameter).Expects(sut, dummyName, gomocker.Anything()).Returns(dummyError).SideEffects(
+		gomocker.ParamSideEffect(1, 3, func(value *int) { *value = dummyResult })).Once()
+
+	//  act
+	var result, err = GetRequestParameterFromSession[int](sut, dummyName)
+
+	// assert
+	assert.Equal(t, dummyResult, *result)
+	assert.Equal(t, dummyError, err)
 }
 
 func TestSessionGetRequestParameter_NilSession(t *testing.T) {
@@ -378,9 +422,8 @@ func TestSessionGetRequestParameter_ParameterInvalid(t *testing.T) {
 	m.Mock(mux.Vars).Expects(dummyHTTPRequest).Returns(dummyParameters).Once()
 	m.Mock(logEndpointRequest).Expects(dummySession, "Parameter", dummyName, dummyValue).Returns().Once()
 	m.Mock(logEndpointRequest).Expects(dummySession, "Parameter", "UnmarshalError", "%+v", dummyError).Returns().Once()
-	m.Mock(tryUnmarshal).Expects(dummyValue, gomocker.Anything()).Returns(dummyError).SideEffect(func(index int, params ...interface{}) {
-		*(params[1].(*int)) = dummyResult
-	}).Once()
+	m.Mock(tryUnmarshal).Expects(dummyValue, gomocker.Anything()).Returns(dummyError).SideEffects(
+		gomocker.ParamSideEffect(1, 2, func(value *int) { *value = dummyResult })).Once()
 	m.Mock(newAppError).Expects(errorCodeBadRequest, errorMessageParameterInvalid, []error{dummyError}).Returns(dummyAppError).Once()
 
 	// act
@@ -418,9 +461,8 @@ func TestSessionGetRequestParameter_ParameterValid(t *testing.T) {
 	// expect
 	m.Mock(mux.Vars).Expects(dummyHTTPRequest).Returns(dummyParameters).Once()
 	m.Mock(logEndpointRequest).Expects(dummySession, "Parameter", dummyName, dummyValue).Returns().Once()
-	m.Mock(tryUnmarshal).Expects(dummyValue, gomocker.Anything()).Returns(nil).SideEffect(func(index int, params ...interface{}) {
-		*(params[1].(*int)) = dummyResult
-	}).Once()
+	m.Mock(tryUnmarshal).Expects(dummyValue, gomocker.Anything()).Returns(nil).SideEffects(
+		gomocker.ParamSideEffect(1, 2, func(value *int) { *value = dummyResult })).Once()
 
 	// act
 	var err = dummySession.GetRequestParameter(
@@ -448,7 +490,7 @@ func TestSessionGetAllQueries_NoURL(t *testing.T) {
 	)
 
 	// assert
-	assert.Nil(t, result)
+	assert.Empty(t, result)
 }
 
 func TestSessionGetAllQueries_NotFound(t *testing.T) {
@@ -470,7 +512,7 @@ func TestSessionGetAllQueries_NotFound(t *testing.T) {
 	)
 
 	// assert
-	assert.Nil(t, result)
+	assert.Empty(t, result)
 }
 
 func TestSessionGetAllQueries_HappyPath(t *testing.T) {
@@ -478,7 +520,7 @@ func TestSessionGetAllQueries_HappyPath(t *testing.T) {
 	var dummyName = "some name"
 	var dummyHTTPRequest = &http.Request{
 		URL: &url.URL{
-			RawQuery: dummyName + "=me&" + dummyName + "=you",
+			RawQuery: dummyName + "=foo,bar&" + dummyName + "=test",
 		},
 	}
 	var dummySession = &session{
@@ -492,9 +534,219 @@ func TestSessionGetAllQueries_HappyPath(t *testing.T) {
 	)
 
 	// assert
-	assert.Equal(t, 2, len(result))
-	assert.Equal(t, "me", result[0])
-	assert.Equal(t, "you", result[1])
+	assert.Equal(t, 3, len(result))
+	assert.Equal(t, "foo", result[0])
+	assert.Equal(t, "bar", result[1])
+	assert.Equal(t, "test", result[2])
+}
+
+func TestGetRequestQueriesFromSession_HappyPath(t *testing.T) {
+	// arrange
+	var dummyName = "some name"
+	var dummyResults = []int{rand.Int(), rand.Int(), rand.Int()}
+	var dummyError = errors.New("some error")
+
+	// mock
+	var m = gomocker.NewMocker(t)
+
+	// SUT
+	var sut = &session{}
+
+	// expect
+	m.Mock((*session).GetRequestQueries).Expects(sut, dummyName, gomocker.Anything()).Returns(dummyError).SideEffects(
+		gomocker.ParamSideEffect(1, 3, func(value *[]int) { *value = dummyResults })).Once()
+
+	//  act
+	var results, err = GetRequestQueriesFromSession[int](sut, dummyName)
+
+	// assert
+	assert.Equal(t, dummyResults, results)
+	assert.Equal(t, dummyError, err)
+}
+
+func TestSessionGetRequestQueries_NilSession(t *testing.T) {
+	// arrange
+	var dummyName = "some name"
+	var dummyDataTemplate []int
+	var dummyAppError = &appError{Message: "some error message"}
+
+	// mock
+	var m = gomocker.NewMocker(t)
+
+	// SUT
+	var dummySession *session
+
+	// expect
+	m.Mock(newAppError).Expects(errorCodeGeneralFailure, errorMessageSessionNil, []error{}).Returns(dummyAppError).Once()
+
+	// act
+	var err = dummySession.GetRequestQueries(
+		dummyName,
+		&dummyDataTemplate,
+	)
+
+	// assert
+	assert.Equal(t, dummyAppError, err)
+	assert.Zero(t, dummyDataTemplate)
+}
+
+func TestSessionGetRequestQueries_DataTemplateNotAPointer(t *testing.T) {
+	// arrange
+	var dummySessionID = uuid.New()
+	var dummyName = "some name"
+	var dummyDataTemplate []int
+	var dummyAppError = &appError{Message: "some error message"}
+
+	// mock
+	var m = gomocker.NewMocker(t)
+
+	// SUT
+	var dummySession = &session{
+		id: dummySessionID,
+	}
+
+	// expect
+	m.Mock(newAppError).Expects(errorCodeGeneralFailure, errorMessageDataTemplateInvalid, []error{}).Returns(dummyAppError).Once()
+
+	// act
+	var err = dummySession.GetRequestQueries(
+		dummyName,
+		dummyDataTemplate,
+	)
+
+	// assert
+	assert.Equal(t, dummyAppError, err)
+	assert.Zero(t, dummyDataTemplate)
+}
+
+func TestSessionGetRequestQueries_DataTemplateNotASlice(t *testing.T) {
+	// arrange
+	var dummySessionID = uuid.New()
+	var dummyName = "some name"
+	var dummyDataTemplate int
+	var dummyAppError = &appError{Message: "some error message"}
+
+	// mock
+	var m = gomocker.NewMocker(t)
+
+	// SUT
+	var dummySession = &session{
+		id: dummySessionID,
+	}
+
+	// expect
+	m.Mock(newAppError).Expects(errorCodeGeneralFailure, errorMessageDataTemplateInvalid, []error{}).Returns(dummyAppError).Once()
+
+	// act
+	var err = dummySession.GetRequestQueries(
+		dummyName,
+		&dummyDataTemplate,
+	)
+
+	// assert
+	assert.Equal(t, dummyAppError, err)
+	assert.Zero(t, dummyDataTemplate)
+}
+
+func TestSessionGetRequestQueries_UnmarshalError(t *testing.T) {
+	// arrange
+	var dummySessionID = uuid.New()
+	var dummyName = "some name"
+	var dummyDataTemplate []int
+	var dummyQueries = []string{
+		"foo",
+		"456",
+		"789",
+	}
+	var dummyError = errors.New("some error")
+	var dummyAppError = &appError{Message: "some error message"}
+
+	// mock
+	var m = gomocker.NewMocker(t)
+
+	// SUT
+	var dummySession = &session{
+		id: dummySessionID,
+	}
+
+	// expect
+	m.Mock(getAllQueries).Expects(dummySession, dummyName).Returns(dummyQueries).Once()
+	m.Mock(logEndpointRequest).Expects(dummySession, "Query", dummyName, dummyQueries[0]).Returns().Once()
+	m.Mock(tryUnmarshal).Expects(dummyQueries[0], gomocker.Anything()).Returns(dummyError).Once()
+	m.Mock(logEndpointRequest).Expects(dummySession, "Query", "UnmarshalError", "%+v", dummyError).Returns().Once()
+	m.Mock(newAppError).Expects(errorCodeBadRequest, errorMessageQueryInvalid, []error{dummyError}).Returns(dummyAppError).Once()
+
+	// act
+	var err = dummySession.GetRequestQueries(
+		dummyName,
+		&dummyDataTemplate,
+	)
+
+	// assert
+	assert.Equal(t, dummyAppError, err)
+	assert.Empty(t, dummyDataTemplate)
+}
+
+func TestSessionGetRequestQueries_Success(t *testing.T) {
+	// arrange
+	var dummySessionID = uuid.New()
+	var dummyName = "some name"
+	var dummyDataTemplate []int
+	var dummyQueries = []string{
+		"123",
+		"456",
+		"789",
+	}
+	var dummyResult = []int{123, 456, 789}
+
+	// mock
+	var m = gomocker.NewMocker(t)
+
+	// SUT
+	var dummySession = &session{
+		id: dummySessionID,
+	}
+
+	// expect
+	m.Mock(getAllQueries).Expects(dummySession, dummyName).Returns(dummyQueries).Once()
+	m.Mock(logEndpointRequest).Expects(dummySession, "Query", dummyName, dummyQueries[0]).Returns().Once()
+	m.Mock(logEndpointRequest).Expects(dummySession, "Query", dummyName, dummyQueries[1]).Returns().Once()
+	m.Mock(logEndpointRequest).Expects(dummySession, "Query", dummyName, dummyQueries[2]).Returns().Once()
+
+	// act
+	var err = dummySession.GetRequestQueries(
+		dummyName,
+		&dummyDataTemplate,
+	)
+
+	// assert
+	assert.NoError(t, err)
+	assert.Equal(t, dummyResult, dummyDataTemplate)
+}
+
+func TestGetRequestQueryFromSession_HappyPath(t *testing.T) {
+	// arrange
+	var dummyName = "some name"
+	var dummyIndex = rand.Int()
+	var dummyResult = rand.Int()
+	var dummyError = errors.New("some error")
+
+	// mock
+	var m = gomocker.NewMocker(t)
+
+	// SUT
+	var sut = &session{}
+
+	// expect
+	m.Mock((*session).GetRequestQuery).Expects(sut, dummyName, dummyIndex, gomocker.Anything()).Returns(dummyError).SideEffects(
+		gomocker.ParamSideEffect(1, 4, func(value *int) { *value = dummyResult })).Once()
+
+	//  act
+	var result, err = GetRequestQueryFromSession[int](sut, dummyName, dummyIndex)
+
+	// assert
+	assert.Equal(t, dummyResult, *result)
+	assert.Equal(t, dummyError, err)
 }
 
 func TestSessionGetRequestQuery_NilSession(t *testing.T) {
@@ -589,9 +841,8 @@ func TestSessionGetRequestQuery_QueryInvalid(t *testing.T) {
 	m.Mock(getAllQueries).Expects(dummySession, dummyName).Returns(dummyQueries).Once()
 	m.Mock(logEndpointRequest).Expects(dummySession, "Query", dummyName, dummyQueries[dummyIndex]).Returns().Once()
 	m.Mock(logEndpointRequest).Expects(dummySession, "Query", "UnmarshalError", "%+v", dummyError).Returns().Once()
-	m.Mock(tryUnmarshal).Expects(dummyQueries[dummyIndex], gomocker.Anything()).Returns(dummyError).SideEffect(func(index int, params ...interface{}) {
-		*(params[1].(*int)) = dummyResult
-	}).Once()
+	m.Mock(tryUnmarshal).Expects(dummyQueries[dummyIndex], gomocker.Anything()).Returns(dummyError).SideEffects(
+		gomocker.ParamSideEffect(1, 2, func(value *int) { *value = dummyResult })).Once()
 	m.Mock(newAppError).Expects(errorCodeBadRequest, errorMessageQueryInvalid, []error{dummyError}).Returns(dummyAppError).Once()
 
 	// act
@@ -630,9 +881,8 @@ func TestSessionGetRequestQuery_QueryValid(t *testing.T) {
 	// expect
 	m.Mock(getAllQueries).Expects(dummySession, dummyName).Returns(dummyQueries).Once()
 	m.Mock(logEndpointRequest).Expects(dummySession, "Query", dummyName, dummyQueries[dummyIndex]).Returns().Once()
-	m.Mock(tryUnmarshal).Expects(dummyQueries[dummyIndex], gomocker.Anything()).Returns(nil).SideEffect(func(index int, params ...interface{}) {
-		*(params[1].(*int)) = dummyResult
-	}).Once()
+	m.Mock(tryUnmarshal).Expects(dummyQueries[dummyIndex], gomocker.Anything()).Returns(nil).SideEffects(
+		gomocker.ParamSideEffect(1, 2, func(value *int) { *value = dummyResult })).Once()
 
 	// act
 	var err = dummySession.GetRequestQuery(
@@ -708,6 +958,215 @@ func TestSessionGetAllHeaders_HappyPath(t *testing.T) {
 	assert.Equal(t, 2, len(result))
 	assert.Equal(t, "me", result[0])
 	assert.Equal(t, "you", result[1])
+}
+
+func TestGetRequestHeadersFromSession_HappyPath(t *testing.T) {
+	// arrange
+	var dummyName = "some name"
+	var dummyResults = []int{rand.Int(), rand.Int(), rand.Int()}
+	var dummyError = errors.New("some error")
+
+	// mock
+	var m = gomocker.NewMocker(t)
+
+	// SUT
+	var sut = &session{}
+
+	// expect
+	m.Mock((*session).GetRequestHeaders).Expects(sut, dummyName, gomocker.Anything()).Returns(dummyError).SideEffects(
+		gomocker.ParamSideEffect(1, 3, func(value *[]int) { *value = dummyResults })).Once()
+
+	//  act
+	var results, err = GetRequestHeadersFromSession[int](sut, dummyName)
+
+	// assert
+	assert.Equal(t, dummyResults, results)
+	assert.Equal(t, dummyError, err)
+}
+
+func TestSessionGetRequestHeaders_NilSession(t *testing.T) {
+	// arrange
+	var dummyName = "some name"
+	var dummyDataTemplate []int
+	var dummyAppError = &appError{Message: "some error message"}
+
+	// mock
+	var m = gomocker.NewMocker(t)
+
+	// SUT
+	var dummySession *session
+
+	// expect
+	m.Mock(newAppError).Expects(errorCodeGeneralFailure, errorMessageSessionNil, []error{}).Returns(dummyAppError).Once()
+
+	// act
+	var err = dummySession.GetRequestHeaders(
+		dummyName,
+		&dummyDataTemplate,
+	)
+
+	// assert
+	assert.Equal(t, dummyAppError, err)
+	assert.Zero(t, dummyDataTemplate)
+}
+
+func TestSessionGetRequestHeaders_DataTemplateNotAPointer(t *testing.T) {
+	// arrange
+	var dummySessionID = uuid.New()
+	var dummyName = "some name"
+	var dummyDataTemplate []int
+	var dummyAppError = &appError{Message: "some error message"}
+
+	// mock
+	var m = gomocker.NewMocker(t)
+
+	// SUT
+	var dummySession = &session{
+		id: dummySessionID,
+	}
+
+	// expect
+	m.Mock(newAppError).Expects(errorCodeGeneralFailure, errorMessageDataTemplateInvalid, []error{}).Returns(dummyAppError).Once()
+
+	// act
+	var err = dummySession.GetRequestHeaders(
+		dummyName,
+		dummyDataTemplate,
+	)
+
+	// assert
+	assert.Equal(t, dummyAppError, err)
+	assert.Zero(t, dummyDataTemplate)
+}
+
+func TestSessionGetRequestHeaders_DataTemplateNotASlice(t *testing.T) {
+	// arrange
+	var dummySessionID = uuid.New()
+	var dummyName = "some name"
+	var dummyDataTemplate int
+	var dummyAppError = &appError{Message: "some error message"}
+
+	// mock
+	var m = gomocker.NewMocker(t)
+
+	// SUT
+	var dummySession = &session{
+		id: dummySessionID,
+	}
+
+	// expect
+	m.Mock(newAppError).Expects(errorCodeGeneralFailure, errorMessageDataTemplateInvalid, []error{}).Returns(dummyAppError).Once()
+
+	// act
+	var err = dummySession.GetRequestHeaders(
+		dummyName,
+		&dummyDataTemplate,
+	)
+
+	// assert
+	assert.Equal(t, dummyAppError, err)
+	assert.Zero(t, dummyDataTemplate)
+}
+
+func TestSessionGetRequestHeaders_UnmarshalError(t *testing.T) {
+	// arrange
+	var dummySessionID = uuid.New()
+	var dummyName = "some name"
+	var dummyDataTemplate []int
+	var dummyHeaders = []string{
+		"foo",
+		"456",
+		"789",
+	}
+	var dummyError = errors.New("some error")
+	var dummyAppError = &appError{Message: "some error message"}
+
+	// mock
+	var m = gomocker.NewMocker(t)
+
+	// SUT
+	var dummySession = &session{
+		id: dummySessionID,
+	}
+
+	// expect
+	m.Mock(getAllHeaders).Expects(dummySession, dummyName).Returns(dummyHeaders).Once()
+	m.Mock(logEndpointRequest).Expects(dummySession, "Header", dummyName, dummyHeaders[0]).Returns().Once()
+	m.Mock(tryUnmarshal).Expects(dummyHeaders[0], gomocker.Anything()).Returns(dummyError).Once()
+	m.Mock(logEndpointRequest).Expects(dummySession, "Header", "UnmarshalError", "%+v", dummyError).Returns().Once()
+	m.Mock(newAppError).Expects(errorCodeBadRequest, errorMessageHeaderInvalid, []error{dummyError}).Returns(dummyAppError).Once()
+
+	// act
+	var err = dummySession.GetRequestHeaders(
+		dummyName,
+		&dummyDataTemplate,
+	)
+
+	// assert
+	assert.Equal(t, dummyAppError, err)
+	assert.Empty(t, dummyDataTemplate)
+}
+
+func TestSessionGetRequestHeaders_Success(t *testing.T) {
+	// arrange
+	var dummySessionID = uuid.New()
+	var dummyName = "some name"
+	var dummyDataTemplate []int
+	var dummyHeaders = []string{
+		"123",
+		"456",
+		"789",
+	}
+	var dummyResult = []int{123, 456, 789}
+
+	// mock
+	var m = gomocker.NewMocker(t)
+
+	// SUT
+	var dummySession = &session{
+		id: dummySessionID,
+	}
+
+	// expect
+	m.Mock(getAllHeaders).Expects(dummySession, dummyName).Returns(dummyHeaders).Once()
+	m.Mock(logEndpointRequest).Expects(dummySession, "Header", dummyName, dummyHeaders[0]).Returns().Once()
+	m.Mock(logEndpointRequest).Expects(dummySession, "Header", dummyName, dummyHeaders[1]).Returns().Once()
+	m.Mock(logEndpointRequest).Expects(dummySession, "Header", dummyName, dummyHeaders[2]).Returns().Once()
+
+	// act
+	var err = dummySession.GetRequestHeaders(
+		dummyName,
+		&dummyDataTemplate,
+	)
+
+	// assert
+	assert.NoError(t, err)
+	assert.Equal(t, dummyResult, dummyDataTemplate)
+}
+
+func TestGetRequestHeaderFromSession_HappyPath(t *testing.T) {
+	// arrange
+	var dummyName = "some name"
+	var dummyIndex = rand.Int()
+	var dummyResult = rand.Int()
+	var dummyError = errors.New("some error")
+
+	// mock
+	var m = gomocker.NewMocker(t)
+
+	// SUT
+	var sut = &session{}
+
+	// expect
+	m.Mock((*session).GetRequestHeader).Expects(sut, dummyName, dummyIndex, gomocker.Anything()).Returns(dummyError).SideEffects(
+		gomocker.ParamSideEffect(1, 4, func(value *int) { *value = dummyResult })).Once()
+
+	//  act
+	var result, err = GetRequestHeaderFromSession[int](sut, dummyName, dummyIndex)
+
+	// assert
+	assert.Equal(t, dummyResult, *result)
+	assert.Equal(t, dummyError, err)
 }
 
 func TestSessionGetRequestHeader_NilSession(t *testing.T) {
@@ -802,9 +1261,8 @@ func TestSessionGetRequestHeader_HeaderInvalid(t *testing.T) {
 	m.Mock(getAllHeaders).Expects(dummySession, dummyName).Returns(dummyHeaders).Once()
 	m.Mock(logEndpointRequest).Expects(dummySession, "Header", dummyName, dummyHeaders[dummyIndex]).Returns().Once()
 	m.Mock(logEndpointRequest).Expects(dummySession, "Header", "UnmarshalError", "%+v", dummyError).Returns().Once()
-	m.Mock(tryUnmarshal).Expects(dummyHeaders[dummyIndex], gomocker.Anything()).Returns(dummyError).SideEffect(func(index int, params ...interface{}) {
-		*(params[1].(*int)) = dummyResult
-	}).Once()
+	m.Mock(tryUnmarshal).Expects(dummyHeaders[dummyIndex], gomocker.Anything()).Returns(dummyError).SideEffects(
+		gomocker.ParamSideEffect(1, 2, func(value *int) { *value = dummyResult })).Once()
 	m.Mock(newAppError).Expects(errorCodeBadRequest, errorMessageHeaderInvalid, []error{dummyError}).Returns(dummyAppError).Once()
 
 	// act
@@ -843,9 +1301,8 @@ func TestSessionGetRequestHeader_HeaderValid(t *testing.T) {
 	// expect
 	m.Mock(getAllHeaders).Expects(dummySession, dummyName).Returns(dummyHeaders).Once()
 	m.Mock(logEndpointRequest).Expects(dummySession, "Header", dummyName, dummyHeaders[dummyIndex]).Returns().Once()
-	m.Mock(tryUnmarshal).Expects(dummyHeaders[dummyIndex], gomocker.Anything()).Returns(nil).SideEffect(func(index int, params ...interface{}) {
-		*(params[1].(*int)) = dummyResult
-	}).Once()
+	m.Mock(tryUnmarshal).Expects(dummyHeaders[dummyIndex], gomocker.Anything()).Returns(nil).SideEffects(
+		gomocker.ParamSideEffect(1, 2, func(value *int) { *value = dummyResult })).Once()
 
 	// act
 	var err = dummySession.GetRequestHeader(
@@ -890,7 +1347,7 @@ func TestSessionAttach_NilSessionObject(t *testing.T) {
 func TestSessionAttach_NoAttachment(t *testing.T) {
 	// arrange
 	var dummyName = "some name"
-	var dummyValue = dummyAttachment{
+	var dummyValue = &dummyAttachment{
 		ID:   uuid.New(),
 		Foo:  "bar",
 		Test: rand.Intn(100),
@@ -915,7 +1372,7 @@ func TestSessionAttach_NoAttachment(t *testing.T) {
 func TestSessionAttach_WithAttachment(t *testing.T) {
 	// arrange
 	var dummyName = "some name"
-	var dummyValue = dummyAttachment{
+	var dummyValue = &dummyAttachment{
 		ID:   uuid.New(),
 		Foo:  "bar",
 		Test: rand.Intn(100),
@@ -923,7 +1380,7 @@ func TestSessionAttach_WithAttachment(t *testing.T) {
 
 	// SUT
 	var dummySession = &session{
-		attachment: map[string]interface{}{
+		attachment: map[string]any{
 			dummyName: "some value",
 		},
 	}
@@ -981,7 +1438,7 @@ func TestSessionDetach_WithAttachment(t *testing.T) {
 
 	// SUT
 	var dummySession = &session{
-		attachment: map[string]interface{}{
+		attachment: map[string]any{
 			dummyName: "some value",
 		},
 	}
@@ -1042,7 +1499,7 @@ func TestSessionGetRawAttachment_Success(t *testing.T) {
 
 	// SUT
 	var dummySession = &session{
-		attachment: map[string]interface{}{
+		attachment: map[string]any{
 			dummyName: dummyValue,
 		},
 	}
@@ -1054,6 +1511,72 @@ func TestSessionGetRawAttachment_Success(t *testing.T) {
 
 	// assert
 	assert.Equal(t, dummyValue, result)
+	assert.True(t, found)
+}
+
+func TestGetAttachmentFromSession_NotFound(t *testing.T) {
+	// arrange
+	var dummyName = "some name"
+	var dummyResult = rand.Int()
+
+	// mock
+	var m = gomocker.NewMocker(t)
+
+	// SUT
+	var sut = &session{}
+
+	// expect
+	m.Mock((*session).GetRawAttachment).Expects(sut, dummyName).Returns(dummyResult, false).Once()
+
+	//  act
+	var result, found = GetAttachmentFromSession[int](sut, dummyName)
+
+	// assert
+	assert.Zero(t, *result)
+	assert.False(t, found)
+}
+
+func TestGetAttachmentFromSession_TypeMismatch(t *testing.T) {
+	// arrange
+	var dummyName = "some name"
+	var dummyResult = "some value"
+
+	// mock
+	var m = gomocker.NewMocker(t)
+
+	// SUT
+	var sut = &session{}
+
+	// expect
+	m.Mock((*session).GetRawAttachment).Expects(sut, dummyName).Returns(dummyResult, true).Once()
+
+	//  act
+	var result, found = GetAttachmentFromSession[int](sut, dummyName)
+
+	// assert
+	assert.Zero(t, *result)
+	assert.False(t, found)
+}
+
+func TestGetAttachmentFromSession_Success(t *testing.T) {
+	// arrange
+	var dummyName = "some name"
+	var dummyResult = rand.Int()
+
+	// mock
+	var m = gomocker.NewMocker(t)
+
+	// SUT
+	var sut = &session{}
+
+	// expect
+	m.Mock((*session).GetRawAttachment).Expects(sut, dummyName).Returns(dummyResult, true).Once()
+
+	//  act
+	var result, found = GetAttachmentFromSession[int](sut, dummyName)
+
+	// assert
+	assert.Equal(t, dummyResult, *result)
 	assert.True(t, found)
 }
 
@@ -1095,7 +1618,7 @@ func TestSessionGetAttachment_NoAttachment(t *testing.T) {
 	assert.Zero(t, dummyDataTemplate)
 }
 
-func TestSessionGetAttachment_MarshalError(t *testing.T) {
+func TestSessionGetAttachment_DataTemplateNotAPointer(t *testing.T) {
 	// arrange
 	var dummyName = "some name"
 	var dummyValue = dummyAttachment{
@@ -1105,15 +1628,9 @@ func TestSessionGetAttachment_MarshalError(t *testing.T) {
 	}
 	var dummyDataTemplate dummyAttachment
 
-	// mock
-	var m = gomocker.NewMocker(t)
-
-	// expect
-	m.Mock(json.Marshal).Expects(dummyValue).Returns(nil, errors.New("some marshal error")).Once()
-
 	// SUT
 	var dummySession = &session{
-		attachment: map[string]interface{}{
+		attachment: map[string]any{
 			dummyName: dummyValue,
 		},
 	}
@@ -1121,40 +1638,12 @@ func TestSessionGetAttachment_MarshalError(t *testing.T) {
 	// act
 	var result = dummySession.GetAttachment(
 		dummyName,
-		&dummyDataTemplate,
+		dummyDataTemplate,
 	)
 
 	// assert
 	assert.False(t, result)
-	assert.Zero(t, dummyDataTemplate)
-}
-
-func TestSessionGetAttachment_UnmarshalError(t *testing.T) {
-	// arrange
-	var dummyName = "some name"
-	var dummyValue = dummyAttachment{
-		Foo:  "bar",
-		Test: rand.Intn(100),
-		ID:   uuid.New(),
-	}
-	var dummyDataTemplate int
-
-	// SUT
-	var dummySession = &session{
-		attachment: map[string]interface{}{
-			dummyName: dummyValue,
-		},
-	}
-
-	// act
-	var result = dummySession.GetAttachment(
-		dummyName,
-		&dummyDataTemplate,
-	)
-
-	// assert
-	assert.False(t, result)
-	assert.Zero(t, dummyDataTemplate)
+	assert.NotEqual(t, dummyValue, dummyDataTemplate)
 }
 
 func TestSessionGetAttachment_Success(t *testing.T) {
@@ -1169,7 +1658,7 @@ func TestSessionGetAttachment_Success(t *testing.T) {
 
 	// SUT
 	var dummySession = &session{
-		attachment: map[string]interface{}{
+		attachment: map[string]any{
 			dummyName: dummyValue,
 		},
 	}
@@ -1243,7 +1732,7 @@ func TestSessionLogMethodParameter(t *testing.T) {
 	var dummyParameter1 = "foo"
 	var dummyParameter2 = rand.Int()
 	var dummyParameter3 = errors.New("test")
-	var dummyParameters = []interface{}{
+	var dummyParameters = []any{
 		dummyParameter1,
 		dummyParameter2,
 		dummyParameter3,
@@ -1314,7 +1803,7 @@ func TestSessionLogMethodReturn(t *testing.T) {
 	var dummyReturn1 = "foo"
 	var dummyReturn2 = rand.Int()
 	var dummyReturn3 = errors.New("test")
-	var dummyReturns = []interface{}{
+	var dummyReturns = []any{
 		dummyReturn1,
 		dummyReturn2,
 		dummyReturn3,

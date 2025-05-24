@@ -6,19 +6,20 @@ import (
 
 // web server built-in error messages
 const (
-	errorMessageSessionNil         = "The session object is nil"
-	errorMessageRouteRegistration  = "The route registration failed"
-	errorMessageHostServer         = "The server hosting failed"
-	errorMessageRequestBodyEmpty   = "The request body is empty"
-	errorMessageRequestBodyInvalid = "The request body is invalid"
-	errorMessageParameterNotFound  = "The request parameter is not found"
-	errorMessageParameterInvalid   = "The request parameter is invalid"
-	errorMessageQueryNotFound      = "The request query is not found"
-	errorMessageQueryInvalid       = "The request query is invalid"
-	errorMessageHeaderNotFound     = "The request header is not found"
-	errorMessageHeaderInvalid      = "The request header is invalid"
-	errorMessageWebRequestNil      = "The web request object is nil"
-	errorMessageResponseInvalid    = "The response body is invalid"
+	errorMessageSessionNil          = "The session object is nil"
+	errorMessageRouteRegistration   = "The route registration failed"
+	errorMessageHostServer          = "The server hosting failed"
+	errorMessageRequestBodyEmpty    = "The request body is empty"
+	errorMessageRequestBodyInvalid  = "The request body is invalid"
+	errorMessageParameterNotFound   = "The request parameter is not found"
+	errorMessageParameterInvalid    = "The request parameter is invalid"
+	errorMessageQueryNotFound       = "The request query is not found"
+	errorMessageQueryInvalid        = "The request query is invalid"
+	errorMessageHeaderNotFound      = "The request header is not found"
+	errorMessageHeaderInvalid       = "The request header is invalid"
+	errorMessageWebRequestNil       = "The web request object is nil"
+	errorMessageResponseInvalid     = "The response body is invalid"
+	errorMessageDataTemplateInvalid = "The data templated is not a pointer"
 )
 
 type errorCode string

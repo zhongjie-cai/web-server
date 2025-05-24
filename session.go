@@ -1,11 +1,12 @@
 package webserver
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/textproto"
+	"reflect"
 	"runtime"
 	"strconv"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -46,16 +47,22 @@ type SessionHTTPRequest interface {
 	GetRequest() *http.Request
 
 	// GetRequestBody loads HTTP request body associated to session and unmarshals the content JSON to given data template
-	GetRequestBody(dataTemplate interface{}) error
+	GetRequestBody(dataTemplate any) error
 
 	// GetRequestParameter loads HTTP request parameter associated to session for given name and unmarshals the content to given data template
-	GetRequestParameter(name string, dataTemplate interface{}) error
+	GetRequestParameter(name string, dataTemplate any) error
+
+	// GetRequestQueries loads HTTP request query strings associated to session for given name and unmarshals the content to given data template (must be a slice)
+	GetRequestQueries(name string, dataTemplate any) error
 
 	// GetRequestQuery loads HTTP request single query string associated to session for given name and unmarshals the content to given data template
-	GetRequestQuery(name string, index int, dataTemplate interface{}) error
+	GetRequestQuery(name string, index int, dataTemplate any) error
+
+	// GetRequestHeader loads HTTP request header strings associated to session for given name and unmarshals the content to given data template (must be a slice)
+	GetRequestHeaders(name string, dataTemplate any) error
 
 	// GetRequestHeader loads HTTP request single header string associated to session for given name and unmarshals the content to given data template
-	GetRequestHeader(name string, index int, dataTemplate interface{}) error
+	GetRequestHeader(name string, index int, dataTemplate any) error
 }
 
 // SessionHTTPResponse is a subset of SessionHTTP interface, containing only HTTP response related methods
@@ -67,16 +74,16 @@ type SessionHTTPResponse interface {
 // SessionAttachment is a subset of Session interface, containing only attachment related methods
 type SessionAttachment interface {
 	// Attach attaches any value object into the given session associated to the session ID
-	Attach(name string, value interface{}) bool
+	Attach(name string, value any) bool
 
 	// Detach detaches any value object from the given session associated to the session ID
 	Detach(name string) bool
 
 	// GetRawAttachment retrieves any value object from the given session associated to the session ID and returns the raw interface (consumer needs to manually cast, but works for struct with private fields)
-	GetRawAttachment(name string) (interface{}, bool)
+	GetRawAttachment(name string) (any, bool)
 
 	// GetAttachment retrieves any value object from the given session associated to the session ID and unmarshals the content to given data template (only works for structs with exported fields)
-	GetAttachment(name string, dataTemplate interface{}) bool
+	GetAttachment(name string, dataTemplate any) bool
 }
 
 // SessionLogging is a subset of Session interface, containing only logging related methods
@@ -85,13 +92,13 @@ type SessionLogging interface {
 	LogMethodEnter()
 
 	// LogMethodParameter sends a logging entry of MethodParameter log type for the given session associated to the session ID
-	LogMethodParameter(parameters ...interface{})
+	LogMethodParameter(parameters ...any)
 
 	// LogMethodLogic sends a logging entry of MethodLogic log type for the given session associated to the session ID
-	LogMethodLogic(logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{})
+	LogMethodLogic(logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...any)
 
 	// LogMethodReturn sends a logging entry of MethodReturn log type for the given session associated to the session ID
-	LogMethodReturn(returns ...interface{})
+	LogMethodReturn(returns ...any)
 
 	// LogMethodExit sends a logging entry of MethodExit log type for the given session associated to the session ID
 	LogMethodExit()
@@ -108,7 +115,7 @@ type session struct {
 	name           string
 	request        *http.Request
 	responseWriter http.ResponseWriter
-	attachment     map[string]interface{}
+	attachment     map[string]any
 	customization  Customization
 }
 
@@ -146,8 +153,15 @@ func (session *session) GetResponseWriter() http.ResponseWriter {
 	return session.responseWriter
 }
 
+// GetRequestBodyFromSession is a sugar-function to retrieve request body as an object via generics
+func GetRequestBodyFromSession[T any](session Session) (*T, error) {
+	var result T
+	var err = session.GetRequestBody(&result)
+	return &result, err
+}
+
 // GetRequestBody loads HTTP request body associated to session and unmarshals the content JSON to given data template
-func (session *session) GetRequestBody(dataTemplate interface{}) error {
+func (session *session) GetRequestBody(dataTemplate any) error {
 	if session == nil {
 		return newAppError(
 			errorCodeGeneralFailure,
@@ -193,8 +207,15 @@ func (session *session) GetRequestBody(dataTemplate interface{}) error {
 	return nil
 }
 
+// GetRequestParameterFromSession is a sugar-function to retrieve request parameter as an object via generics
+func GetRequestParameterFromSession[T any](session Session, name string) (*T, error) {
+	var result T
+	var err = session.GetRequestParameter(name, &result)
+	return &result, err
+}
+
 // GetRequestParameter loads HTTP request parameter associated to session for given name and unmarshals the content to given data template
-func (session *session) GetRequestParameter(name string, dataTemplate interface{}) error {
+func (session *session) GetRequestParameter(name string, dataTemplate any) error {
 	if session == nil {
 		return newAppError(
 			errorCodeGeneralFailure,
@@ -242,19 +263,101 @@ func (session *session) GetRequestParameter(name string, dataTemplate interface{
 }
 
 func getAllQueries(session *session, name string) []string {
+	var results = make([]string, 0)
 	var httpRequest = session.GetRequest()
 	if httpRequest.URL == nil {
-		return nil
+		return results
 	}
 	var queries, found = httpRequest.URL.Query()[name]
 	if !found {
-		return nil
+		return results
 	}
-	return queries
+	for _, query := range queries {
+		var items = strings.Split(query, ",")
+		results = append(results, items...)
+	}
+	return results
+}
+
+// GetRequestQueriesFromSession is a sugar-function to retrieve request queries as a slice via generics
+func GetRequestQueriesFromSession[T any](session Session, name string) ([]T, error) {
+	var results []T
+	var err = session.GetRequestQueries(name, &results)
+	return results, err
+}
+
+// GetRequestQueries loads HTTP request query strings associated to session for given name and unmarshals the content to given data template (must be a slice)
+func (session *session) GetRequestQueries(name string, dataTemplate any) error {
+	if session == nil {
+		return newAppError(
+			errorCodeGeneralFailure,
+			errorMessageSessionNil,
+			[]error{},
+		)
+	}
+	var vTemplate = reflect.ValueOf(dataTemplate)
+	var tTemplate = vTemplate.Type()
+	if vTemplate.Type().Kind() != reflect.Pointer {
+		return newAppError(
+			errorCodeGeneralFailure,
+			errorMessageDataTemplateInvalid,
+			[]error{},
+		)
+	}
+	vTemplate = reflect.Indirect(vTemplate)
+	tTemplate = vTemplate.Type()
+	if tTemplate.Kind() != reflect.Slice {
+		return newAppError(
+			errorCodeGeneralFailure,
+			errorMessageDataTemplateInvalid,
+			[]error{},
+		)
+	}
+	var tItem = tTemplate.Elem()
+	var queries = getAllQueries(
+		session,
+		name,
+	)
+	for _, query := range queries {
+		var vItem = reflect.New(tItem)
+		logEndpointRequest(
+			session,
+			"Query",
+			name,
+			query,
+		)
+		var unmarshalError = tryUnmarshal(
+			query,
+			vItem.Interface(),
+		)
+		if unmarshalError != nil {
+			logEndpointRequest(
+				session,
+				"Query",
+				"UnmarshalError",
+				"%+v",
+				unmarshalError,
+			)
+			return newAppError(
+				errorCodeBadRequest,
+				errorMessageQueryInvalid,
+				[]error{unmarshalError},
+			)
+		}
+		vTemplate.Set(reflect.Append(vTemplate, vItem.Elem()))
+	}
+	return nil
+}
+
+// GetRequestQueryFromSession is a sugar-function to retrieve request query as an object via generics
+func GetRequestQueryFromSession[T any](session Session, name string, index int) (*T, error) {
+	var result T
+	var err = session.GetRequestQuery(name, index, &result)
+	return &result, err
 }
 
 // GetRequestQuery loads HTTP request single query string associated to session for given name and unmarshals the content to given data template
-func (session *session) GetRequestQuery(name string, index int, dataTemplate interface{}) error {
+func (session *session) GetRequestQuery(name string, index int, dataTemplate any) error {
 	if session == nil {
 		return newAppError(
 			errorCodeGeneralFailure,
@@ -311,8 +414,85 @@ func getAllHeaders(session *session, name string) []string {
 	return headers
 }
 
+// GetRequestHeadersFromSession is a sugar-function to retrieve request headers as a slice via generics
+func GetRequestHeadersFromSession[T any](session Session, name string) ([]T, error) {
+	var results []T
+	var err = session.GetRequestHeaders(name, &results)
+	return results, err
+}
+
+// GetRequestHeader loads HTTP request header strings associated to session for given name and unmarshals the content to given data template (must be a slice)
+func (session *session) GetRequestHeaders(name string, dataTemplate any) error {
+	if session == nil {
+		return newAppError(
+			errorCodeGeneralFailure,
+			errorMessageSessionNil,
+			[]error{},
+		)
+	}
+	var vTemplate = reflect.ValueOf(dataTemplate)
+	var tTemplate = vTemplate.Type()
+	if vTemplate.Type().Kind() != reflect.Pointer {
+		return newAppError(
+			errorCodeGeneralFailure,
+			errorMessageDataTemplateInvalid,
+			[]error{},
+		)
+	}
+	vTemplate = reflect.Indirect(vTemplate)
+	tTemplate = vTemplate.Type()
+	if tTemplate.Kind() != reflect.Slice {
+		return newAppError(
+			errorCodeGeneralFailure,
+			errorMessageDataTemplateInvalid,
+			[]error{},
+		)
+	}
+	var tItem = tTemplate.Elem()
+	var headers = getAllHeaders(
+		session,
+		name,
+	)
+	for _, header := range headers {
+		var vItem = reflect.New(tItem)
+		logEndpointRequest(
+			session,
+			"Header",
+			name,
+			header,
+		)
+		var unmarshalError = tryUnmarshal(
+			header,
+			vItem.Interface(),
+		)
+		if unmarshalError != nil {
+			logEndpointRequest(
+				session,
+				"Header",
+				"UnmarshalError",
+				"%+v",
+				unmarshalError,
+			)
+			return newAppError(
+				errorCodeBadRequest,
+				errorMessageHeaderInvalid,
+				[]error{unmarshalError},
+			)
+		}
+		vTemplate.Set(reflect.Append(vTemplate, vItem.Elem()))
+	}
+	return nil
+}
+
+// GetRequestHeaderFromSession is a sugar-function to retrieve request header as an object via generics
+func GetRequestHeaderFromSession[T any](session Session, name string, index int) (*T, error) {
+	var result T
+	var err = session.GetRequestHeader(name, index, &result)
+	return &result, err
+}
+
 // GetRequestHeader loads HTTP request single header string associated to session for given name and unmarshals the content to given data template
-func (session *session) GetRequestHeader(name string, index int, dataTemplate interface{}) error {
+func (session *session) GetRequestHeader(name string, index int, dataTemplate any) error {
 	if session == nil {
 		return newAppError(
 			errorCodeGeneralFailure,
@@ -360,12 +540,12 @@ func (session *session) GetRequestHeader(name string, index int, dataTemplate in
 }
 
 // Attach attaches any value object into the given session associated to the session ID
-func (session *session) Attach(name string, value interface{}) bool {
+func (session *session) Attach(name string, value any) bool {
 	if session == nil {
 		return false
 	}
 	if session.attachment == nil {
-		session.attachment = map[string]interface{}{}
+		session.attachment = map[string]any{}
 	}
 	session.attachment[name] = value
 	return true
@@ -383,7 +563,7 @@ func (session *session) Detach(name string) bool {
 }
 
 // GetRawAttachment retrieves any value object from the given session associated to the session ID and returns the raw interface (consumer needs to manually cast, but works for struct with private fields)
-func (session *session) GetRawAttachment(name string) (interface{}, bool) {
+func (session *session) GetRawAttachment(name string) (any, bool) {
 	if session == nil {
 		return nil, false
 	}
@@ -394,8 +574,21 @@ func (session *session) GetRawAttachment(name string) (interface{}, bool) {
 	return attachment, true
 }
 
+// GetAttachmentFromSession is a sugar-function to retrieve attachment as an object via generics
+func GetAttachmentFromSession[T any](session Session, name string) (*T, bool) {
+	var attachment, found = session.GetRawAttachment(name)
+	if !found {
+		return new(T), false
+	}
+	var result, ok = attachment.(T)
+	if !ok {
+		return new(T), false
+	}
+	return &result, true
+}
+
 // GetAttachment retrieves any value object from the given session associated to the session ID and unmarshals the content to given data template
-func (session *session) GetAttachment(name string, dataTemplate interface{}) bool {
+func (session *session) GetAttachment(name string, dataTemplate any) bool {
 	if session == nil {
 		return false
 	}
@@ -403,15 +596,14 @@ func (session *session) GetAttachment(name string, dataTemplate interface{}) boo
 	if !found {
 		return false
 	}
-	var bytes, marshalError = json.Marshal(attachment)
-	if marshalError != nil {
+	var vTemplate = reflect.ValueOf(dataTemplate)
+	var tTemplate = vTemplate.Type()
+	if tTemplate.Kind() != reflect.Pointer {
 		return false
 	}
-	var unmarshalError = json.Unmarshal(
-		bytes,
-		dataTemplate,
-	)
-	return unmarshalError == nil
+	vTemplate = reflect.Indirect(vTemplate)
+	vTemplate.Set(reflect.ValueOf(attachment))
+	return true
 }
 
 func getMethodName() string {
@@ -435,7 +627,7 @@ func (session *session) LogMethodEnter() {
 }
 
 // LogMethodParameter sends a logging entry of MethodParameter log type for the given session associated to the session ID
-func (session *session) LogMethodParameter(parameters ...interface{}) {
+func (session *session) LogMethodParameter(parameters ...any) {
 	var methodName = getMethodName()
 	for index, parameter := range parameters {
 		logMethodParameter(
@@ -449,7 +641,7 @@ func (session *session) LogMethodParameter(parameters ...interface{}) {
 }
 
 // LogMethodLogic sends a logging entry of MethodLogic log type for the given session associated to the session ID
-func (session *session) LogMethodLogic(logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{}) {
+func (session *session) LogMethodLogic(logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...any) {
 	logMethodLogic(
 		session,
 		logLevel,
@@ -461,7 +653,7 @@ func (session *session) LogMethodLogic(logLevel LogLevel, category string, subca
 }
 
 // LogMethodReturn sends a logging entry of MethodReturn log type for the given session associated to the session ID
-func (session *session) LogMethodReturn(returns ...interface{}) {
+func (session *session) LogMethodReturn(returns ...any) {
 	var methodName = getMethodName()
 	for index, returnValue := range returns {
 		logMethodReturn(

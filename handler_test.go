@@ -14,13 +14,13 @@ import (
 	"github.com/zhongjie-cai/gomocker/v2"
 )
 
-func functionPointerEquals(expectFunc interface{}, actualFunc interface{}) bool {
+func functionPointerEquals(expectFunc any, actualFunc any) bool {
 	var expectValue = fmt.Sprintf("%v", reflect.ValueOf(expectFunc))
 	var actualValue = fmt.Sprintf("%v", reflect.ValueOf(actualFunc))
 	return expectValue == actualValue
 }
 
-func assertFunctionEquals(t *testing.T, expectFunc interface{}, actualFunc interface{}) {
+func assertFunctionEquals(t *testing.T, expectFunc any, actualFunc any) {
 	assert.True(t, functionPointerEquals(expectFunc, actualFunc))
 }
 
@@ -33,7 +33,7 @@ func TestInitiateSession(t *testing.T) {
 	var dummyResponseWriter = &dummyResponseWriter{}
 	var dummyHTTPRequest = &http.Request{Host: "some host"}
 	var dummyCustomization = &DefaultCustomization{}
-	var dummyAction = func(session Session) (interface{}, error) { return nil, nil }
+	var dummyAction = func(session Session) (any, error) { return nil, nil }
 	var dummyActionFuncMap = map[string]ActionFunc{
 		"some key": dummyAction,
 	}
@@ -104,7 +104,7 @@ func TestFinalizeSession(t *testing.T) {
 	)
 }
 
-func dummyAction(session Session) (interface{}, error) {
+func dummyAction(session Session) (any, error) {
 	return nil, nil
 }
 
@@ -191,7 +191,7 @@ func TestHandleSession_RouteError(t *testing.T) {
 	var dummySession = &session{
 		name: dummyName,
 	}
-	var dummyAction = func(session Session) (interface{}, error) { return nil, nil }
+	var dummyAction = func(session Session) (any, error) { return nil, nil }
 	var dummyRouteError = errors.New("some route error")
 	var dummyStartTime = time.Now()
 
@@ -224,7 +224,7 @@ func TestHandleSession_Success(t *testing.T) {
 	var dummySession = &session{
 		name: dummyName,
 	}
-	var dummyAction = func(session Session) (interface{}, error) { return nil, nil }
+	var dummyAction = func(session Session) (any, error) { return nil, nil }
 	var dummyStartTime = time.Now()
 
 	// mock
@@ -235,7 +235,7 @@ func TestHandleSession_Success(t *testing.T) {
 	m.Mock(logEndpointEnter).Expects(dummySession, dummyName, dummyMethod, "").Returns().Once()
 	m.Mock(getTimeNowUTC).Expects().Returns(dummyStartTime).Once()
 	m.Mock(finalizeSession).Expects(dummySession, dummyStartTime, recover()).Returns().Once()
-	m.Mock(handleAction).Expects(dummySession, gomocker.Matches(func(value interface{}) bool {
+	m.Mock(handleAction).Expects(dummySession, gomocker.Matches(func(value any) bool {
 		return functionPointerEquals(dummyAction, value)
 	})).Returns().Once()
 

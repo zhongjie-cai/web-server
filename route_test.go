@@ -321,7 +321,7 @@ func TestWalkRegisteredRoutes_Error(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.Mock((*mux.Router).Walk).Expects(dummyRouter, gomocker.Matches(func(value interface{}) bool {
+	m.Mock((*mux.Router).Walk).Expects(dummyRouter, gomocker.Matches(func(value any) bool {
 		return functionPointerEquals(evaluateRoute, value)
 	})).Returns(dummyError).Once()
 	m.Mock(logAppRoot).Expects(dummySession, "route", "walkRegisteredRoutes", "Failure: %+v", dummyError).Returns().Once()
@@ -349,7 +349,7 @@ func TestWalkRegisteredRoutes_Success(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.Mock((*mux.Router).Walk).Expects(dummyRouter, gomocker.Matches(func(value interface{}) bool {
+	m.Mock((*mux.Router).Walk).Expects(dummyRouter, gomocker.Matches(func(value any) bool {
 		return functionPointerEquals(evaluateRoute, value)
 	})).Returns(nil).Once()
 
@@ -384,7 +384,7 @@ func TestRegisterRoute(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.Mock((*mux.Router).HandleFunc).Expects(dummyRouter, dummyPath, gomocker.Matches(func(value interface{}) bool {
+	m.Mock((*mux.Router).HandleFunc).Expects(dummyRouter, dummyPath, gomocker.Matches(func(value any) bool {
 		return functionPointerEquals(dummyHandlerFunc, value)
 	})).Returns(dummyRoute).Once()
 	m.Mock((*mux.Route).Methods).Expects(dummyRoute, dummyMethod).Returns(dummyRoute).Once()
@@ -529,7 +529,7 @@ func TestGetRouteInfo_ValidRoute(t *testing.T) {
 	var dummyName = "some name"
 	var dummyActionExpected = 0
 	var dummyActionCalled = 0
-	var dummyAction = func(Session) (interface{}, error) {
+	var dummyAction = func(Session) (any, error) {
 		dummyActionCalled++
 		return nil, nil
 	}

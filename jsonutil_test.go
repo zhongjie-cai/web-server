@@ -266,7 +266,7 @@ func TestTryUnmarshalPrimitiveTypes_OtherTypes(t *testing.T) {
 func TestTryUnmarshal_NilDataTemplate(t *testing.T) {
 	// arrange
 	var dummyValue = "some value"
-	var dummyDataTemplate interface{}
+	var dummyDataTemplate any
 
 	// mock
 	var m = gomocker.NewMocker(t)

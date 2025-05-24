@@ -119,7 +119,7 @@ func registerRoute(
 	return name, route
 }
 
-func defaultActionFunc(session Session) (interface{}, error) {
+func defaultActionFunc(session Session) (any, error) {
 	return nil,
 		newAppError(
 			errorCodeNotImplemented,

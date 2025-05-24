@@ -19,7 +19,7 @@ var (
 )
 
 // marshalIgnoreError returns the string representation of the given object; returns empty string in case of error
-func marshalIgnoreError(v interface{}) string {
+func marshalIgnoreError(v any) string {
 	var buffer = &bytes.Buffer{}
 	var encoder = json.NewEncoder(buffer)
 	encoder.SetEscapeHTML(false)
@@ -28,7 +28,7 @@ func marshalIgnoreError(v interface{}) string {
 	return strings.TrimRight(result, "\n")
 }
 
-func tryUnmarshalPrimitiveTypes(value string, dataTemplate interface{}) bool {
+func tryUnmarshalPrimitiveTypes(value string, dataTemplate any) bool {
 	if value == "" {
 		return true
 	}
@@ -80,7 +80,7 @@ func tryUnmarshalPrimitiveTypes(value string, dataTemplate interface{}) bool {
 }
 
 // tryUnmarshal tries to unmarshal given value to dataTemplate
-func tryUnmarshal(value string, dataTemplate interface{}) error {
+func tryUnmarshal(value string, dataTemplate any) error {
 	if isInterfaceValueNil(dataTemplate) {
 		return nil
 	}

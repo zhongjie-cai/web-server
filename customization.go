@@ -83,13 +83,13 @@ type HandlerCustomization interface {
 	PostAction(session Session) error
 
 	// InterpretSuccess is to customize how application interpret a response content into HTTP status code and corresponding response body
-	InterpretSuccess(responseContent interface{}) (int, string)
+	InterpretSuccess(responseContent any) (int, string)
 
 	// InterpretError is to customize how application interpret an error into HTTP status code and corresponding response body
 	InterpretError(err error) (int, string)
 
 	// RecoverPanic is to customize the recovery of panic into a valid response and error in case it happens (for recoverable panic only)
-	RecoverPanic(session Session, recoverResult interface{}) (interface{}, error)
+	RecoverPanic(session Session, recoverResult any) (any, error)
 
 	// NotFoundHandler is to customize the handler to be used when no route matches.
 	NotFoundHandler() http.Handler
@@ -209,7 +209,7 @@ func (customization *DefaultCustomization) PostAction(session Session) error {
 }
 
 // InterpretSuccess is to customize how application interpret a response content into HTTP status code and corresponding response body
-func (customization *DefaultCustomization) InterpretSuccess(responseContent interface{}) (int, string) {
+func (customization *DefaultCustomization) InterpretSuccess(responseContent any) (int, string) {
 	if isInterfaceValueNil(responseContent) {
 		return http.StatusNoContent, ""
 	}
@@ -231,7 +231,7 @@ func (customization *DefaultCustomization) InterpretError(err error) (int, strin
 		typedError.HTTPResponseMessage()
 }
 
-func getRecoverError(recoverResult interface{}) error {
+func getRecoverError(recoverResult any) error {
 	var err, ok = recoverResult.(error)
 	if !ok {
 		err = fmt.Errorf("endpoint panic: %v", recoverResult)
@@ -240,7 +240,7 @@ func getRecoverError(recoverResult interface{}) error {
 }
 
 // RecoverPanic is to customize the recovery of panic into a valid response and error in case it happens (for recoverable panic only)
-func (customization *DefaultCustomization) RecoverPanic(session Session, recoverResult interface{}) (interface{}, error) {
+func (customization *DefaultCustomization) RecoverPanic(session Session, recoverResult any) (any, error) {
 	var err = getRecoverError(
 		recoverResult,
 	)

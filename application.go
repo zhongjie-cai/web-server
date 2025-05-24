@@ -48,7 +48,7 @@ func NewApplication(
 			name,
 			defaultRequest,
 			defaultResponseWriter,
-			map[string]interface{}{},
+			map[string]any{},
 			customization,
 		},
 		customization,

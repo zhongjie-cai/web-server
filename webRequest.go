@@ -106,7 +106,7 @@ type WebRequest interface {
 	// SetupRetry sets up automatic retry upon error of specific HTTP status codes; each entry maps an HTTP status code to how many times retry should happen if code matches
 	SetupRetry(connectivityRetryCount int, httpStatusRetryCount map[int]int, retryDelay time.Duration) WebRequest
 	// Anticipate registers a data template to be deserialized to when the given range of HTTP status codes are returned during the processing of the web request; latter registration overrides former when overlapping
-	Anticipate(beginStatusCode int, endStatusCode int, dataTemplate interface{}) WebRequest
+	Anticipate(beginStatusCode int, endStatusCode int, dataTemplate any) WebRequest
 	// Process sends the webcall request over the wire, retrieves and serialize the response to registered data templates, and returns status code, header and error accordingly
 	Process() (statusCode int, responseHeader http.Header, responseError error)
 }
@@ -114,7 +114,7 @@ type WebRequest interface {
 type dataReceiver struct {
 	beginStatusCode int
 	endStatusCode   int
-	dataTemplate    interface{}
+	dataTemplate    any
 }
 
 type webRequest struct {
@@ -168,7 +168,7 @@ func (webRequest *webRequest) SetupRetry(connectivityRetryCount int, httpStatusR
 }
 
 // Anticipate registers a data template to be deserialized to when the given range of HTTP status codes are returned during the processing of the web request; latter registration overrides former when overlapping
-func (webRequest *webRequest) Anticipate(beginStatusCode int, endStatusCode int, dataTemplate interface{}) WebRequest {
+func (webRequest *webRequest) Anticipate(beginStatusCode int, endStatusCode int, dataTemplate any) WebRequest {
 	webRequest.dataReceivers = append(
 		webRequest.dataReceivers,
 		dataReceiver{
@@ -379,8 +379,8 @@ func doRequestProcessing(webRequest *webRequest) (*http.Response, error) {
 	return responseObject, responseError
 }
 
-func getDataTemplate(session *session, statusCode int, dataReceivers []dataReceiver) interface{} {
-	var dataTemplate interface{}
+func getDataTemplate(session *session, statusCode int, dataReceivers []dataReceiver) any {
+	var dataTemplate any
 	for _, dataReceiver := range dataReceivers {
 		if dataReceiver.beginStatusCode <= statusCode &&
 			dataReceiver.endStatusCode > statusCode {
@@ -399,7 +399,7 @@ func getDataTemplate(session *session, statusCode int, dataReceivers []dataRecei
 	return dataTemplate
 }
 
-func parseResponse(session *session, body io.ReadCloser, dataTemplate interface{}) error {
+func parseResponse(session *session, body io.ReadCloser, dataTemplate any) error {
 	var bodyBytes, bodyError = io.ReadAll(
 		body,
 	)

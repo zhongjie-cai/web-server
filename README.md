@@ -85,7 +85,7 @@ func (customization *myCustomization) Routes() []webserver.Route {
 // getHealth is an example of how a normal HTTP handling method is written with this library
 func getHealth(
 	session webserver.Session,
-) (interface{}, error) {
+) (any, error) {
 	var appVersion = "some application version"
 	session.LogMethodLogic(
 		webserver.LogLevelWarn,
@@ -137,19 +137,50 @@ The registered handler could retrieve request body, parameters and query strings
 
 ```golang
 // request body: {"foo":"bar","test":123}
-var body struct {
+type request struct {
 	Foo string `json:"foo"`
 	Test int `json:"test"`
 }
+var body request
 var bodyError = session.GetRequestBody(&body)
+
+// another way to retrieve request body via sugar-function
+var body, bodyError = webserver.GetRequestBodyFromSession[request](session)
 
 // parameters: "id"=456
 var id int
 var idError = session.GetRequestParameter("id", &id)
 
-// query strigns: "uuid"="123456-1234-1234-1234-123456789abc"
-var uuid uuid.UUID
-var uuidError = session.GetRequestQuery("uuid", 0, &uuid)
+// another way to retrieve request parameter via sugar-function
+var id, idError = webserver.GetRequestParameterFromSession[int](session, "id")
+
+// query strings: name=foo
+var name string
+var namesError = session.GetRequestQuery("name", 0, &name)
+
+// another way to retrieve request query via sugar-function
+var name, namesError = webserver.GetRequestQueryFromSession[string](session, "name", 0)
+
+// query strings: name=foo&name=bar or name=foo,bar
+var names []string
+var namesError = session.GetRequestQueries("name", &names)
+
+// another way to retrieve request queries via sugar-function
+var names, namesError = webserver.GetRequestQueriesFromSession[string](session, "name")
+
+// header strings: value=123
+var value int
+var valueError = session.GetRequestHeader("value", 0, &value)
+
+// another way to retrieve request header via sugar-function
+var value, valueError = webserver.GetRequestHeaderFromSession[int](session, "value", 0)
+
+// header strings: value=123&value=456 or value=123,456
+var values []int
+var valuesError = session.GetRequestHeaders("value", &values)
+
+// another way to retrieve request headers via sugar-function
+var values, valuesError = webserver.GetRequestHeadersFromSession[int](session, "value")
 ```
 
 However, if specific data is needed from request, one could always retrieve request from session through following function call using session object:
@@ -223,9 +254,9 @@ The registered session allows the user to add manual logging to its codebase, th
 
 ```golang
 session.LogMethodEnter()
-session.LogMethodParameter(parameters ...interface{})
-session.LogMethodLogic(logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...interface{})
-session.LogMethodReturn(returns ...interface{})
+session.LogMethodParameter(parameters ...any)
+session.LogMethodLogic(logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...any)
+session.LogMethodReturn(returns ...any)
 session.LogMethodExit()
 ```
 
@@ -260,6 +291,9 @@ if !success {
 } else {
 	// succeeded to retrieve an attachment: add your customized logic here if needed
 }
+
+// alternatively, use the sugar-function to retrieve attachment like below
+var retrievedAttachment, success = webserver.GetAttachmentFromSession[anyJSONSerializableStruct](session, myAttachmentName)
 ```
 
 In some situations, it is good to detach a certain attachment, especially if it is a big object consuming large memory, which can be done as following.

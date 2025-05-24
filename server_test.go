@@ -461,9 +461,8 @@ func TestRunServer_HappyPath(t *testing.T) {
 	m.Mock(createServer).Expects(dummyAddress, dummySession, dummyRouter).Returns(dummyServer, dummyHTTPS).Once()
 	m.Mock(signal.Notify).Expects(gomocker.Anything(), os.Interrupt, syscall.SIGTERM).Returns().Once()
 	m.Mock(listenAndServe).Expects(dummySession, dummyServer, dummyHTTPS).Returns(dummyHostError).Once()
-	m.Mock(haltServer).Expects(gomocker.Anything()).Returns().SideEffect(func(index int, params ...interface{}) {
-		dummyShutdownSignal <- os.Interrupt
-	}).Once()
+	m.Mock(haltServer).Expects(gomocker.Anything()).Returns().SideEffects(gomocker.GeneralSideEffect(
+		0, func() { dummyShutdownSignal <- os.Interrupt })).Once()
 	m.Mock(logAppRoot).Expects(dummySession, "server", "runServer", "Interrupt signal received: Terminating server").Returns().Once()
 	m.Mock(context.Background).Expects().Returns(dummyBackgroundContext).Once()
 	m.Mock((*DefaultCustomization).GraceShutdownWaitTime).Expects(dummyCustomization).Returns(dummyGraceShutdownWaitTime).Once()

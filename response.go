@@ -16,12 +16,12 @@ type skipResponseHandlingDummy struct{}
 var typeOfSkipResponseHandling = reflect.TypeOf(skipResponseHandlingDummy{})
 
 // SkipResponseHandling indicates to the library to skip operating on the HTTP response writer
-func SkipResponseHandling() (interface{}, error) {
+func SkipResponseHandling() (any, error) {
 	return skipResponseHandlingDummy{}, nil
 }
 
 func shouldSkipHandling(
-	responseObject interface{},
+	responseObject any,
 	responseError error,
 ) bool {
 	if responseError != nil {
@@ -33,7 +33,7 @@ func shouldSkipHandling(
 
 func constructResponse(
 	session *session,
-	responseObject interface{},
+	responseObject any,
 	responseError error,
 ) (int, string) {
 	if responseError != nil {
@@ -49,7 +49,7 @@ func constructResponse(
 // writeResponse responds to the consumer with corresponding HTTP status code and response body
 func writeResponse(
 	session *session,
-	responseObject interface{},
+	responseObject any,
 	responseError error,
 ) {
 	if shouldSkipHandling(

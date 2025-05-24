@@ -179,7 +179,7 @@ func TestDefaultCustomization_PostAction(t *testing.T) {
 
 func TestDefaultCustomization_InterpretSuccess_NilResponseContent(t *testing.T) {
 	// arrange
-	var dummyResponseContent interface{}
+	var dummyResponseContent any
 
 	// mock
 	var m = gomocker.NewMocker(t)
@@ -199,7 +199,7 @@ func TestDefaultCustomization_InterpretSuccess_NilResponseContent(t *testing.T) 
 
 func TestDefaultCustomization_InterpretSuccess_EmptyResponseContent(t *testing.T) {
 	// arrange
-	var dummyResponseContent interface{}
+	var dummyResponseContent any
 	var dummyContent string
 
 	// mock
@@ -221,7 +221,7 @@ func TestDefaultCustomization_InterpretSuccess_EmptyResponseContent(t *testing.T
 
 func TestDefaultCustomization_InterpretSuccess_HappyPath(t *testing.T) {
 	// arrange
-	var dummyResponseContent interface{}
+	var dummyResponseContent any
 	var dummyContent = "some content"
 
 	// mock
@@ -316,7 +316,7 @@ func TestDefaultCustomization_RecoverPanic(t *testing.T) {
 	// arrange
 	var dummySession = &session{}
 	var dummyError = errors.New("some error")
-	var dummyRecoverResult = dummyError.(interface{})
+	var dummyRecoverResult = dummyError.(any)
 	var dummyDebugStackString = "some debug stack string"
 	var dummyDebugStack = []byte(dummyDebugStackString)
 	var dummyName = "some name"

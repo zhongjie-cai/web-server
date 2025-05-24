@@ -333,10 +333,10 @@ func TestInitializeHTTPClients(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.Mock(getHTTPTransport).Expects(dummySkipServerCertVerification, dummyClientCert, gomocker.Matches(func(value interface{}) bool {
+	m.Mock(getHTTPTransport).Expects(dummySkipServerCertVerification, dummyClientCert, gomocker.Matches(func(value any) bool {
 		return functionPointerEquals(dummyRoundTripperWrapper, value)
 	})).Returns(dummyHTTPTransport1).Once()
-	m.Mock(getHTTPTransport).Expects(dummySkipServerCertVerification, nil, gomocker.Matches(func(value interface{}) bool {
+	m.Mock(getHTTPTransport).Expects(dummySkipServerCertVerification, nil, gomocker.Matches(func(value any) bool {
 		return functionPointerEquals(dummyRoundTripperWrapper, value)
 	})).Returns(dummyHTTPTransport2).Once()
 
@@ -1265,9 +1265,8 @@ func TestParseResponse_HappyPath(t *testing.T) {
 
 	// expect
 	m.Mock(io.ReadAll).Expects(dummyBody).Returns(dummyBytes, nil).Once()
-	m.Mock(tryUnmarshal).Expects(string(dummyBytes), gomocker.Anything()).Returns(nil).SideEffect(func(index int, params ...interface{}) {
-		(*(params[1]).(*string)) = dummyData
-	}).Once()
+	m.Mock(tryUnmarshal).Expects(string(dummyBytes), gomocker.Anything()).Returns(nil).SideEffects(
+		gomocker.ParamSideEffect(1, 2, func(value *string) { *value = dummyData })).Once()
 
 	// SUT + act
 	var err = parseResponse(
@@ -1442,9 +1441,8 @@ func TestWebRequestProcess_Success_ValidObject(t *testing.T) {
 	// expect
 	m.Mock(doRequestProcessing).Expects(sut).Returns(dummyResponseObject, dummyResponseError).Once()
 	m.Mock(getDataTemplate).Expects(dummySession, dummyStatusCode, dummyDataReceivers).Returns(&dummyDataTemplate).Once()
-	m.Mock(parseResponse).Expects(dummySession, dummyBody, gomocker.Anything()).Returns(dummyParseError).SideEffect(func(index int, params ...interface{}) {
-		(*(params[2]).(*string)) = dummyData
-	}).Once()
+	m.Mock(parseResponse).Expects(dummySession, dummyBody, gomocker.Anything()).Returns(dummyParseError).SideEffects(
+		gomocker.ParamSideEffect(1, 3, func(value *string) { *value = dummyData })).Once()
 
 	// act
 	var result, header, err = sut.Process()

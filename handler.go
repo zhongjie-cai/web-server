@@ -21,7 +21,7 @@ func initiateSession(
 		endpoint,
 		httpRequest,
 		responseWriter,
-		map[string]interface{}{},
+		map[string]any{},
 		app.customization,
 	}, action, routeError
 }
@@ -29,7 +29,7 @@ func initiateSession(
 func finalizeSession(
 	session *session,
 	startTime time.Time,
-	recoverResult interface{},
+	recoverResult any,
 ) {
 	handlePanic(
 		session,
