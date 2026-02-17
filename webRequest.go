@@ -63,18 +63,17 @@ func getHTTPTransport(
 	clientCertificate *tls.Certificate,
 	roundTripperWrapper func(originalTransport http.RoundTripper) http.RoundTripper,
 ) http.RoundTripper {
-	var httpTransport = http.DefaultTransport
+	var tlsConfig = &tls.Config{
+		InsecureSkipVerify: skipServerCertVerification,
+	}
 	if clientCertificate != nil {
-		var tlsConfig = &tls.Config{
-			Certificates: []tls.Certificate{
-				*clientCertificate,
-			},
-			InsecureSkipVerify: skipServerCertVerification,
+		tlsConfig.Certificates = []tls.Certificate{
+			*clientCertificate,
 		}
-		httpTransport = &http.Transport{
-			TLSClientConfig: tlsConfig,
-			Proxy:           http.ProxyFromEnvironment,
-		}
+	}
+	var httpTransport = &http.Transport{
+		TLSClientConfig: tlsConfig,
+		Proxy:           http.ProxyFromEnvironment,
 	}
 	return roundTripperWrapper(
 		httpTransport,

@@ -276,14 +276,23 @@ func TestGetHTTPTransport_NoClientCert(t *testing.T) {
 	// arrange
 	var dummySkipServerCertVerification = rand.Intn(100) < 50
 	var dummyClientCert *tls.Certificate
-	var dummyRoundTripper = &http.Transport{}
+	var dummyRoundTripper = &http.Transport{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: dummySkipServerCertVerification,
+		},
+		Proxy: http.ProxyFromEnvironment,
+	}
 	var dummyRoundTripperWrapper = func(rt http.RoundTripper) http.RoundTripper { return nil }
 
 	// mock
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.Mock(dummyRoundTripperWrapper).Expects(http.DefaultTransport).Returns(dummyRoundTripper).Once()
+	m.Mock(dummyRoundTripperWrapper).Expects(gomocker.Matches(func(value *http.Transport) bool {
+		return value.TLSClientConfig.InsecureSkipVerify == dummySkipServerCertVerification &&
+			len(value.TLSClientConfig.Certificates) == 0 &&
+			functionPointerEquals(value.Proxy, http.ProxyFromEnvironment)
+	})).Returns(dummyRoundTripper).Once()
 
 	// SUT + act
 	var result = getHTTPTransport(
@@ -300,14 +309,25 @@ func TestGetHTTPTransport_WithClientCert(t *testing.T) {
 	// arrange
 	var dummySkipServerCertVerification = rand.Intn(100) < 50
 	var dummyClientCert = &tls.Certificate{}
-	var dummyRoundTripper = &http.Transport{}
+	var dummyRoundTripper = &http.Transport{
+		TLSClientConfig: &tls.Config{
+			Certificates:       []tls.Certificate{*dummyClientCert},
+			InsecureSkipVerify: dummySkipServerCertVerification,
+		},
+		Proxy: http.ProxyFromEnvironment,
+	}
 	var dummyRoundTripperWrapper = func(rt http.RoundTripper) http.RoundTripper { return nil }
 
 	// mock
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.Mock(dummyRoundTripperWrapper).Expects(gomocker.Anything()).Returns(dummyRoundTripper).Once()
+	m.Mock(dummyRoundTripperWrapper).Expects(gomocker.Matches(func(value *http.Transport) bool {
+		return value.TLSClientConfig.InsecureSkipVerify == dummySkipServerCertVerification &&
+			len(value.TLSClientConfig.Certificates) == 1 &&
+			assert.ObjectsAreEqual(value.TLSClientConfig.Certificates[0], *dummyClientCert) &&
+			functionPointerEquals(value.Proxy, http.ProxyFromEnvironment)
+	})).Returns(dummyRoundTripper).Once()
 
 	// SUT + act
 	var result = getHTTPTransport(
