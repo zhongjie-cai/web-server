@@ -58,33 +58,6 @@ func evaluatePathWithParameters(
 	return updatedPath
 }
 
-func evaluateQueries(
-	queries map[string]ParameterType,
-) []string {
-	var evaluatedQueries = []string{}
-	for key, value := range queries {
-		var queryParameter string
-		if value == "" {
-			queryParameter = fmt.Sprintf(
-				"{%v}",
-				key,
-			)
-		} else {
-			queryParameter = fmt.Sprintf(
-				"{%v:%v}",
-				key,
-				value,
-			)
-		}
-		evaluatedQueries = append(
-			evaluatedQueries,
-			key,
-			queryParameter,
-		)
-	}
-	return evaluatedQueries
-}
-
 func registerRoutes(
 	app *application,
 	session *session,
@@ -179,7 +152,8 @@ func instantiateRouter(
 	app *application,
 	session *session,
 ) (chi.Router, error) {
-	var router = chi.NewRouter()
+	var router chi.Router
+	router = chi.NewRouter()
 	registerRoutes(
 		app,
 		session,
@@ -197,7 +171,26 @@ func instantiateRouter(
 		session.customization,
 		router,
 	)
-	return session.customization.InstrumentRouter(
+	router = session.customization.InstrumentRouter(
 		router,
-	), nil
+	)
+	var err = walkRegisteredRoutes(
+		session,
+		router,
+	)
+	if err != nil {
+		logAppRoot(
+			session,
+			"register",
+			"instantiateRouter",
+			"%+v",
+			err,
+		)
+		return router, newAppError(
+			errorCodeGeneralFailure,
+			errorMessageRouteRegistration,
+			err,
+		)
+	}
+	return router, err
 }

@@ -168,7 +168,7 @@ func TestWriteResponse_HappyPath(t *testing.T) {
 	m.Mock(constructResponse).Expects(dummySession, dummyResponseObject, dummyResponseError).Returns(dummyCode, dummyMessage).Once()
 	m.Mock(http.StatusText).Expects(dummyCode).Returns(dummyStatusText).Once()
 	m.Mock(strconv.Itoa).Expects(dummyCode).Returns(dummyCodeString).Once()
-	m.Mock(logEndpointResponse).Expects(dummySession, dummyStatusText, dummyCodeString, dummyMessage).Returns().Once()
+	m.Mock(logEndpointResponse).Expects(dummySession, dummyStatusText, dummyCodeString, "%s", dummyMessage).Returns().Once()
 	m.Mock(isInterfaceValueNil).Expects(dummyResponseWriterInstance).Returns(false).Once()
 	m.Mock((*dummyResponseWriter).Header).Expects(dummyResponseWriterInstance).Returns(dummyHeader).Once()
 	m.Mock((*dummyResponseWriter).WriteHeader).Expects(dummyResponseWriterInstance, dummyCode).Returns().Once()

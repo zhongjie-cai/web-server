@@ -59,7 +59,7 @@ func newAppError(errorCode errorCode, errorMessage string, innerErrors ...error)
 		Code:    errorCode,
 		Message: errorMessage,
 		InnerErrors: cleanupInnerErrors(
-			innerErrors,
+			innerErrors...,
 		),
 	}
 }
@@ -68,7 +68,7 @@ func getErrorMessage(err error) string {
 	return err.Error()
 }
 
-func printInnerErrors(innerErrors []*appError) string {
+func printInnerErrors(innerErrors ...*appError) string {
 	if len(innerErrors) == 0 {
 		return ""
 	}
@@ -97,7 +97,7 @@ func (appError *appError) Error() string {
 		appError.Message,
 	)
 	var innerErrorMessage = printInnerErrors(
-		appError.InnerErrors,
+		appError.InnerErrors...,
 	)
 	return fmt.Sprint(
 		baseErrorMessage,
@@ -131,7 +131,7 @@ func appErrorContains(appError AppError, targetError error) bool {
 	return appError.Contains(targetError)
 }
 
-func innerErrorContains(innerErrors []*appError, targetError error) bool {
+func innerErrorContains(targetError error, innerErrors ...*appError) bool {
 	for _, innerError := range innerErrors {
 		if appErrorContains(
 			innerError,
@@ -149,12 +149,12 @@ func (appError *appError) Contains(targetError error) bool {
 		appError,
 		targetError,
 	) || innerErrorContains(
-		appError.InnerErrors,
 		targetError,
+		appError.InnerErrors...,
 	)
 }
 
-func cleanupInnerErrors(innerErrors []error) []*appError {
+func cleanupInnerErrors(innerErrors ...error) []*appError {
 	var cleanedInnerErrors = []*appError{}
 	for _, innerError := range innerErrors {
 		if innerError != nil {
@@ -177,7 +177,7 @@ func cleanupInnerErrors(innerErrors []error) []*appError {
 // Wrap wraps the given list of inner errors into the current app error object
 func (appError *appError) Wrap(innerErrors ...error) AppError {
 	var cleanedInnerErrors = cleanupInnerErrors(
-		innerErrors,
+		innerErrors...,
 	)
 	appError.InnerErrors = append(
 		appError.InnerErrors,

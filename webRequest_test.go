@@ -662,7 +662,7 @@ func TestCreateHTTPRequest_NilWebRequest(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.Mock(newAppError).Expects(errorCodeGeneralFailure, errorMessageWebRequestNil, []error{}).Returns(dummyAppError).Once()
+	m.Mock(newAppError).Expects(errorCodeGeneralFailure, errorMessageWebRequestNil).Returns(dummyAppError).Once()
 
 	// SUT + act
 	var result, err = createHTTPRequest(
@@ -683,7 +683,7 @@ func TestCreateHTTPRequest_NilWebRequestSession(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.Mock(newAppError).Expects(errorCodeGeneralFailure, errorMessageWebRequestNil, []error{}).Returns(dummyAppError).Once()
+	m.Mock(newAppError).Expects(errorCodeGeneralFailure, errorMessageWebRequestNil).Returns(dummyAppError).Once()
 
 	// SUT + act
 	var result, err = createHTTPRequest(
@@ -816,9 +816,9 @@ func TestCreateHTTPRequest_Success(t *testing.T) {
 	m.Mock(generateRequestURL).Expects(dummyURL, dummyQuery).Returns(dummyRequestURL).Once()
 	m.Mock(strings.NewReader).Expects(dummyPayload).Returns(dummyStingsReader).Once()
 	m.Mock(http.NewRequest).Expects(dummyMethod, dummyRequestURL, gomocker.Anything()).Returns(dummyRequest, nil).Once()
-	m.Mock(logWebcallStart).Expects(dummySession, dummyMethod, dummyURL, dummyRequestURL).Returns().Once()
-	m.Mock(logWebcallRequest).Expects(dummySession, "Payload", "Content", dummyPayload).Returns().Once()
-	m.Mock(logWebcallRequest).Expects(dummySession, "Header", "Content", dummyHeaderContent).Returns().Once()
+	m.Mock(logWebcallStart).Expects(dummySession, dummyMethod, dummyURL, "%s", dummyRequestURL).Returns().Once()
+	m.Mock(logWebcallRequest).Expects(dummySession, "Payload", "Content", "%s", dummyPayload).Returns().Once()
+	m.Mock(logWebcallRequest).Expects(dummySession, "Header", "Content", "%s", dummyHeaderContent).Returns().Once()
 	m.Mock(marshalIgnoreError).Expects(gomocker.Anything()).Returns(dummyHeaderContent).Once()
 	m.Mock((*DefaultCustomization).WrapRequest).Expects(dummyCustomization, dummySession, dummyRequest).Returns(dummyCustomized).Once()
 
@@ -901,8 +901,8 @@ func TestLogSuccessResponse_ValidResponse(t *testing.T) {
 	m.Mock(bytes.NewBuffer).Expects(dummyResponseBytes).Returns(dummyBuffer).Once()
 	m.Mock(io.NopCloser).Expects(dummyBuffer).Returns(dummyNewBody).Once()
 	m.Mock(http.StatusText).Expects(dummyStatusCode).Returns(dummyStatus).Once()
-	m.Mock(logWebcallResponse).Expects(dummySession, "Header", "Content", dummyHeaderContent).Returns().Once()
-	m.Mock(logWebcallResponse).Expects(dummySession, "Body", "Content", dummyResponseBody).Returns().Once()
+	m.Mock(logWebcallResponse).Expects(dummySession, "Header", "Content", "%s", dummyHeaderContent).Returns().Once()
+	m.Mock(logWebcallResponse).Expects(dummySession, "Body", "Content", "%s", dummyResponseBody).Returns().Once()
 	m.Mock(marshalIgnoreError).Expects(gomocker.Anything()).Returns(dummyHeaderContent).Once()
 	m.Mock(time.Since).Expects(dummyStartTime).Returns(dummyTimeSince).Once()
 	m.Mock(logWebcallFinish).Expects(dummySession, dummyStatus, strconv.Itoa(dummyStatusCode), "%s", dummyTimeSince).Returns().Once()
@@ -927,7 +927,7 @@ func TestDoRequestProcessing_NilWebRequest(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.Mock(newAppError).Expects(errorCodeGeneralFailure, errorMessageWebRequestNil, []error{}).Returns(dummyAppError).Once()
+	m.Mock(newAppError).Expects(errorCodeGeneralFailure, errorMessageWebRequestNil).Returns(dummyAppError).Once()
 
 	// SUT + act
 	var result, err = doRequestProcessing(
@@ -948,7 +948,7 @@ func TestDoRequestProcessing_NilWebRequestSession(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.Mock(newAppError).Expects(errorCodeGeneralFailure, errorMessageWebRequestNil, []error{}).Returns(dummyAppError).Once()
+	m.Mock(newAppError).Expects(errorCodeGeneralFailure, errorMessageWebRequestNil).Returns(dummyAppError).Once()
 
 	// SUT + act
 	var result, err = doRequestProcessing(
@@ -1238,7 +1238,7 @@ func TestParseResponse_JSONError(t *testing.T) {
 	m.Mock(io.ReadAll).Expects(dummyBody).Returns(dummyBytes, nil).Once()
 	m.Mock(tryUnmarshal).Expects(string(dummyBytes), gomocker.Anything()).Returns(dummyError).Once()
 	m.Mock(logWebcallResponse).Expects(dummySession, "Body", "UnmarshalError", "%+v", dummyError).Returns().Once()
-	m.Mock(newAppError).Expects(errorCodeGeneralFailure, errorMessageResponseInvalid, []error{dummyError}).Returns(dummyAppError).Once()
+	m.Mock(newAppError).Expects(errorCodeGeneralFailure, errorMessageResponseInvalid, dummyError).Returns(dummyAppError).Once()
 
 	// SUT + act
 	var err = parseResponse(
@@ -1291,7 +1291,7 @@ func TestWebRequestProcess_NilWebRequest(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.Mock(newAppError).Expects(errorCodeGeneralFailure, errorMessageWebRequestNil, []error{}).Returns(dummyAppError).Once()
+	m.Mock(newAppError).Expects(errorCodeGeneralFailure, errorMessageWebRequestNil).Returns(dummyAppError).Once()
 
 	// act
 	var result, header, err = sut.Process()
@@ -1313,7 +1313,7 @@ func TestWebRequestProcess_NilWebRequestSession(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.Mock(newAppError).Expects(errorCodeGeneralFailure, errorMessageWebRequestNil, []error{}).Returns(dummyAppError).Once()
+	m.Mock(newAppError).Expects(errorCodeGeneralFailure, errorMessageWebRequestNil).Returns(dummyAppError).Once()
 
 	// act
 	var result, header, err = sut.Process()

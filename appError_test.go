@@ -31,7 +31,7 @@ func TestNewAppError(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.Mock(cleanupInnerErrors).Expects(dummyInnerErrors).Returns(dummyCleanedUpErrors).Once()
+	m.Mock(cleanupInnerErrors).Expects(dummyInnerErrors[0], dummyInnerErrors[1], dummyInnerErrors[2]).Returns(dummyCleanedUpErrors).Once()
 
 	// SUT + act
 	var result = newAppError(
@@ -66,7 +66,7 @@ func TestPrintInnerErrors_NilInnerErrors(t *testing.T) {
 
 	// SUT + act
 	var result = printInnerErrors(
-		dummyInnerErrors,
+		dummyInnerErrors...,
 	)
 
 	// assert
@@ -79,7 +79,7 @@ func TestPrintInnerErrors_EmptyInnerErrors(t *testing.T) {
 
 	// SUT + act
 	var result = printInnerErrors(
-		dummyInnerErrors,
+		dummyInnerErrors...,
 	)
 
 	// assert
@@ -118,7 +118,7 @@ func TestPrintInnerErrors_ValidInnerErrors(t *testing.T) {
 
 	// SUT + act
 	var result = printInnerErrors(
-		dummyInnerErrors,
+		dummyInnerErrors...,
 	)
 
 	// assert
@@ -147,7 +147,7 @@ func TestAppError_Error(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.Mock(printInnerErrors).Expects(dummyInnerErrors).Returns(dummyInnerErrorMessage).Once()
+	m.Mock(printInnerErrors).Expects(dummyInnerErrors[0], dummyInnerErrors[1], dummyInnerErrors[2]).Returns(dummyInnerErrorMessage).Once()
 	m.Mock(fmt.Sprint).Expects(dummyBaseErrorMessage, dummyInnerErrorMessage).Returns(dummyResult).Once()
 
 	// SUT + act
@@ -310,8 +310,8 @@ func TestInnerErrorContains_NilInnerErrors(t *testing.T) {
 
 	// SUT + act
 	var result = innerErrorContains(
-		dummyInnerErrors,
 		dummyError,
+		dummyInnerErrors...,
 	)
 
 	// assert
@@ -325,8 +325,8 @@ func TestInnerErrorContains_EmptyInnerErrors(t *testing.T) {
 
 	// SUT + act
 	var result = innerErrorContains(
-		dummyInnerErrors,
 		dummyError,
+		dummyInnerErrors...,
 	)
 
 	// assert
@@ -352,8 +352,8 @@ func TestInnerErrorContains_ValidInnerError(t *testing.T) {
 
 	// SUT + act
 	var result = innerErrorContains(
-		dummyInnerErrors,
 		dummyError,
+		dummyInnerErrors...,
 	)
 
 	// assert
@@ -385,8 +385,8 @@ func TestInnerErrorContains_NoMatchingErrors(t *testing.T) {
 
 	// SUT + act
 	var result = innerErrorContains(
-		dummyInnerErrors,
 		dummyError,
+		dummyInnerErrors...,
 	)
 
 	// assert
@@ -439,7 +439,7 @@ func TestAppError_Contains_InnerErrorEqual(t *testing.T) {
 
 	// expect
 	m.Mock(equalsError).Expects(dummyappError, dummyError).Returns(false).Once()
-	m.Mock(innerErrorContains).Expects(dummyInnerErrors, dummyError).Returns(dummyResult).Once()
+	m.Mock(innerErrorContains).Expects(dummyError, dummyInnerErrors[0], dummyInnerErrors[1], dummyInnerErrors[2]).Returns(dummyResult).Once()
 
 	// SUT
 	var sut = dummyappError
@@ -459,7 +459,7 @@ func TestCleanupInnerErrors_NilInnerErrors(t *testing.T) {
 
 	// SUT + act
 	var result = cleanupInnerErrors(
-		dummyInnerErrors,
+		dummyInnerErrors...,
 	)
 
 	// assert
@@ -467,13 +467,8 @@ func TestCleanupInnerErrors_NilInnerErrors(t *testing.T) {
 }
 
 func TestCleanupInnerErrors_EmptyInnerErrors(t *testing.T) {
-	// arrange
-	var dummyInnerErrors = []error{}
-
 	// SUT + act
-	var result = cleanupInnerErrors(
-		dummyInnerErrors,
-	)
+	var result = cleanupInnerErrors()
 
 	// assert
 	assert.Empty(t, result)
@@ -489,7 +484,7 @@ func TestCleanupInnerErrors_NoValidInnerErrors(t *testing.T) {
 
 	// SUT + act
 	var result = cleanupInnerErrors(
-		dummyInnerErrors,
+		dummyInnerErrors...,
 	)
 
 	// assert
@@ -511,7 +506,7 @@ func TestCleanupInnerErrors_HasValidInnerErrors(t *testing.T) {
 
 	// SUT + act
 	var result = cleanupInnerErrors(
-		dummyInnerErrors,
+		dummyInnerErrors...,
 	)
 
 	// assert
@@ -551,7 +546,7 @@ func TestAppErrorWrap_NoInnerError(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.Mock(cleanupInnerErrors).Expects([]error{nil, nil, nil}).Returns(dummyCleanedInnerErrors).Once()
+	m.Mock(cleanupInnerErrors).Expects(nil, nil, nil).Returns(dummyCleanedInnerErrors).Once()
 
 	// SUT
 	var appError = &appError{
@@ -615,7 +610,7 @@ func TestAppErrorWrap_HasInnerError(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.Mock(cleanupInnerErrors).Expects(dummyNewInnerErrors).Returns(dummyCleanedInnerErrors).Once()
+	m.Mock(cleanupInnerErrors).Expects(dummyNewInnerError1, nil, dummyNewInnerError2, nil, dummyNewInnerError3).Returns(dummyCleanedInnerErrors).Once()
 
 	// SUT
 	var appError = &appError{
@@ -654,11 +649,9 @@ func TestGetGeneralFailure(t *testing.T) {
 	m.Mock(newAppError).Expects(
 		errorCodeGeneralFailure,
 		dummyErrorMessage,
-		[]error{
-			dummyInnerError1,
-			dummyInnerError2,
-			dummyInnerError3,
-		},
+		dummyInnerError1,
+		dummyInnerError2,
+		dummyInnerError3,
 	).Returns(dummyResult).Once()
 
 	// SUT + act
@@ -689,11 +682,9 @@ func TestGetUnauthorized(t *testing.T) {
 	m.Mock(newAppError).Expects(
 		errorCodeUnauthorized,
 		dummyErrorMessage,
-		[]error{
-			dummyInnerError1,
-			dummyInnerError2,
-			dummyInnerError3,
-		},
+		dummyInnerError1,
+		dummyInnerError2,
+		dummyInnerError3,
 	).Returns(dummyResult).Once()
 
 	// SUT + act
@@ -724,11 +715,9 @@ func TestGetInvalidOperation(t *testing.T) {
 	m.Mock(newAppError).Expects(
 		errorCodeInvalidOperation,
 		dummyErrorMessage,
-		[]error{
-			dummyInnerError1,
-			dummyInnerError2,
-			dummyInnerError3,
-		},
+		dummyInnerError1,
+		dummyInnerError2,
+		dummyInnerError3,
 	).Returns(dummyResult).Once()
 
 	// SUT + act
@@ -759,11 +748,9 @@ func TestGetBadRequest(t *testing.T) {
 	m.Mock(newAppError).Expects(
 		errorCodeBadRequest,
 		dummyErrorMessage,
-		[]error{
-			dummyInnerError1,
-			dummyInnerError2,
-			dummyInnerError3,
-		},
+		dummyInnerError1,
+		dummyInnerError2,
+		dummyInnerError3,
 	).Returns(dummyResult).Once()
 
 	// SUT + act
@@ -794,11 +781,9 @@ func TestGetNotFound(t *testing.T) {
 	m.Mock(newAppError).Expects(
 		errorCodeNotFound,
 		dummyErrorMessage,
-		[]error{
-			dummyInnerError1,
-			dummyInnerError2,
-			dummyInnerError3,
-		},
+		dummyInnerError1,
+		dummyInnerError2,
+		dummyInnerError3,
 	).Returns(dummyResult).Once()
 
 	// SUT + act
@@ -829,11 +814,9 @@ func TestGetCircuitBreak(t *testing.T) {
 	m.Mock(newAppError).Expects(
 		errorCodeCircuitBreak,
 		dummyErrorMessage,
-		[]error{
-			dummyInnerError1,
-			dummyInnerError2,
-			dummyInnerError3,
-		},
+		dummyInnerError1,
+		dummyInnerError2,
+		dummyInnerError3,
 	).Returns(dummyResult).Once()
 
 	// SUT + act
@@ -864,11 +847,9 @@ func TestGetOperationLock(t *testing.T) {
 	m.Mock(newAppError).Expects(
 		errorCodeOperationLock,
 		dummyErrorMessage,
-		[]error{
-			dummyInnerError1,
-			dummyInnerError2,
-			dummyInnerError3,
-		},
+		dummyInnerError1,
+		dummyInnerError2,
+		dummyInnerError3,
 	).Returns(dummyResult).Once()
 
 	// SUT + act
@@ -899,11 +880,9 @@ func TestGetAccessForbidden(t *testing.T) {
 	m.Mock(newAppError).Expects(
 		errorCodeAccessForbidden,
 		dummyErrorMessage,
-		[]error{
-			dummyInnerError1,
-			dummyInnerError2,
-			dummyInnerError3,
-		},
+		dummyInnerError1,
+		dummyInnerError2,
+		dummyInnerError3,
 	).Returns(dummyResult).Once()
 
 	// SUT + act
@@ -934,11 +913,9 @@ func TestGetDataCorruption(t *testing.T) {
 	m.Mock(newAppError).Expects(
 		errorCodeDataCorruption,
 		dummyErrorMessage,
-		[]error{
-			dummyInnerError1,
-			dummyInnerError2,
-			dummyInnerError3,
-		},
+		dummyInnerError1,
+		dummyInnerError2,
+		dummyInnerError3,
 	).Returns(dummyResult).Once()
 
 	// SUT + act
@@ -969,11 +946,9 @@ func TestGetNotImplemented(t *testing.T) {
 	m.Mock(newAppError).Expects(
 		errorCodeNotImplemented,
 		dummyErrorMessage,
-		[]error{
-			dummyInnerError1,
-			dummyInnerError2,
-			dummyInnerError3,
-		},
+		dummyInnerError1,
+		dummyInnerError2,
+		dummyInnerError3,
 	).Returns(dummyResult).Once()
 
 	// SUT + act
@@ -1004,11 +979,9 @@ func TestWrapError_NormalError(t *testing.T) {
 	m.Mock(newAppError).Expects(
 		errorCodeGeneralFailure,
 		dummySourceError.Error(),
-		[]error{
-			dummyInnerError1,
-			dummyInnerError2,
-			dummyInnerError3,
-		},
+		dummyInnerError1,
+		dummyInnerError2,
+		dummyInnerError3,
 	).Returns(dummyAppError).Once()
 
 	// SUT + act

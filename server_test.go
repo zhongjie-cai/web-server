@@ -76,7 +76,7 @@ func TestHostServer_RunServerFailure(t *testing.T) {
 	m.Mock(logAppRoot).Expects(dummySession, "server", "hostServer", "Targeting address [%v]", dummyAddress).Returns().Once()
 	m.Mock(logAppRoot).Expects(dummySession, "server", "hostServer", "Server terminated").Returns().Once()
 	m.Mock(runServer).Expects(dummyAddress, dummySession, dummyRouter, dummyShutdownSignal, &dummyStarted).Returns(false).Once()
-	m.Mock(newAppError).Expects(errorCodeGeneralFailure, errorMessageHostServer, []error{}).Returns(dummyAppError).Once()
+	m.Mock(newAppError).Expects(errorCodeGeneralFailure, errorMessageHostServer).Returns(dummyAppError).Once()
 
 	// SUT + act
 	var err = hostServer(
