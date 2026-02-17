@@ -232,7 +232,6 @@ func createHTTPRequest(webRequest *webRequest) (*http.Request, error) {
 			newAppError(
 				errorCodeGeneralFailure,
 				errorMessageWebRequestNil,
-				[]error{},
 			)
 	}
 	var requestURL = generateRequestURL(
@@ -254,12 +253,14 @@ func createHTTPRequest(webRequest *webRequest) (*http.Request, error) {
 		webRequest.session,
 		webRequest.method,
 		webRequest.url,
+		"%s",
 		requestURL,
 	)
 	logWebcallRequest(
 		webRequest.session,
 		"Payload",
 		"Content",
+		"%s",
 		webRequest.payload,
 	)
 	requestObject.Header = make(http.Header)
@@ -272,6 +273,7 @@ func createHTTPRequest(webRequest *webRequest) (*http.Request, error) {
 		webRequest.session,
 		"Header",
 		"Content",
+		"%s",
 		marshalIgnoreError(
 			requestObject.Header,
 		),
@@ -318,6 +320,7 @@ func logSuccessResponse(session *session, response *http.Response, startTime tim
 		session,
 		"Header",
 		"Content",
+		"%s",
 		marshalIgnoreError(
 			responseHeaders,
 		),
@@ -326,6 +329,7 @@ func logSuccessResponse(session *session, response *http.Response, startTime tim
 		session,
 		"Body",
 		"Content",
+		"%s",
 		string(responseBody),
 	)
 	logWebcallFinish(
@@ -344,7 +348,6 @@ func doRequestProcessing(webRequest *webRequest) (*http.Response, error) {
 			newAppError(
 				errorCodeGeneralFailure,
 				errorMessageWebRequestNil,
-				[]error{},
 			)
 	}
 	var requestObject, requestError = createHTTPRequest(
@@ -421,7 +424,7 @@ func parseResponse(session *session, body io.ReadCloser, dataTemplate any) error
 		return newAppError(
 			errorCodeGeneralFailure,
 			errorMessageResponseInvalid,
-			[]error{unmarshalError},
+			unmarshalError,
 		)
 	}
 	return nil
@@ -436,7 +439,6 @@ func (webRequest *webRequest) Process() (statusCode int, responseHeader http.Hea
 			newAppError(
 				errorCodeGeneralFailure,
 				errorMessageWebRequestNil,
-				[]error{},
 			)
 	}
 	var responseObject *http.Response

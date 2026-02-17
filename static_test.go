@@ -3,32 +3,29 @@ package webserver
 import (
 	"testing"
 
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
+	"github.com/go-chi/chi/v5"
+	"github.com/zhongjie-cai/gomocker/v2"
 )
 
 func TestRegisterStatic(t *testing.T) {
 	// arrange
-	var dummyName = "some name"
 	var dummyPath = "/foo/"
 	var dummyHandler = &dummyHandler{}
+	type router struct {
+		chi.Router
+	}
+	var dummyRouter = &router{}
 
-	// SUT
-	var router = mux.NewRouter()
+	// mock
+	var mock = gomocker.NewMocker(t)
 
-	// act
-	var route = registerStatic(
-		router,
-		dummyName,
+	// expect
+	mock.Mock((*router).Route).Expects(dummyRouter, dummyPath, dummyHandler).Returns().Once()
+
+	// SUT + act
+	registerStatic(
+		dummyRouter,
 		dummyPath,
 		dummyHandler,
 	)
-	var name = route.GetName()
-	var pathTemplate, _ = route.GetPathTemplate()
-	var handler = route.GetHandler()
-
-	// assert
-	assert.Equal(t, dummyName, name)
-	assert.Equal(t, dummyPath, pathTemplate)
-	assert.Equal(t, dummyHandler, handler)
 }

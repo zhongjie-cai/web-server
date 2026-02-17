@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 )
 
 var (
@@ -166,7 +165,6 @@ func (session *session) GetRequestBody(dataTemplate any) error {
 		return newAppError(
 			errorCodeGeneralFailure,
 			errorMessageSessionNil,
-			[]error{},
 		)
 	}
 	var httpRequest = session.GetRequest()
@@ -177,13 +175,13 @@ func (session *session) GetRequestBody(dataTemplate any) error {
 		return newAppError(
 			errorCodeBadRequest,
 			errorMessageRequestBodyEmpty,
-			[]error{},
 		)
 	}
 	logEndpointRequest(
 		session,
 		"Body",
 		"Content",
+		"%s",
 		requestBody,
 	)
 	var unmarshalError = tryUnmarshal(
@@ -201,7 +199,7 @@ func (session *session) GetRequestBody(dataTemplate any) error {
 		return newAppError(
 			errorCodeBadRequest,
 			errorMessageRequestBodyInvalid,
-			[]error{unmarshalError},
+			unmarshalError,
 		)
 	}
 	return nil
@@ -220,29 +218,25 @@ func (session *session) GetRequestParameter(name string, dataTemplate any) error
 		return newAppError(
 			errorCodeGeneralFailure,
 			errorMessageSessionNil,
-			[]error{},
 		)
 	}
 	var httpRequest = session.GetRequest()
-	var parameters = mux.Vars(
-		httpRequest,
-	)
-	var value, found = parameters[name]
-	if !found {
+	var paramValue = httpRequest.PathValue(name)
+	if paramValue == "" {
 		return newAppError(
 			errorCodeBadRequest,
 			errorMessageParameterNotFound,
-			[]error{},
 		)
 	}
 	logEndpointRequest(
 		session,
 		"Parameter",
 		name,
-		value,
+		"%s",
+		paramValue,
 	)
 	var unmarshalError = tryUnmarshal(
-		value,
+		paramValue,
 		dataTemplate,
 	)
 	if unmarshalError != nil {
@@ -256,7 +250,7 @@ func (session *session) GetRequestParameter(name string, dataTemplate any) error
 		return newAppError(
 			errorCodeBadRequest,
 			errorMessageParameterInvalid,
-			[]error{unmarshalError},
+			unmarshalError,
 		)
 	}
 	return nil
@@ -292,7 +286,6 @@ func (session *session) GetRequestQueries(name string, dataTemplate any) error {
 		return newAppError(
 			errorCodeGeneralFailure,
 			errorMessageSessionNil,
-			[]error{},
 		)
 	}
 	var vTemplate = reflect.ValueOf(dataTemplate)
@@ -301,7 +294,6 @@ func (session *session) GetRequestQueries(name string, dataTemplate any) error {
 		return newAppError(
 			errorCodeGeneralFailure,
 			errorMessageDataTemplateInvalid,
-			[]error{},
 		)
 	}
 	vTemplate = reflect.Indirect(vTemplate)
@@ -310,7 +302,6 @@ func (session *session) GetRequestQueries(name string, dataTemplate any) error {
 		return newAppError(
 			errorCodeGeneralFailure,
 			errorMessageDataTemplateInvalid,
-			[]error{},
 		)
 	}
 	var tItem = tTemplate.Elem()
@@ -324,6 +315,7 @@ func (session *session) GetRequestQueries(name string, dataTemplate any) error {
 			session,
 			"Query",
 			name,
+			"%s",
 			query,
 		)
 		var unmarshalError = tryUnmarshal(
@@ -341,7 +333,7 @@ func (session *session) GetRequestQueries(name string, dataTemplate any) error {
 			return newAppError(
 				errorCodeBadRequest,
 				errorMessageQueryInvalid,
-				[]error{unmarshalError},
+				unmarshalError,
 			)
 		}
 		vTemplate.Set(reflect.Append(vTemplate, vItem.Elem()))
@@ -362,7 +354,6 @@ func (session *session) GetRequestQuery(name string, index int, dataTemplate any
 		return newAppError(
 			errorCodeGeneralFailure,
 			errorMessageSessionNil,
-			[]error{},
 		)
 	}
 	var queries = getAllQueries(
@@ -373,7 +364,6 @@ func (session *session) GetRequestQuery(name string, index int, dataTemplate any
 		return newAppError(
 			errorCodeBadRequest,
 			errorMessageQueryNotFound,
-			[]error{},
 		)
 	}
 	var value = queries[index]
@@ -381,6 +371,7 @@ func (session *session) GetRequestQuery(name string, index int, dataTemplate any
 		session,
 		"Query",
 		name,
+		"%s",
 		value,
 	)
 	var unmarshalError = tryUnmarshal(
@@ -398,7 +389,7 @@ func (session *session) GetRequestQuery(name string, index int, dataTemplate any
 		return newAppError(
 			errorCodeBadRequest,
 			errorMessageQueryInvalid,
-			[]error{unmarshalError},
+			unmarshalError,
 		)
 	}
 	return nil
@@ -427,7 +418,6 @@ func (session *session) GetRequestHeaders(name string, dataTemplate any) error {
 		return newAppError(
 			errorCodeGeneralFailure,
 			errorMessageSessionNil,
-			[]error{},
 		)
 	}
 	var vTemplate = reflect.ValueOf(dataTemplate)
@@ -436,7 +426,6 @@ func (session *session) GetRequestHeaders(name string, dataTemplate any) error {
 		return newAppError(
 			errorCodeGeneralFailure,
 			errorMessageDataTemplateInvalid,
-			[]error{},
 		)
 	}
 	vTemplate = reflect.Indirect(vTemplate)
@@ -445,7 +434,6 @@ func (session *session) GetRequestHeaders(name string, dataTemplate any) error {
 		return newAppError(
 			errorCodeGeneralFailure,
 			errorMessageDataTemplateInvalid,
-			[]error{},
 		)
 	}
 	var tItem = tTemplate.Elem()
@@ -459,6 +447,7 @@ func (session *session) GetRequestHeaders(name string, dataTemplate any) error {
 			session,
 			"Header",
 			name,
+			"%s",
 			header,
 		)
 		var unmarshalError = tryUnmarshal(
@@ -476,7 +465,7 @@ func (session *session) GetRequestHeaders(name string, dataTemplate any) error {
 			return newAppError(
 				errorCodeBadRequest,
 				errorMessageHeaderInvalid,
-				[]error{unmarshalError},
+				unmarshalError,
 			)
 		}
 		vTemplate.Set(reflect.Append(vTemplate, vItem.Elem()))
@@ -497,7 +486,6 @@ func (session *session) GetRequestHeader(name string, index int, dataTemplate an
 		return newAppError(
 			errorCodeGeneralFailure,
 			errorMessageSessionNil,
-			[]error{},
 		)
 	}
 	var headers = getAllHeaders(
@@ -508,7 +496,6 @@ func (session *session) GetRequestHeader(name string, index int, dataTemplate an
 		return newAppError(
 			errorCodeBadRequest,
 			errorMessageHeaderNotFound,
-			[]error{},
 		)
 	}
 	var value = headers[index]
@@ -516,6 +503,7 @@ func (session *session) GetRequestHeader(name string, index int, dataTemplate an
 		session,
 		"Header",
 		name,
+		"%s",
 		value,
 	)
 	var unmarshalError = tryUnmarshal(
@@ -533,7 +521,7 @@ func (session *session) GetRequestHeader(name string, index int, dataTemplate an
 		return newAppError(
 			errorCodeBadRequest,
 			errorMessageHeaderInvalid,
-			[]error{unmarshalError},
+			unmarshalError,
 		)
 	}
 	return nil

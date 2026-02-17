@@ -1,12 +1,10 @@
 module github.com/zhongjie-cai/web-server
 
-go 1.23
-
-toolchain go1.23.2
+go 1.25
 
 require (
+	github.com/go-chi/chi/v5 v5.2.5
 	github.com/google/uuid v1.6.0
-	github.com/gorilla/mux v1.8.1
 	github.com/stretchr/testify v1.10.0
 	github.com/zhongjie-cai/gomocker/v2 v2.1.0
 )

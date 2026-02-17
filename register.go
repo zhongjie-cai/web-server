@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gorilla/mux"
+	"github.com/go-chi/chi/v5"
 )
 
 func doParameterReplacement(
@@ -88,7 +88,7 @@ func evaluateQueries(
 func registerRoutes(
 	app *application,
 	session *session,
-	router *mux.Router,
+	router chi.Router,
 ) {
 	var configuredRoutes = session.customization.Routes()
 	if len(configuredRoutes) == 0 {
@@ -106,15 +106,13 @@ func registerRoutes(
 			configuredRoute.Path,
 			configuredRoute.Parameters,
 		)
-		var queries = evaluateQueries(
-			configuredRoute.Queries,
-		)
-		var name, _ = registerRoute(
-			router,
-			configuredRoute.Endpoint,
+		var name = generateRouteName(
 			configuredRoute.Method,
 			evaluatedPath,
-			queries,
+		)
+		router.MethodFunc(
+			configuredRoute.Method,
+			evaluatedPath,
 			app.handleSession,
 		)
 		app.actionFuncMap[name] = configuredRoute.ActionFunc
@@ -123,7 +121,7 @@ func registerRoutes(
 
 func registerStatics(
 	session *session,
-	router *mux.Router,
+	router chi.Router,
 ) {
 	var statics = session.customization.Statics()
 	if len(statics) == 0 {
@@ -136,9 +134,7 @@ func registerStatics(
 		return
 	}
 	for _, static := range statics {
-		registerStatic(
-			router,
-			static.Name,
+		router.Handle(
 			static.PathPrefix,
 			static.Handler,
 		)
@@ -147,7 +143,7 @@ func registerStatics(
 
 func registerMiddlewares(
 	session *session,
-	router *mux.Router,
+	router chi.Router,
 ) {
 	var middlewares = session.customization.Middlewares()
 	if len(middlewares) == 0 {
@@ -160,27 +156,30 @@ func registerMiddlewares(
 		return
 	}
 	for _, middleware := range middlewares {
-		addMiddleware(
-			router,
-			middleware,
-		)
+		router.Use(middleware)
 	}
 }
 
 func registerErrorHandlers(
 	customization Customization,
-	router *mux.Router,
+	router chi.Router,
 ) {
-	router.MethodNotAllowedHandler = customization.MethodNotAllowedHandler()
-	router.NotFoundHandler = customization.NotFoundHandler()
+	var notAllowedHandler = customization.MethodNotAllowedHandler()
+	if notAllowedHandler != nil {
+		router.MethodNotAllowed(notAllowedHandler)
+	}
+	var notFoundHandler = customization.NotFoundHandler()
+	if notFoundHandler != nil {
+		router.NotFound(notFoundHandler)
+	}
 }
 
 // instantiateRouter instantiates and registers the given routes according to custom specification
 func instantiateRouter(
 	app *application,
 	session *session,
-) (*mux.Router, error) {
-	var router = mux.NewRouter()
+) (chi.Router, error) {
+	var router = chi.NewRouter()
 	registerRoutes(
 		app,
 		session,
@@ -194,25 +193,6 @@ func instantiateRouter(
 		session,
 		router,
 	)
-	var routerError = walkRegisteredRoutes(
-		session,
-		router,
-	)
-	if routerError != nil {
-		logAppRoot(
-			session,
-			"register",
-			"instantiateRouter",
-			"%+v",
-			routerError,
-		)
-		return router,
-			newAppError(
-				errorCodeGeneralFailure,
-				errorMessageRouteRegistration,
-				[]error{routerError},
-			)
-	}
 	registerErrorHandlers(
 		session.customization,
 		router,

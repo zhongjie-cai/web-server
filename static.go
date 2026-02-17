@@ -3,28 +3,23 @@ package webserver
 import (
 	"net/http"
 
-	"github.com/gorilla/mux"
+	"github.com/go-chi/chi/v5"
 )
 
 // Static holds the registration information of a static content hosting
 type Static struct {
-	Name       string
 	PathPrefix string
 	Handler    http.Handler
 }
 
-// registerStatic wraps the mux static content handler
+// registerStatic wraps the go-chi static content handler
 func registerStatic(
-	router *mux.Router,
-	name string,
+	router chi.Router,
 	path string,
 	handler http.Handler,
-) *mux.Route {
-	return router.PathPrefix(
+) {
+	router.Handle(
 		path,
-	).Handler(
 		handler,
-	).Name(
-		name,
 	)
 }

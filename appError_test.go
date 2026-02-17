@@ -37,7 +37,7 @@ func TestNewAppError(t *testing.T) {
 	var result = newAppError(
 		dummyErrorCode,
 		dummyErrorMessage,
-		dummyInnerErrors,
+		dummyInnerErrors...,
 	)
 
 	// assert
