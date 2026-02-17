@@ -14,7 +14,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        go: [1.23]
+        go: [1.25]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -36,7 +36,7 @@ jobs:
 
       - name: Go Coverage Badge # Pass the `coverage.out` output to this action
         uses: tj-actions/coverage-badge-go@v2
-        if: ${{ runner.os == 'Linux' && matrix.go == '1.23' }} # Runs this on only one of the ci builds.
+        if: ${{ runner.os == 'Linux' && matrix.go == '1.25' }} # Runs this on only one of the ci builds.
         with:
           green: 100
           filename: coverage.out
