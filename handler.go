@@ -12,13 +12,13 @@ func initiateSession(
 	responseWriter http.ResponseWriter,
 	httpRequest *http.Request,
 ) (*session, ActionFunc, error) {
-	var endpoint, action, routeError = getRouteInfo(
+	var name, action, routeError = getRouteInfo(
 		httpRequest,
 		app.actionFuncMap,
 	)
 	return &session{
 		uuid.New(),
-		endpoint,
+		name,
 		httpRequest,
 		responseWriter,
 		map[string]any{},
@@ -35,10 +35,11 @@ func finalizeSession(
 		session,
 		recoverResult,
 	)
+	var method, pattern = extractRouteMethodAndPattern(session.name)
 	logEndpointExit(
 		session,
-		session.name,
-		session.request.Method,
+		pattern,
+		method,
 		"%s",
 		time.Since(startTime),
 	)
@@ -90,10 +91,11 @@ func (app *application) handleSession(
 		responseWriter,
 		httpRequest,
 	)
+	var method, pattern = extractRouteMethodAndPattern(session.name)
 	logEndpointEnter(
 		session,
-		session.name,
-		httpRequest.Method,
+		pattern,
+		method,
 		"",
 	)
 	defer finalizeSession(

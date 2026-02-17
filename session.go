@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
 
@@ -221,7 +222,7 @@ func (session *session) GetRequestParameter(name string, dataTemplate any) error
 		)
 	}
 	var httpRequest = session.GetRequest()
-	var paramValue = httpRequest.PathValue(name)
+	var paramValue = chi.URLParam(httpRequest, name)
 	if paramValue == "" {
 		return newAppError(
 			errorCodeBadRequest,

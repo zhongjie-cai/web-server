@@ -61,12 +61,10 @@ func (customization *myCustomization) Middlewares() []webserver.MiddlewareFunc {
 func (customization *myCustomization) Statics() []webserver.Static {
 	return []webserver.Static{
 		webserver.Static{
-			Name:       "SwaggerUI",
 			PathPrefix: "/docs/",
 			Handler:    swaggerHandler(),
 		},
 		webserver.Static{
-			Name:       "SwaggerRedirect",
 			PathPrefix: "/docs",
 			Handler:    swaggerRedirect(),
 		},
@@ -75,7 +73,6 @@ func (customization *myCustomization) Statics() []webserver.Static {
 func (customization *myCustomization) Routes() []webserver.Route {
 	return []webserver.Route{
 		webserver.Route{
-			Endpoint:   "Health",
 			Method:     http.MethodGet,
 			Path:       "/health",
 			ActionFunc: getHealth,

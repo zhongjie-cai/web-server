@@ -3,6 +3,7 @@ package webserver
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -79,6 +80,17 @@ func generateRouteName(method string, pattern string) string {
 		method,
 		pattern,
 	)
+}
+
+func extractRouteMethodAndPattern(name string) (string, string) {
+	var parts = strings.Split(name, ":")
+	if len(parts) < 2 {
+		return "??", name
+	}
+	if len(parts) > 2 {
+		return parts[0], strings.Join(parts[1:], ":")
+	}
+	return parts[0], parts[1]
 }
 
 // getRouteInfo retrieves the registered name and action for the given route

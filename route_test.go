@@ -152,6 +152,42 @@ func TestGenerateRouteName(t *testing.T) {
 	assert.Equal(t, "some_method:some_pattern", result)
 }
 
+func TestExtractRouteMethodAndPattern_LessParts(t *testing.T) {
+	// arrange
+	var dummyName = "some name"
+
+	// SUT + act
+	var method, pattern = extractRouteMethodAndPattern(dummyName)
+
+	// assert
+	assert.Equal(t, "??", method)
+	assert.Equal(t, dummyName, pattern)
+}
+
+func TestExtractRouteMethodAndPattern_MoreParts(t *testing.T) {
+	// arrange
+	var dummyName = "some method:some pattern:some extra"
+
+	// SUT + act
+	var method, pattern = extractRouteMethodAndPattern(dummyName)
+
+	// assert
+	assert.Equal(t, "some method", method)
+	assert.Equal(t, "some pattern:some extra", pattern)
+}
+
+func TestExtractRouteMethodAndPattern_ExactParts(t *testing.T) {
+	// arrange
+	var dummyName = "some method:some pattern"
+
+	// SUT + act
+	var method, pattern = extractRouteMethodAndPattern(dummyName)
+
+	// assert
+	assert.Equal(t, "some method", method)
+	assert.Equal(t, "some pattern", pattern)
+}
+
 func TestGetRouteInfo_NilRoute(t *testing.T) {
 	// arrange
 	var dummyHTTPRequest = &http.Request{

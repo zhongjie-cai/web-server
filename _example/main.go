@@ -41,25 +41,32 @@ func (customization *myCustomization) Routes() []webserver.Route {
 		webserver.Route{
 			Method:     http.MethodGet,
 			Path:       "/health",
-			ActionFunc: getHealth,
+			ActionFunc: getHealthSimple,
 		},
 		webserver.Route{
 			Method:     http.MethodGet,
 			Path:       "/health/{data}",
-			ActionFunc: getHealth,
+			ActionFunc: getHealthData,
 			Parameters: map[string]webserver.ParameterType{
 				"data": webserver.ParameterTypeAnything,
 			},
 		},
-		webserver.Route{
-			Method:     http.MethodGet,
-			Path:       "/health/simple",
-			ActionFunc: getHealthSimple,
-		},
 	}
 }
 
-func getHealth(
+func getHealthSimple(
+	session webserver.Session,
+) (any, error) {
+	session.LogMethodLogic(
+		webserver.LogLevelWarn,
+		"Health",
+		"Summary",
+		"Simple",
+	)
+	return "--", nil
+}
+
+func getHealthData(
 	session webserver.Session,
 ) (any, error) {
 	var value string
@@ -75,18 +82,6 @@ func getHealth(
 		value,
 	)
 	return value, nil
-}
-
-func getHealthSimple(
-	session webserver.Session,
-) (any, error) {
-	session.LogMethodLogic(
-		webserver.LogLevelWarn,
-		"Health",
-		"Summary",
-		"Simple",
-	)
-	return "--", nil
 }
 
 // loggingRequestURIMiddleware is an example of how a middleware function is written with this library

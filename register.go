@@ -154,16 +154,16 @@ func instantiateRouter(
 ) (chi.Router, error) {
 	var router chi.Router
 	router = chi.NewRouter()
+	registerMiddlewares(
+		session,
+		router,
+	)
 	registerRoutes(
 		app,
 		session,
 		router,
 	)
 	registerStatics(
-		session,
-		router,
-	)
-	registerMiddlewares(
 		session,
 		router,
 	)

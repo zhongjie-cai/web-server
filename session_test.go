@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"testing"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/zhongjie-cai/gomocker/v2"
@@ -378,7 +379,7 @@ func TestSessionGetRequestParameter_ParameterNotFound(t *testing.T) {
 	}
 
 	// expect
-	m.Mock((*http.Request).PathValue).Expects(dummyHTTPRequest, dummyName).Returns(dummyValue).Once()
+	m.Mock(chi.URLParam).Expects(dummyHTTPRequest, dummyName).Returns(dummyValue).Once()
 	m.Mock(newAppError).Expects(errorCodeBadRequest, errorMessageParameterNotFound).Returns(dummyAppError).Once()
 
 	// act
@@ -410,7 +411,7 @@ func TestSessionGetRequestParameter_ParameterInvalid(t *testing.T) {
 	}
 
 	// expect
-	m.Mock((*http.Request).PathValue).Expects(dummyHTTPRequest, dummyName).Returns(dummyValue).Once()
+	m.Mock(chi.URLParam).Expects(dummyHTTPRequest, dummyName).Returns(dummyValue).Once()
 	m.Mock(logEndpointRequest).Expects(dummySession, "Parameter", dummyName, "%s", dummyValue).Returns().Once()
 	m.Mock(logEndpointRequest).Expects(dummySession, "Parameter", "UnmarshalError", "%+v", dummyError).Returns().Once()
 	m.Mock(tryUnmarshal).Expects(dummyValue, gomocker.Anything()).Returns(dummyError).SideEffects(
@@ -445,7 +446,7 @@ func TestSessionGetRequestParameter_ParameterValid(t *testing.T) {
 	}
 
 	// expect
-	m.Mock((*http.Request).PathValue).Expects(dummyHTTPRequest, dummyName).Returns(dummyValue).Once()
+	m.Mock(chi.URLParam).Expects(dummyHTTPRequest, dummyName).Returns(dummyValue).Once()
 	m.Mock(logEndpointRequest).Expects(dummySession, "Parameter", dummyName, "%s", dummyValue).Returns().Once()
 	m.Mock(tryUnmarshal).Expects(dummyValue, gomocker.Anything()).Returns(nil).SideEffects(
 		gomocker.ParamSideEffect(1, 2, func(value *int) { *value = dummyResult })).Once()

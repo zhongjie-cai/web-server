@@ -380,9 +380,9 @@ func TestInstantiateRouter_RouterError(t *testing.T) {
 
 	// expect
 	m.Mock(chi.NewRouter).Expects().Returns(dummyRouter).Once()
+	m.Mock(registerMiddlewares).Expects(dummySession, dummyRouter).Returns().Once()
 	m.Mock(registerRoutes).Expects(dummyApplication, dummySession, dummyRouter).Returns().Once()
 	m.Mock(registerStatics).Expects(dummySession, dummyRouter).Returns().Once()
-	m.Mock(registerMiddlewares).Expects(dummySession, dummyRouter).Returns().Once()
 	m.Mock(walkRegisteredRoutes).Expects(dummySession, dummyRouter).Returns(dummyError).Once()
 	m.Mock(logAppRoot).Expects(dummySession, "register", "instantiateRouter", "%+v", dummyError).Returns().Once()
 	m.Mock(newAppError).Expects(errorCodeGeneralFailure, errorMessageRouteRegistration, dummyError).Returns(dummyAppError).Once()
@@ -412,9 +412,9 @@ func TestInstantiateRouter_HappyPath(t *testing.T) {
 
 	// expect
 	m.Mock(chi.NewRouter).Expects().Returns(dummyRouter).Once()
+	m.Mock(registerMiddlewares).Expects(dummySession, dummyRouter).Returns().Once()
 	m.Mock(registerRoutes).Expects(dummyApplication, dummySession, dummyRouter).Returns().Once()
 	m.Mock(registerStatics).Expects(dummySession, dummyRouter).Returns().Once()
-	m.Mock(registerMiddlewares).Expects(dummySession, dummyRouter).Returns().Once()
 	m.Mock(walkRegisteredRoutes).Expects(dummySession, dummyRouter).Returns(nil).Once()
 	m.Mock(registerErrorHandlers).Expects(dummyCustomization, dummyRouter).Returns().Once()
 	m.Mock((*DefaultCustomization).InstrumentRouter).Expects(dummyCustomization, dummyRouter).Returns(dummyRouter).Once()
