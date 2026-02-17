@@ -2,7 +2,7 @@ version: "3.3"
 
 services:
   webserver_code:
-    image: mcr.microsoft.com/vscode/devcontainers/go:1.23
+    image: mcr.microsoft.com/vscode/devcontainers/go:1.25
     container_name: "webserver_code"
     volumes:
       # Mounts the project folder to '/workspace'. The target path inside the container

@@ -12,7 +12,7 @@ Original source: https://github.com/zhongjie-cai/web-server
 Library dependencies (must be present in vendor folder or in Go path):
 
 - [UUID](https://github.com/google/uuid): `go get -u github.com/google/uuid`
-- [MUX](https://github.com/gorilla/mux): `go get -u github.com/gorilla/mux`
+- [Go-Chi](https://github.com/go-chi/chi/v5): `go get -u github.com/go-chi/chi/v5`
 - [Testify](https://github.com/stretchr/testify): `go get -u github.com/stretchr/testify` (For tests only)
 - [gomocker](https://github.com/zhongjie-cai/gomocker): `go get -u github.com/zhongjie-cai/gomocker` (For tests only)
 
@@ -34,7 +34,7 @@ import (
 func main() {
 	var application = webserver.NewApplication(
 		"my web server",
-		18605,
+		":18605",
 		"0.0.1",
 		&myCustomization{},
 	)
@@ -61,12 +61,10 @@ func (customization *myCustomization) Middlewares() []webserver.MiddlewareFunc {
 func (customization *myCustomization) Statics() []webserver.Static {
 	return []webserver.Static{
 		webserver.Static{
-			Name:       "SwaggerUI",
 			PathPrefix: "/docs/",
 			Handler:    swaggerHandler(),
 		},
 		webserver.Static{
-			Name:       "SwaggerRedirect",
 			PathPrefix: "/docs",
 			Handler:    swaggerRedirect(),
 		},
@@ -75,7 +73,6 @@ func (customization *myCustomization) Statics() []webserver.Static {
 func (customization *myCustomization) Routes() []webserver.Route {
 	return []webserver.Route{
 		webserver.Route{
-			Endpoint:   "Health",
 			Method:     http.MethodGet,
 			Path:       "/health",
 			ActionFunc: getHealth,

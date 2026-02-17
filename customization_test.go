@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/zhongjie-cai/gomocker/v2"
 )
@@ -127,7 +127,10 @@ func TestDefaultCustomization_Middlewares(t *testing.T) {
 
 func TestDefaultCustomization_InstrumentRouter(t *testing.T) {
 	// arrange
-	var dummyRouter = &mux.Router{KeepContext: rand.Intn(100) > 50}
+	type router struct {
+		chi.Router
+	}
+	var dummyRouter = &router{}
 
 	// SUT + act
 	var result = customizationDefault.InstrumentRouter(dummyRouter)
@@ -138,7 +141,10 @@ func TestDefaultCustomization_InstrumentRouter(t *testing.T) {
 
 func TestDefaultCustomization_WrapHandler(t *testing.T) {
 	// arrange
-	var dummyRouter = &mux.Router{KeepContext: rand.Intn(100) > 50}
+	type router struct {
+		chi.Router
+	}
+	var dummyRouter = &router{}
 
 	// SUT + act
 	var result = customizationDefault.WrapHandler(dummyRouter)

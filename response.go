@@ -73,6 +73,7 @@ func writeResponse(
 		session,
 		http.StatusText(statusCode),
 		strconv.Itoa(statusCode),
+		"%s",
 		responseMessage,
 	)
 	var responseWriter = session.GetResponseWriter()

@@ -9,7 +9,7 @@ import (
 	"runtime/debug"
 	"time"
 
-	"github.com/gorilla/mux"
+	"github.com/go-chi/chi/v5"
 )
 
 // Customization holds all customization methods
@@ -62,10 +62,10 @@ type HostingCustomization interface {
 	Statics() []Static
 
 	// Middlewares is to customize the middlewares registration
-	Middlewares() []MiddlewareFunc
+	Middlewares() []func(http.Handler) http.Handler
 
 	// InstrumentRouter is to customize the instrumentation on top of a fully configured router; usually useful for 3rd party monitoring tools such as new relic, etc.
-	InstrumentRouter(router *mux.Router) *mux.Router
+	InstrumentRouter(router chi.Router) chi.Router
 
 	// WrapHandler is to customize the overall wrapping of http.Handler before the server is configured
 	WrapHandler(handler http.Handler) http.Handler
@@ -92,10 +92,10 @@ type HandlerCustomization interface {
 	RecoverPanic(session Session, recoverResult any) (any, error)
 
 	// NotFoundHandler is to customize the handler to be used when no route matches.
-	NotFoundHandler() http.Handler
+	NotFoundHandler() http.HandlerFunc
 
 	// MethodNotAllowed is to customize the handler to be used when the request method does not match the route
-	MethodNotAllowedHandler() http.Handler
+	MethodNotAllowedHandler() http.HandlerFunc
 }
 
 // WebRequestCustomization holds customization methods related to web requests
@@ -179,12 +179,12 @@ func (customization *DefaultCustomization) Statics() []Static {
 }
 
 // Middlewares is to customize the middlewares registration
-func (customization *DefaultCustomization) Middlewares() []MiddlewareFunc {
-	return []MiddlewareFunc{}
+func (customization *DefaultCustomization) Middlewares() []func(http.Handler) http.Handler {
+	return []func(http.Handler) http.Handler{}
 }
 
 // InstrumentRouter is to customize the instrumentation on top of a fully configured router; usually useful for 3rd party monitoring tools such as new relic, etc.
-func (customization *DefaultCustomization) InstrumentRouter(router *mux.Router) *mux.Router {
+func (customization *DefaultCustomization) InstrumentRouter(router chi.Router) chi.Router {
 	return router
 }
 
@@ -258,12 +258,12 @@ func (customization *DefaultCustomization) RecoverPanic(session Session, recover
 }
 
 // NotFoundHandler is to customize the handler to be used when no route matches.
-func (customization *DefaultCustomization) NotFoundHandler() http.Handler {
+func (customization *DefaultCustomization) NotFoundHandler() http.HandlerFunc {
 	return nil
 }
 
 // MethodNotAllowedHandler is to customize the handler to be used when the request method does not match the route
-func (customization *DefaultCustomization) MethodNotAllowedHandler() http.Handler {
+func (customization *DefaultCustomization) MethodNotAllowedHandler() http.HandlerFunc {
 	return nil
 }
 

@@ -83,6 +83,7 @@ func TestFinalizeSession(t *testing.T) {
 		name:    dummyName,
 		request: dummyHTTPRequest,
 	}
+	var dummyPattern = "some pattern"
 	var dummyStartTime = getTimeNowUTC()
 	var dummyRecoverResult = "some recover result"
 	var dummyDuration = time.Duration(rand.Intn(100))
@@ -92,7 +93,8 @@ func TestFinalizeSession(t *testing.T) {
 
 	// expect
 	m.Mock(handlePanic).Expects(dummySession, dummyRecoverResult).Returns().Once()
-	m.Mock(logEndpointExit).Expects(dummySession, dummyName, dummyMethod,
+	m.Mock(extractRouteMethodAndPattern).Expects(dummyName).Returns(dummyMethod, dummyPattern).Once()
+	m.Mock(logEndpointExit).Expects(dummySession, dummyPattern, dummyMethod,
 		"%s", dummyDuration).Returns().Once()
 	m.Mock(time.Since).Expects(dummyStartTime).Returns(dummyDuration).Once()
 
@@ -191,6 +193,7 @@ func TestHandleSession_RouteError(t *testing.T) {
 	var dummySession = &session{
 		name: dummyName,
 	}
+	var dummyPattern = "some pattern"
 	var dummyAction = func(session Session) (any, error) { return nil, nil }
 	var dummyRouteError = errors.New("some route error")
 	var dummyStartTime = time.Now()
@@ -200,7 +203,8 @@ func TestHandleSession_RouteError(t *testing.T) {
 
 	// expect
 	m.Mock(initiateSession).Expects(dummyApplication, dummyResponseWriter, dummyHTTPRequest).Returns(dummySession, dummyAction, dummyRouteError).Once()
-	m.Mock(logEndpointEnter).Expects(dummySession, dummyName, dummyMethod, "").Returns().Once()
+	m.Mock(extractRouteMethodAndPattern).Expects(dummyName).Returns(dummyMethod, dummyPattern).Once()
+	m.Mock(logEndpointEnter).Expects(dummySession, dummyPattern, dummyMethod, "").Returns().Once()
 	m.Mock(getTimeNowUTC).Expects().Returns(dummyStartTime).Once()
 	m.Mock(finalizeSession).Expects(dummySession, dummyStartTime, recover()).Returns().Once()
 	m.Mock(writeResponse).Expects(dummySession, nil, dummyRouteError).Returns().Once()
@@ -224,6 +228,7 @@ func TestHandleSession_Success(t *testing.T) {
 	var dummySession = &session{
 		name: dummyName,
 	}
+	var dummyPattern = "some pattern"
 	var dummyAction = func(session Session) (any, error) { return nil, nil }
 	var dummyStartTime = time.Now()
 
@@ -232,7 +237,8 @@ func TestHandleSession_Success(t *testing.T) {
 
 	// expect
 	m.Mock(initiateSession).Expects(dummyApplication, dummyResponseWriter, dummyHTTPRequest).Returns(dummySession, dummyAction, nil).Once()
-	m.Mock(logEndpointEnter).Expects(dummySession, dummyName, dummyMethod, "").Returns().Once()
+	m.Mock(extractRouteMethodAndPattern).Expects(dummyName).Returns(dummyMethod, dummyPattern).Once()
+	m.Mock(logEndpointEnter).Expects(dummySession, dummyPattern, dummyMethod, "").Returns().Once()
 	m.Mock(getTimeNowUTC).Expects().Returns(dummyStartTime).Once()
 	m.Mock(finalizeSession).Expects(dummySession, dummyStartTime, recover()).Returns().Once()
 	m.Mock(handleAction).Expects(dummySession, gomocker.Matches(func(value any) bool {

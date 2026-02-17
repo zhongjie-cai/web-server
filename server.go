@@ -8,7 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/gorilla/mux"
+	"github.com/go-chi/chi/v5"
 )
 
 // hostServer hosts the service entries and starts HTTPS server
@@ -56,14 +56,13 @@ func hostServer(
 	return newAppError(
 		errorCodeGeneralFailure,
 		errorMessageHostServer,
-		[]error{},
 	)
 }
 
 func createServer(
 	address string,
 	session *session,
-	router *mux.Router,
+	router chi.Router,
 ) (*http.Server, bool) {
 	var tlsConfig = &tls.Config{
 		// TLS 1.2 as minimum requirement
@@ -155,7 +154,7 @@ func evaluateServerErrors(
 func runServer(
 	address string,
 	session *session,
-	router *mux.Router,
+	router chi.Router,
 	shutdownSignal chan os.Signal,
 	started *bool,
 ) bool {

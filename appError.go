@@ -54,12 +54,12 @@ type appError struct {
 	InnerErrors []*appError `json:"innerErrors,omitempty"`
 }
 
-func newAppError(errorCode errorCode, errorMessage string, innerErrors []error) *appError {
+func newAppError(errorCode errorCode, errorMessage string, innerErrors ...error) *appError {
 	return &appError{
 		Code:    errorCode,
 		Message: errorMessage,
 		InnerErrors: cleanupInnerErrors(
-			innerErrors,
+			innerErrors...,
 		),
 	}
 }
@@ -68,7 +68,7 @@ func getErrorMessage(err error) string {
 	return err.Error()
 }
 
-func printInnerErrors(innerErrors []*appError) string {
+func printInnerErrors(innerErrors ...*appError) string {
 	if len(innerErrors) == 0 {
 		return ""
 	}
@@ -97,7 +97,7 @@ func (appError *appError) Error() string {
 		appError.Message,
 	)
 	var innerErrorMessage = printInnerErrors(
-		appError.InnerErrors,
+		appError.InnerErrors...,
 	)
 	return fmt.Sprint(
 		baseErrorMessage,
@@ -131,7 +131,7 @@ func appErrorContains(appError AppError, targetError error) bool {
 	return appError.Contains(targetError)
 }
 
-func innerErrorContains(innerErrors []*appError, targetError error) bool {
+func innerErrorContains(targetError error, innerErrors ...*appError) bool {
 	for _, innerError := range innerErrors {
 		if appErrorContains(
 			innerError,
@@ -149,12 +149,12 @@ func (appError *appError) Contains(targetError error) bool {
 		appError,
 		targetError,
 	) || innerErrorContains(
-		appError.InnerErrors,
 		targetError,
+		appError.InnerErrors...,
 	)
 }
 
-func cleanupInnerErrors(innerErrors []error) []*appError {
+func cleanupInnerErrors(innerErrors ...error) []*appError {
 	var cleanedInnerErrors = []*appError{}
 	for _, innerError := range innerErrors {
 		if innerError != nil {
@@ -177,7 +177,7 @@ func cleanupInnerErrors(innerErrors []error) []*appError {
 // Wrap wraps the given list of inner errors into the current app error object
 func (appError *appError) Wrap(innerErrors ...error) AppError {
 	var cleanedInnerErrors = cleanupInnerErrors(
-		innerErrors,
+		innerErrors...,
 	)
 	appError.InnerErrors = append(
 		appError.InnerErrors,
@@ -191,7 +191,7 @@ func GetGeneralFailure(errorMessage string, innerErrors ...error) AppError {
 	return newAppError(
 		errorCodeGeneralFailure,
 		errorMessage,
-		innerErrors,
+		innerErrors...,
 	)
 }
 
@@ -200,7 +200,7 @@ func GetUnauthorized(errorMessage string, innerErrors ...error) AppError {
 	return newAppError(
 		errorCodeUnauthorized,
 		errorMessage,
-		innerErrors,
+		innerErrors...,
 	)
 }
 
@@ -209,7 +209,7 @@ func GetInvalidOperation(errorMessage string, innerErrors ...error) AppError {
 	return newAppError(
 		errorCodeInvalidOperation,
 		errorMessage,
-		innerErrors,
+		innerErrors...,
 	)
 }
 
@@ -218,7 +218,7 @@ func GetBadRequest(errorMessage string, innerErrors ...error) AppError {
 	return newAppError(
 		errorCodeBadRequest,
 		errorMessage,
-		innerErrors,
+		innerErrors...,
 	)
 }
 
@@ -227,7 +227,7 @@ func GetNotFound(errorMessage string, innerErrors ...error) AppError {
 	return newAppError(
 		errorCodeNotFound,
 		errorMessage,
-		innerErrors,
+		innerErrors...,
 	)
 }
 
@@ -236,7 +236,7 @@ func GetCircuitBreak(errorMessage string, innerErrors ...error) AppError {
 	return newAppError(
 		errorCodeCircuitBreak,
 		errorMessage,
-		innerErrors,
+		innerErrors...,
 	)
 }
 
@@ -245,7 +245,7 @@ func GetOperationLock(errorMessage string, innerErrors ...error) AppError {
 	return newAppError(
 		errorCodeOperationLock,
 		errorMessage,
-		innerErrors,
+		innerErrors...,
 	)
 }
 
@@ -254,7 +254,7 @@ func GetAccessForbidden(errorMessage string, innerErrors ...error) AppError {
 	return newAppError(
 		errorCodeAccessForbidden,
 		errorMessage,
-		innerErrors,
+		innerErrors...,
 	)
 }
 
@@ -263,7 +263,7 @@ func GetDataCorruption(errorMessage string, innerErrors ...error) AppError {
 	return newAppError(
 		errorCodeDataCorruption,
 		errorMessage,
-		innerErrors,
+		innerErrors...,
 	)
 }
 
@@ -272,7 +272,7 @@ func GetNotImplemented(errorMessage string, innerErrors ...error) AppError {
 	return newAppError(
 		errorCodeNotImplemented,
 		errorMessage,
-		innerErrors,
+		innerErrors...,
 	)
 }
 
@@ -283,7 +283,7 @@ func WrapError(sourceError error, innerErrors ...error) AppError {
 		return newAppError(
 			errorCodeGeneralFailure,
 			sourceError.Error(),
-			innerErrors,
+			innerErrors...,
 		)
 	}
 	return typedError.Wrap(innerErrors...)

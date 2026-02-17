@@ -5,64 +5,45 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gorilla/mux"
+	"github.com/go-chi/chi/v5"
 )
+
+// Static holds the registration information of a static content hosting
+type Static struct {
+	PathPrefix string
+	Handler    http.Handler
+}
 
 // Route holds the registration information of a dynamic route hosting
 type Route struct {
-	Endpoint   string
 	Method     string
 	Path       string
 	Parameters map[string]ParameterType
-	Queries    map[string]ParameterType
 	ActionFunc ActionFunc
 }
 
-const (
-	stringSeparator string = "|"
-)
-
-func getName(route *mux.Route) string {
-	return route.GetName()
-}
-
-func getPathTemplate(route *mux.Route) (string, error) {
-	return route.GetPathTemplate()
-}
-
-func getPathRegexp(route *mux.Route) (string, error) {
-	return route.GetPathRegexp()
-}
-
-func getQueriesTemplates(route *mux.Route) string {
-	var queriesTemplates, _ = route.GetQueriesTemplates()
-	return strings.Join(queriesTemplates, stringSeparator)
-}
-
-func getQueriesRegexp(route *mux.Route) string {
-	var queriesRegexps, _ = route.GetQueriesRegexp()
-	return strings.Join(queriesRegexps, stringSeparator)
-}
-
-func getMethods(route *mux.Route) string {
-	var methods, _ = route.GetMethods()
-	return strings.Join(methods, stringSeparator)
-}
-
 func evaluateRoute(
-	route *mux.Route,
-	router *mux.Router,
-	ancestors []*mux.Route,
+	method string,
+	route string,
+	handler http.Handler,
+	middlewares ...func(http.Handler) http.Handler,
 ) error {
-	var (
-		_, pathTemplateError = getPathTemplate(route)
-		_, pathRegexpError   = getPathRegexp(route)
-	)
-	if pathTemplateError != nil {
-		return pathTemplateError
+	if handler == nil {
+		return fmt.Errorf(
+			"Invalid handler for %v:%v",
+			method,
+			route,
+		)
 	}
-	if pathRegexpError != nil {
-		return pathRegexpError
+	for index, middleware := range middlewares {
+		if middleware == nil {
+			return fmt.Errorf(
+				"Invalid middleware for %v:%v @ #%d",
+				method,
+				route,
+				index+1,
+			)
+		}
 	}
 	return nil
 }
@@ -70,9 +51,10 @@ func evaluateRoute(
 // walkRegisteredRoutes examines the registered router for errors
 func walkRegisteredRoutes(
 	session *session,
-	router *mux.Router,
+	router chi.Router,
 ) error {
-	var walkError = router.Walk(
+	var walkError = chi.Walk(
+		router,
 		evaluateRoute,
 	)
 	if walkError != nil {
@@ -86,76 +68,59 @@ func walkRegisteredRoutes(
 		return newAppError(
 			errorCodeGeneralFailure,
 			errorMessageRouteRegistration,
-			[]error{walkError},
+			walkError,
 		)
 	}
 	return nil
 }
 
-// registerRoute wraps the mux route handler
-func registerRoute(
-	router *mux.Router,
-	endpoint string,
-	method string,
-	path string,
-	queries []string,
-	handleFunc func(http.ResponseWriter, *http.Request),
-) (string, *mux.Route) {
-	var name = fmt.Sprintf(
+func generateRouteName(method string, pattern string) string {
+	return fmt.Sprintf(
 		"%v:%v",
-		endpoint,
 		method,
+		pattern,
 	)
-	var route = router.HandleFunc(
-		path,
-		handleFunc,
-	).Methods(
-		method,
-	).Queries(
-		queries...,
-	).Name(
-		name,
-	)
-	return name, route
 }
 
-func defaultActionFunc(session Session) (any, error) {
-	return nil,
-		newAppError(
-			errorCodeNotImplemented,
-			"No corresponding action function configured; falling back to default",
-			[]error{},
-		)
-}
-
-func getEndpointByName(name string) string {
-	var splitSubs = strings.Split(
-		name,
-		":",
-	)
-	if len(splitSubs) < 2 {
-		return name
+func extractRouteMethodAndPattern(name string) (string, string) {
+	var parts = strings.Split(name, ":")
+	if len(parts) < 2 {
+		return "??", name
 	}
-	return splitSubs[0]
+	if len(parts) > 2 {
+		return parts[0], strings.Join(parts[1:], ":")
+	}
+	return parts[0], parts[1]
 }
 
 // getRouteInfo retrieves the registered name and action for the given route
 func getRouteInfo(httpRequest *http.Request, actionFuncMap map[string]ActionFunc) (string, ActionFunc, error) {
-	var route = mux.CurrentRoute(httpRequest)
-	if route == nil {
+	var ctx = chi.RouteContext(httpRequest.Context())
+	if ctx == nil {
 		return "",
 			nil,
 			newAppError(
-				errorCodeNotFound,
-				"No corresponding route configured for path",
-				[]error{},
+				errorCodeDataCorruption,
+				"No go-chi context found in HTTP request",
 			)
 	}
-	var name = getName(route)
-	var endpoint = getEndpointByName(name)
-	var action, found = actionFuncMap[name]
-	if !found {
-		action = defaultActionFunc
+	for _, routePattern := range ctx.RoutePatterns {
+		var name = generateRouteName(
+			ctx.RouteMethod,
+			routePattern,
+		)
+		var action, found = actionFuncMap[name]
+		if found {
+			return name, action, nil
+		}
 	}
-	return endpoint, action, nil
+	return "",
+		nil,
+		newAppError(
+			errorCodeNotFound,
+			fmt.Sprintf(
+				"No corresponding route configured for path: %v",
+				httpRequest.RequestURI,
+			),
+		)
 }
