@@ -333,17 +333,20 @@ webcallRequest.AddHeader(
 	"Accept",
 	"application/json",
 ).Anticipate(
-	http.StatusOK,
-	http.StatusBadRequest,
 	&responseOn200,
+	webserver.StatusCodeRange{
+		Begin: http.StatusOK,
+		End:   http.StatusBadRequest,
+	}
 ).Anticipate(
-	http.StatusBadRequest,
-	http.StatusInternalServerError,
 	&responseOn400,
+	http.StatusBadRequest,
+	http.StatusForbidden,
 ).Anticipate(
-	http.StatusInternalServerError,
-	999,
 	&responseOn500,
+	webserver.StatusCodeRange{
+		Begin: http.StatusInternalServerError,
+	},
 )
 var statusCode, responseHeader, responseError = webcallRequest.Process()
 

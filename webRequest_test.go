@@ -17,12 +17,31 @@ import (
 	"github.com/zhongjie-cai/gomocker/v2"
 )
 
+func TestGetClientForRequest_UseCustomClient(t *testing.T) {
+	// arrange
+	var dummyHttpClient0 = &http.Client{Timeout: time.Duration(rand.Int())}
+	var dummyHTTPClient1 = &http.Client{Timeout: time.Duration(rand.Int())}
+	var dummyHTTPClient2 = &http.Client{Timeout: time.Duration(rand.Int())}
+
+	// stub
+	httpClientCustom = dummyHttpClient0
+	httpClientWithCert = dummyHTTPClient1
+	httpClientNoCert = dummyHTTPClient2
+
+	// SUT + act
+	var result = getClientForRequest(true)
+
+	// assert
+	assert.Equal(t, dummyHttpClient0, result)
+}
+
 func TestGetClientForRequest_SendClientCert(t *testing.T) {
 	// arrange
 	var dummyHTTPClient1 = &http.Client{Timeout: time.Duration(rand.Int())}
 	var dummyHTTPClient2 = &http.Client{Timeout: time.Duration(rand.Int())}
 
 	// stub
+	httpClientCustom = nil
 	httpClientWithCert = dummyHTTPClient1
 	httpClientNoCert = dummyHTTPClient2
 
@@ -39,6 +58,7 @@ func TestGetClientForRequest_NoSendClientCert(t *testing.T) {
 	var dummyHTTPClient2 = &http.Client{Timeout: time.Duration(rand.Int())}
 
 	// stub
+	httpClientCustom = nil
 	httpClientWithCert = dummyHTTPClient1
 	httpClientNoCert = dummyHTTPClient2
 
@@ -342,6 +362,7 @@ func TestGetHTTPTransport_WithClientCert(t *testing.T) {
 
 func TestInitializeHTTPClients(t *testing.T) {
 	// arrange
+	var dummyHttpClient = &http.Client{Timeout: time.Duration(rand.Intn(100))}
 	var dummyWebcallTimeout = time.Duration(rand.Int())
 	var dummySkipServerCertVerification = rand.Intn(100) < 50
 	var dummyClientCert = &tls.Certificate{}
@@ -362,6 +383,7 @@ func TestInitializeHTTPClients(t *testing.T) {
 
 	// SUT + act
 	initializeHTTPClients(
+		dummyHttpClient,
 		dummyWebcallTimeout,
 		dummySkipServerCertVerification,
 		dummyClientCert,
@@ -369,6 +391,8 @@ func TestInitializeHTTPClients(t *testing.T) {
 	)
 
 	// assert
+	assert.NotNil(t, httpClientCustom)
+	assert.Equal(t, dummyHttpClient, httpClientCustom)
 	assert.NotNil(t, httpClientWithCert)
 	assert.Equal(t, dummyHTTPTransport1, httpClientWithCert.Transport)
 	assert.Equal(t, dummyWebcallTimeout, httpClientWithCert.Timeout)
@@ -411,6 +435,46 @@ func TestWebREquestAddQuery_HappyPath(t *testing.T) {
 	assert.Equal(t, dummyValue3, values[2])
 }
 
+func TestWebREquestAddQueries_HappyPath(t *testing.T) {
+	// arrange
+	var dummyName1 = "some name 1"
+	var dummyValue1 = "some value 1"
+	var dummyName2 = "some name 2"
+	var dummyValue2 = "some value 2"
+	var dummyName3 = "some name 3"
+	var dummyValue3 = "some value 3"
+	var dummyQueries = map[string]string{
+		dummyName1: dummyValue1,
+		dummyName2: dummyValue2,
+		dummyName3: dummyValue3,
+	}
+
+	// SUT
+	var sut = &webRequest{}
+
+	// act
+	var result, ok = sut.AddQueries(
+		dummyQueries,
+	).(*webRequest)
+
+	// assert
+	assert.True(t, ok)
+	assert.NotNil(t, result.query)
+	assert.Equal(t, 3, len(result.query))
+	var values, found = result.query[dummyName1]
+	assert.True(t, found)
+	assert.Equal(t, 1, len(values))
+	assert.Equal(t, dummyValue1, values[0])
+	values, found = result.query[dummyName2]
+	assert.True(t, found)
+	assert.Equal(t, 1, len(values))
+	assert.Equal(t, dummyValue2, values[0])
+	values, found = result.query[dummyName3]
+	assert.True(t, found)
+	assert.Equal(t, 1, len(values))
+	assert.Equal(t, dummyValue3, values[0])
+}
+
 func TestWebREquestAddHeader_HappyPath(t *testing.T) {
 	// arrange
 	var dummyName = "some name"
@@ -445,6 +509,46 @@ func TestWebREquestAddHeader_HappyPath(t *testing.T) {
 	assert.Equal(t, dummyValue3, values[2])
 }
 
+func TestWebREquestAddHeaders_HappyPath(t *testing.T) {
+	// arrange
+	var dummyName1 = "some name 1"
+	var dummyValue1 = "some value 1"
+	var dummyName2 = "some name 2"
+	var dummyValue2 = "some value 2"
+	var dummyName3 = "some name 3"
+	var dummyValue3 = "some value 3"
+	var dummyHeaders = map[string]string{
+		dummyName1: dummyValue1,
+		dummyName2: dummyValue2,
+		dummyName3: dummyValue3,
+	}
+
+	// SUT
+	var sut = &webRequest{}
+
+	// act
+	var result, ok = sut.AddHeaders(
+		dummyHeaders,
+	).(*webRequest)
+
+	// assert
+	assert.True(t, ok)
+	assert.NotNil(t, result.header)
+	assert.Equal(t, 3, len(result.header))
+	var values, found = result.header[dummyName1]
+	assert.True(t, found)
+	assert.Equal(t, 1, len(values))
+	assert.Equal(t, dummyValue1, values[0])
+	values, found = result.header[dummyName2]
+	assert.True(t, found)
+	assert.Equal(t, 1, len(values))
+	assert.Equal(t, dummyValue2, values[0])
+	values, found = result.header[dummyName3]
+	assert.True(t, found)
+	assert.Equal(t, 1, len(values))
+	assert.Equal(t, dummyValue3, values[0])
+}
+
 func TestWebRequestSetupRetry(t *testing.T) {
 	// arrange
 	var dummyConnRetry = rand.Int()
@@ -471,13 +575,9 @@ func TestWebRequestSetupRetry(t *testing.T) {
 	assert.Equal(t, dummyRetryDelay, result.retryDelay)
 }
 
-func TestWebRequestAnticipate(t *testing.T) {
+func TestWebRequestAnticipate_NoStatusCodes(t *testing.T) {
 	// arrange
-	var dummyBeginStatusCode1 = rand.Int()
-	var dummyEndStatusCode1 = rand.Int()
 	var dummyDataTemplate1 string
-	var dummyBeginStatusCode2 = rand.Int()
-	var dummyEndStatusCode2 = rand.Int()
 	var dummyDataTemplate2 int
 
 	// SUT
@@ -485,24 +585,71 @@ func TestWebRequestAnticipate(t *testing.T) {
 
 	// act
 	var result, ok = sut.Anticipate(
-		dummyBeginStatusCode1,
-		dummyEndStatusCode1,
 		&dummyDataTemplate1,
 	).Anticipate(
-		dummyBeginStatusCode2,
-		dummyEndStatusCode2,
 		&dummyDataTemplate2,
 	).(*webRequest)
 
 	// assert
 	assert.True(t, ok)
 	assert.Equal(t, 2, len(result.dataReceivers))
-	assert.Equal(t, dummyBeginStatusCode1, result.dataReceivers[0].beginStatusCode)
-	assert.Equal(t, dummyEndStatusCode1, result.dataReceivers[0].endStatusCode)
 	assert.Equal(t, &dummyDataTemplate1, result.dataReceivers[0].dataTemplate)
-	assert.Equal(t, dummyBeginStatusCode2, result.dataReceivers[1].beginStatusCode)
-	assert.Equal(t, dummyEndStatusCode2, result.dataReceivers[1].endStatusCode)
+	assert.Equal(t, 0, result.dataReceivers[0].codeRange.Begin)
+	assert.Equal(t, 999, result.dataReceivers[0].codeRange.End)
 	assert.Equal(t, &dummyDataTemplate2, result.dataReceivers[1].dataTemplate)
+	assert.Equal(t, 0, result.dataReceivers[1].codeRange.Begin)
+	assert.Equal(t, 999, result.dataReceivers[1].codeRange.End)
+}
+
+func TestWebRequestAnticipate_WithStatusCodes(t *testing.T) {
+	// arrange
+	var dummyStatusCode1 = rand.Int()
+	var dummyStatusCode2 = rand.Int()
+	var dummyDataTemplate1 string
+	var dummyStatusCodeRange1 = rand.Int()
+	var dummyStatusCodeRange2 = rand.Int()
+	var dummyStatusCodeRange3 = rand.Int()
+	var dummyDataTemplate2 int
+	var dummyStatusCodeInvalid = "invalid"
+	var dummyDataTemplate3 bool
+
+	// SUT
+	var sut = &webRequest{}
+
+	// act
+	var result, ok = sut.Anticipate(
+		&dummyDataTemplate1,
+		dummyStatusCode1,
+		dummyStatusCode2,
+	).Anticipate(
+		&dummyDataTemplate2,
+		StatusCodeRange{
+			Begin: dummyStatusCodeRange1,
+			End:   dummyStatusCodeRange2,
+		},
+		StatusCodeRange{
+			Begin: dummyStatusCodeRange3,
+		},
+	).Anticipate(
+		&dummyDataTemplate3,
+		dummyStatusCodeInvalid,
+	).(*webRequest)
+
+	// assert
+	assert.True(t, ok)
+	assert.Equal(t, 4, len(result.dataReceivers))
+	assert.Equal(t, &dummyDataTemplate1, result.dataReceivers[0].dataTemplate)
+	assert.Equal(t, dummyStatusCode1, result.dataReceivers[0].codeRange.Begin)
+	assert.Equal(t, dummyStatusCode1+1, result.dataReceivers[0].codeRange.End)
+	assert.Equal(t, &dummyDataTemplate1, result.dataReceivers[1].dataTemplate)
+	assert.Equal(t, dummyStatusCode2, result.dataReceivers[1].codeRange.Begin)
+	assert.Equal(t, dummyStatusCode2+1, result.dataReceivers[1].codeRange.End)
+	assert.Equal(t, &dummyDataTemplate2, result.dataReceivers[2].dataTemplate)
+	assert.Equal(t, dummyStatusCodeRange1, result.dataReceivers[2].codeRange.Begin)
+	assert.Equal(t, dummyStatusCodeRange2, result.dataReceivers[2].codeRange.End)
+	assert.Equal(t, &dummyDataTemplate2, result.dataReceivers[3].dataTemplate)
+	assert.Equal(t, dummyStatusCodeRange3, result.dataReceivers[3].codeRange.Begin)
+	assert.Equal(t, 999, result.dataReceivers[3].codeRange.End)
 }
 
 func TestCreateQueryString_NilQuery(t *testing.T) {
@@ -737,7 +884,7 @@ func TestCreateHTTPRequest_RequestError(t *testing.T) {
 	var dummySendClientCert = rand.Intn(100) < 50
 	var dummyRetryDelay = time.Duration(rand.Intn(100))
 	var dummyDataReceivers = []dataReceiver{
-		{0, 999, nil},
+		{nil, StatusCodeRange{0, 999}},
 	}
 	var dummyWebRequest = &webRequest{
 		dummySession,
@@ -802,7 +949,7 @@ func TestCreateHTTPRequest_Success(t *testing.T) {
 	var dummySendClientCert = rand.Intn(100) < 50
 	var dummyRetryDelay = time.Duration(rand.Intn(100))
 	var dummyDataReceivers = []dataReceiver{
-		{0, 999, nil},
+		{nil, StatusCodeRange{0, 999}},
 	}
 	var dummyWebRequest = &webRequest{
 		dummySession,
@@ -1120,9 +1267,11 @@ func TestGetDataTemplate_NoMatch(t *testing.T) {
 	var dummyDataTemplate string
 	var dummyDataReceivers = []dataReceiver{
 		{
-			beginStatusCode: rand.Intn(100) + 100,
-			endStatusCode:   rand.Intn(100) + 200,
-			dataTemplate:    &dummyDataTemplate,
+			codeRange: StatusCodeRange{
+				Begin: rand.Intn(100) + 100,
+				End:   rand.Intn(100) + 200,
+			},
+			dataTemplate: &dummyDataTemplate,
 		},
 	}
 
@@ -1152,14 +1301,18 @@ func TestGetDataTemplate_SingleMatch(t *testing.T) {
 	var dummyDataTemplate2 int
 	var dummyDataReceivers = []dataReceiver{
 		{
-			beginStatusCode: dummyStatusCode - rand.Intn(10),
-			endStatusCode:   dummyStatusCode + 1 + rand.Intn(10),
-			dataTemplate:    &dummyDataTemplate1,
+			codeRange: StatusCodeRange{
+				Begin: dummyStatusCode - rand.Intn(10),
+				End:   dummyStatusCode + 1 + rand.Intn(10),
+			},
+			dataTemplate: &dummyDataTemplate1,
 		},
 		{
-			beginStatusCode: rand.Intn(100) + 100,
-			endStatusCode:   rand.Intn(100) + 200,
-			dataTemplate:    &dummyDataTemplate2,
+			codeRange: StatusCodeRange{
+				Begin: rand.Intn(100) + 100,
+				End:   rand.Intn(100) + 200,
+			},
+			dataTemplate: &dummyDataTemplate2,
 		},
 	}
 
@@ -1188,14 +1341,18 @@ func TestGetDataTemplate_OverlapMatch(t *testing.T) {
 	var dummyDataTemplate2 int
 	var dummyDataReceivers = []dataReceiver{
 		{
-			beginStatusCode: dummyStatusCode - rand.Intn(10),
-			endStatusCode:   dummyStatusCode + 1 + rand.Intn(10),
-			dataTemplate:    &dummyDataTemplate1,
+			codeRange: StatusCodeRange{
+				Begin: dummyStatusCode - rand.Intn(10),
+				End:   dummyStatusCode + 1 + rand.Intn(10),
+			},
+			dataTemplate: &dummyDataTemplate1,
 		},
 		{
-			beginStatusCode: dummyStatusCode - rand.Intn(10),
-			endStatusCode:   dummyStatusCode + 1 + rand.Intn(10),
-			dataTemplate:    &dummyDataTemplate2,
+			codeRange: StatusCodeRange{
+				Begin: dummyStatusCode - rand.Intn(10),
+				End:   dummyStatusCode + 1 + rand.Intn(10),
+			},
+			dataTemplate: &dummyDataTemplate2,
 		},
 	}
 
@@ -1216,6 +1373,31 @@ func TestGetDataTemplate_OverlapMatch(t *testing.T) {
 	assert.Equal(t, &dummyDataTemplate2, result)
 }
 
+func TestParseResponse_NilDataTemplate(t *testing.T) {
+	// arrange
+	var dummySession = &session{id: uuid.New()}
+	var dummyBody = io.NopCloser(bytes.NewBufferString("some body"))
+	var dummyDataTemplate string
+
+	// mock
+	var m = gomocker.NewMocker(t)
+
+	// expect
+	m.Mock(isInterfaceValueNil).Expects(&dummyDataTemplate).Returns(true).Once()
+	m.Mock(logWebcallResponse).Expects(dummySession, "Body", "Skipped", "No data receiver defined for this body").Returns().Once()
+
+	// SUT + act
+	var err = parseResponse(
+		dummySession,
+		dummyBody,
+		&dummyDataTemplate,
+	)
+
+	// assert
+	assert.Zero(t, dummyDataTemplate)
+	assert.NoError(t, err)
+}
+
 func TestParseResponse_ReadError(t *testing.T) {
 	// arrange
 	var dummySession = &session{id: uuid.New()}
@@ -1228,6 +1410,7 @@ func TestParseResponse_ReadError(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
+	m.Mock(isInterfaceValueNil).Expects(&dummyDataTemplate).Returns(false).Once()
 	m.Mock(io.ReadAll).Expects(dummyBody).Returns(dummyBytes, dummyError).Once()
 
 	// SUT + act
@@ -1255,6 +1438,7 @@ func TestParseResponse_JSONError(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
+	m.Mock(isInterfaceValueNil).Expects(&dummyDataTemplate).Returns(false).Once()
 	m.Mock(io.ReadAll).Expects(dummyBody).Returns(dummyBytes, nil).Once()
 	m.Mock(tryUnmarshal).Expects(string(dummyBytes), gomocker.Anything()).Returns(dummyError).Once()
 	m.Mock(logWebcallResponse).Expects(dummySession, "Body", "UnmarshalError", "%+v", dummyError).Returns().Once()
@@ -1284,6 +1468,7 @@ func TestParseResponse_HappyPath(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
+	m.Mock(isInterfaceValueNil).Expects(&dummyDataTemplate).Returns(false).Once()
 	m.Mock(io.ReadAll).Expects(dummyBody).Returns(dummyBytes, nil).Once()
 	m.Mock(tryUnmarshal).Expects(string(dummyBytes), gomocker.Anything()).Returns(nil).SideEffects(
 		gomocker.ParamSideEffect(1, 2, func(value *string) { *value = dummyData })).Once()
@@ -1417,6 +1602,7 @@ func TestWebRequestProcess_Success_NilObject(t *testing.T) {
 
 	// expect
 	m.Mock(doRequestProcessing).Expects(sut).Returns(dummyResponseObject, dummyResponseError).Once()
+	m.Mock(logWebcallResponse).Expects(sut.session, "webRequest", "Process", "Nil response object received").Returns().Once()
 
 	// act
 	var result, header, err = sut.Process()
@@ -1446,7 +1632,7 @@ func TestWebRequestProcess_Success_ValidObject(t *testing.T) {
 	var dummyData = "some data"
 	var dummySession = &session{id: uuid.New()}
 	var dummyDataReceivers = []dataReceiver{
-		{0, 999, &dummyDataTemplate},
+		{&dummyDataTemplate, StatusCodeRange{0, 999}},
 	}
 
 	// SUT

@@ -120,6 +120,7 @@ func preBootstraping(app *application) bool {
 
 func bootstrap(app *application) {
 	initializeHTTPClients(
+		app.customization.HttpClient(),
 		app.customization.DefaultTimeout(),
 		app.customization.SkipServerCertVerification(),
 		app.customization.ClientCert(),
