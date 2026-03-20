@@ -3,7 +3,7 @@ package webserver
 import (
 	"errors"
 	"fmt"
-	"math/rand"
+	"math/rand/v2"
 	"net/http"
 	"runtime/debug"
 	"testing"
@@ -44,8 +44,8 @@ func TestDefaultCustomization_Log_HappyPath(t *testing.T) {
 	var dummySession = &session{}
 	var dummyTime = time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	var dummyTimeString = "some time string"
-	var dummyLogType = LogType(rand.Intn(100))
-	var dummyLogLevel = LogLevel(rand.Intn(100))
+	var dummyLogType = LogType(rand.IntN(100))
+	var dummyLogLevel = LogLevel(rand.IntN(100))
 	var dummyCategory = "some category"
 	var dummySubcategory = "some subcategory"
 	var dummyDescription = "some description"
@@ -264,7 +264,7 @@ func TestDefaultCustomization_InterpretError_NormalError(t *testing.T) {
 
 func TestDefaultCustomization_InterpretError_AppError(t *testing.T) {
 	// arrange
-	var dummyStatusCode = rand.Intn(600)
+	var dummyStatusCode = rand.IntN(600)
 	var dummyResponseMessage = "some response message"
 	var dummyAppError = &appError{}
 

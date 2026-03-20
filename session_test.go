@@ -2,7 +2,7 @@ package webserver
 
 import (
 	"errors"
-	"math/rand"
+	"math/rand/v2"
 	"net/http"
 	"net/textproto"
 	"net/url"
@@ -739,7 +739,7 @@ func TestGetRequestQueryFromSession_HappyPath(t *testing.T) {
 func TestSessionGetRequestQuery_NilSession(t *testing.T) {
 	// arrange
 	var dummyName = "some name"
-	var dummyIndex = rand.Intn(10)
+	var dummyIndex = rand.IntN(10)
 	var dummyDataTemplate int
 	var dummyAppError = &appError{Message: "some error message"}
 
@@ -774,7 +774,7 @@ func TestSessionGetRequestQuery_QueryNotFound(t *testing.T) {
 		"some query string 2",
 		"some query string 3",
 	}
-	var dummyIndex = rand.Intn(10) + len(dummyQueries)
+	var dummyIndex = rand.IntN(10) + len(dummyQueries)
 	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
@@ -811,7 +811,7 @@ func TestSessionGetRequestQuery_QueryInvalid(t *testing.T) {
 		"some query string 2",
 		"some query string 3",
 	}
-	var dummyIndex = rand.Intn(len(dummyQueries))
+	var dummyIndex = rand.IntN(len(dummyQueries))
 	var dummyError = errors.New("some error")
 	var dummyResult = rand.Int()
 	var dummyAppError = &appError{Message: "some error message"}
@@ -854,7 +854,7 @@ func TestSessionGetRequestQuery_QueryValid(t *testing.T) {
 		"some query string 2",
 		"some query string 3",
 	}
-	var dummyIndex = rand.Intn(len(dummyQueries))
+	var dummyIndex = rand.IntN(len(dummyQueries))
 	var dummyResult = rand.Int()
 
 	// mock
@@ -1160,7 +1160,7 @@ func TestSessionGetRequestHeader_NilSession(t *testing.T) {
 	// arrange
 	var dummyName = "some name"
 	var dummyDataTemplate int
-	var dummyIndex = rand.Intn(10)
+	var dummyIndex = rand.IntN(10)
 	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
@@ -1194,7 +1194,7 @@ func TestSessionGetRequestHeader_HeaderNotFound(t *testing.T) {
 		"some header string 2",
 		"some header string 3",
 	}
-	var dummyIndex = rand.Intn(10) + len(dummyHeaders)
+	var dummyIndex = rand.IntN(10) + len(dummyHeaders)
 	var dummyAppError = &appError{Message: "some error message"}
 
 	// mock
@@ -1231,7 +1231,7 @@ func TestSessionGetRequestHeader_HeaderInvalid(t *testing.T) {
 		"some header string 2",
 		"some header string 3",
 	}
-	var dummyIndex = rand.Intn(len(dummyHeaders))
+	var dummyIndex = rand.IntN(len(dummyHeaders))
 	var dummyError = errors.New("some error")
 	var dummyResult = rand.Int()
 	var dummyAppError = &appError{Message: "some error message"}
@@ -1274,7 +1274,7 @@ func TestSessionGetRequestHeader_HeaderValid(t *testing.T) {
 		"some header string 2",
 		"some header string 3",
 	}
-	var dummyIndex = rand.Intn(len(dummyHeaders))
+	var dummyIndex = rand.IntN(len(dummyHeaders))
 	var dummyResult = rand.Int()
 
 	// mock
@@ -1315,7 +1315,7 @@ func TestSessionAttach_NilSessionObject(t *testing.T) {
 	var dummyValue = dummyAttachment{
 		ID:   uuid.New(),
 		Foo:  "bar",
-		Test: rand.Intn(100),
+		Test: rand.IntN(100),
 	}
 
 	// SUT
@@ -1337,7 +1337,7 @@ func TestSessionAttach_NoAttachment(t *testing.T) {
 	var dummyValue = &dummyAttachment{
 		ID:   uuid.New(),
 		Foo:  "bar",
-		Test: rand.Intn(100),
+		Test: rand.IntN(100),
 	}
 
 	// SUT
@@ -1362,7 +1362,7 @@ func TestSessionAttach_WithAttachment(t *testing.T) {
 	var dummyValue = &dummyAttachment{
 		ID:   uuid.New(),
 		Foo:  "bar",
-		Test: rand.Intn(100),
+		Test: rand.IntN(100),
 	}
 
 	// SUT
@@ -1480,7 +1480,7 @@ func TestSessionGetRawAttachment_Success(t *testing.T) {
 	var dummyName = "some name"
 	var dummyValue = dummyAttachment{
 		Foo:  "bar",
-		Test: rand.Intn(100),
+		Test: rand.IntN(100),
 		ID:   uuid.New(),
 	}
 
@@ -1610,7 +1610,7 @@ func TestSessionGetAttachment_DataTemplateNotAPointer(t *testing.T) {
 	var dummyName = "some name"
 	var dummyValue = dummyAttachment{
 		Foo:  "bar",
-		Test: rand.Intn(100),
+		Test: rand.IntN(100),
 		ID:   uuid.New(),
 	}
 	var dummyDataTemplate dummyAttachment
@@ -1638,7 +1638,7 @@ func TestSessionGetAttachment_Success(t *testing.T) {
 	var dummyName = "some name"
 	var dummyValue = dummyAttachment{
 		Foo:  "bar",
-		Test: rand.Intn(100),
+		Test: rand.IntN(100),
 		ID:   uuid.New(),
 	}
 	var dummyDataTemplate dummyAttachment
@@ -1846,7 +1846,7 @@ func TestSessionCreateWebcallRequest(t *testing.T) {
 	var dummyMethod = "some method"
 	var dummyURL = "some URL"
 	var dummyPayload = "some payload"
-	var dummySendClientCert = rand.Intn(100) < 50
+	var dummySendClientCert = rand.IntN(100) < 50
 
 	// SUT
 	var dummySession = &session{

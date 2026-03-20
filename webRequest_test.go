@@ -5,7 +5,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"io"
-	"math/rand"
+	"math/rand/v2"
 	"net/http"
 	"strconv"
 	"strings"
@@ -75,7 +75,7 @@ func TestClientDoWithRetry_ConnError_NoRetry(t *testing.T) {
 	var dummyRequestObject = &http.Request{}
 	var dummyConnRetry = 0
 	var dummyHTTPRetry = map[int]int{}
-	var dummyRetryDelay = time.Duration(rand.Intn(100))
+	var dummyRetryDelay = time.Duration(rand.IntN(100))
 	var dummyResponseObject = &http.Response{}
 	var dummyResponseError = errors.New("some error")
 
@@ -105,7 +105,7 @@ func TestClientDoWithRetry_ConnError_RetryOK(t *testing.T) {
 	var dummyRequestObject = &http.Request{}
 	var dummyConnRetry = 2
 	var dummyHTTPRetry = map[int]int{}
-	var dummyRetryDelay = time.Duration(rand.Intn(100))
+	var dummyRetryDelay = time.Duration(rand.IntN(100))
 	var dummyResponseObject = &http.Response{}
 	var dummyResponseError = errors.New("some error")
 
@@ -137,7 +137,7 @@ func TestClientDoWithRetry_ConnError_RetryFail(t *testing.T) {
 	var dummyRequestObject = &http.Request{}
 	var dummyConnRetry = 2
 	var dummyHTTPRetry = map[int]int{}
-	var dummyRetryDelay = time.Duration(rand.Intn(100))
+	var dummyRetryDelay = time.Duration(rand.IntN(100))
 	var dummyResponseObject = &http.Response{}
 	var dummyResponseError = errors.New("some error")
 
@@ -168,7 +168,7 @@ func TestClientDoWithRetry_HTTPError_NilResponse(t *testing.T) {
 	var dummyRequestObject = &http.Request{}
 	var dummyConnRetry = rand.Int()
 	var dummyHTTPRetry = map[int]int{}
-	var dummyRetryDelay = time.Duration(rand.Intn(100))
+	var dummyRetryDelay = time.Duration(rand.IntN(100))
 	var dummyResponseObject *http.Response
 
 	// mock
@@ -197,7 +197,7 @@ func TestClientDoWithRetry_HTTPError_NoRetry(t *testing.T) {
 	var dummyRequestObject = &http.Request{}
 	var dummyConnRetry = rand.Int()
 	var dummyHTTPRetry = map[int]int{}
-	var dummyRetryDelay = time.Duration(rand.Intn(100))
+	var dummyRetryDelay = time.Duration(rand.IntN(100))
 	var dummyResponseObject = &http.Response{}
 
 	// mock
@@ -229,7 +229,7 @@ func TestClientDoWithRetry_HTTPError_RetryOK(t *testing.T) {
 	var dummyHTTPRetry = map[int]int{
 		dummyStatusCode: 2,
 	}
-	var dummyRetryDelay = time.Duration(rand.Intn(100))
+	var dummyRetryDelay = time.Duration(rand.IntN(100))
 	var dummyResponseObject1 = &http.Response{
 		StatusCode: dummyStatusCode,
 	}
@@ -266,7 +266,7 @@ func TestClientDoWithRetry_HTTPError_RetryFail(t *testing.T) {
 	var dummyHTTPRetry = map[int]int{
 		dummyStatusCode: 2,
 	}
-	var dummyRetryDelay = time.Duration(rand.Intn(100))
+	var dummyRetryDelay = time.Duration(rand.IntN(100))
 	var dummyResponseObject = &http.Response{
 		StatusCode: dummyStatusCode,
 	}
@@ -294,7 +294,7 @@ func TestClientDoWithRetry_HTTPError_RetryFail(t *testing.T) {
 
 func TestGetHTTPTransport_NoClientCert(t *testing.T) {
 	// arrange
-	var dummySkipServerCertVerification = rand.Intn(100) < 50
+	var dummySkipServerCertVerification = rand.IntN(100) < 50
 	var dummyClientCert *tls.Certificate
 	var dummyRoundTripper = &http.Transport{
 		TLSClientConfig: &tls.Config{
@@ -327,7 +327,7 @@ func TestGetHTTPTransport_NoClientCert(t *testing.T) {
 
 func TestGetHTTPTransport_WithClientCert(t *testing.T) {
 	// arrange
-	var dummySkipServerCertVerification = rand.Intn(100) < 50
+	var dummySkipServerCertVerification = rand.IntN(100) < 50
 	var dummyClientCert = &tls.Certificate{}
 	var dummyRoundTripper = &http.Transport{
 		TLSClientConfig: &tls.Config{
@@ -362,9 +362,9 @@ func TestGetHTTPTransport_WithClientCert(t *testing.T) {
 
 func TestInitializeHTTPClients(t *testing.T) {
 	// arrange
-	var dummyHttpClient = &http.Client{Timeout: time.Duration(rand.Intn(100))}
+	var dummyHttpClient = &http.Client{Timeout: time.Duration(rand.IntN(100))}
 	var dummyWebcallTimeout = time.Duration(rand.Int())
-	var dummySkipServerCertVerification = rand.Intn(100) < 50
+	var dummySkipServerCertVerification = rand.IntN(100) < 50
 	var dummyClientCert = &tls.Certificate{}
 	var dummyHTTPTransport1 = &http.Transport{MaxConnsPerHost: rand.Int()}
 	var dummyHTTPTransport2 = &http.Transport{MaxConnsPerHost: rand.Int()}
@@ -556,7 +556,7 @@ func TestWebRequestSetupRetry(t *testing.T) {
 		rand.Int(): rand.Int(),
 		rand.Int(): rand.Int(),
 	}
-	var dummyRetryDelay = time.Duration(rand.Intn(100))
+	var dummyRetryDelay = time.Duration(rand.IntN(100))
 
 	// SUT
 	var sut = &webRequest{}
@@ -881,8 +881,8 @@ func TestCreateHTTPRequest_RequestError(t *testing.T) {
 		rand.Int(): rand.Int(),
 		rand.Int(): rand.Int(),
 	}
-	var dummySendClientCert = rand.Intn(100) < 50
-	var dummyRetryDelay = time.Duration(rand.Intn(100))
+	var dummySendClientCert = rand.IntN(100) < 50
+	var dummyRetryDelay = time.Duration(rand.IntN(100))
 	var dummyDataReceivers = []dataReceiver{
 		{nil, StatusCodeRange{0, 999}},
 	}
@@ -946,8 +946,8 @@ func TestCreateHTTPRequest_Success(t *testing.T) {
 		rand.Int(): rand.Int(),
 		rand.Int(): rand.Int(),
 	}
-	var dummySendClientCert = rand.Intn(100) < 50
-	var dummyRetryDelay = time.Duration(rand.Intn(100))
+	var dummySendClientCert = rand.IntN(100) < 50
+	var dummyRetryDelay = time.Duration(rand.IntN(100))
 	var dummyDataReceivers = []dataReceiver{
 		{nil, StatusCodeRange{0, 999}},
 	}
@@ -1004,7 +1004,7 @@ func TestLogErrorResponse(t *testing.T) {
 	var dummySession = &session{id: uuid.New()}
 	var dummyError = errors.New("some error")
 	var dummyStartTime = time.Now()
-	var dummyTimeSince = time.Duration(rand.Intn(1000))
+	var dummyTimeSince = time.Duration(rand.IntN(1000))
 
 	// mock
 	var m = gomocker.NewMocker(t)
@@ -1040,7 +1040,7 @@ func TestLogSuccessResponse_ValidResponse(t *testing.T) {
 	// arrange
 	var dummySession = &session{id: uuid.New()}
 	var dummyStatus = "some status"
-	var dummyStatusCode = rand.Intn(1000)
+	var dummyStatusCode = rand.IntN(1000)
 	var dummyBody = io.NopCloser(bytes.NewBufferString("some body"))
 	var dummyHeader = http.Header{
 		"foo":  []string{"bar"},
@@ -1058,7 +1058,7 @@ func TestLogSuccessResponse_ValidResponse(t *testing.T) {
 	var dummyNewBody = io.NopCloser(bytes.NewBufferString("some new body"))
 	var dummyStartTime = time.Now()
 	var dummyHeaderContent = "some header content"
-	var dummyTimeSince = time.Duration(rand.Intn(1000))
+	var dummyTimeSince = time.Duration(rand.IntN(1000))
 
 	// mock
 	var m = gomocker.NewMocker(t)
@@ -1159,8 +1159,8 @@ func TestDoRequestProcessing_ResponseError(t *testing.T) {
 		rand.Int(): rand.Int(),
 		rand.Int(): rand.Int(),
 	}
-	var dummySendClientCert = rand.Intn(100) < 50
-	var dummyRetryDelay = time.Duration(rand.Intn(100))
+	var dummySendClientCert = rand.IntN(100) < 50
+	var dummyRetryDelay = time.Duration(rand.IntN(100))
 	var dummyWebRequest = &webRequest{
 		session:        dummySession,
 		connRetry:      dummyConnRetry,
@@ -1202,8 +1202,8 @@ func TestDoRequestProcessing_ResponseSuccess(t *testing.T) {
 		rand.Int(): rand.Int(),
 		rand.Int(): rand.Int(),
 	}
-	var dummySendClientCert = rand.Intn(100) < 50
-	var dummyRetryDelay = time.Duration(rand.Intn(100))
+	var dummySendClientCert = rand.IntN(100) < 50
+	var dummyRetryDelay = time.Duration(rand.IntN(100))
 	var dummyWebRequest = &webRequest{
 		session:        dummySession,
 		connRetry:      dummyConnRetry,
@@ -1239,7 +1239,7 @@ func TestDoRequestProcessing_ResponseSuccess(t *testing.T) {
 func TestGetDataTemplate_EmptyDataReceivers(t *testing.T) {
 	// arrange
 	var dummySession = &session{}
-	var dummyStatusCode = rand.Intn(100)
+	var dummyStatusCode = rand.IntN(100)
 	var dummyDataReceivers = []dataReceiver{}
 
 	// mock
@@ -1263,13 +1263,13 @@ func TestGetDataTemplate_EmptyDataReceivers(t *testing.T) {
 func TestGetDataTemplate_NoMatch(t *testing.T) {
 	// arrange
 	var dummySession = &session{}
-	var dummyStatusCode = rand.Intn(100)
+	var dummyStatusCode = rand.IntN(100)
 	var dummyDataTemplate string
 	var dummyDataReceivers = []dataReceiver{
 		{
 			codeRange: StatusCodeRange{
-				Begin: rand.Intn(100) + 100,
-				End:   rand.Intn(100) + 200,
+				Begin: rand.IntN(100) + 100,
+				End:   rand.IntN(100) + 200,
 			},
 			dataTemplate: &dummyDataTemplate,
 		},
@@ -1296,21 +1296,21 @@ func TestGetDataTemplate_NoMatch(t *testing.T) {
 func TestGetDataTemplate_SingleMatch(t *testing.T) {
 	// arrange
 	var dummySession = &session{}
-	var dummyStatusCode = rand.Intn(100)
+	var dummyStatusCode = rand.IntN(100)
 	var dummyDataTemplate1 string
 	var dummyDataTemplate2 int
 	var dummyDataReceivers = []dataReceiver{
 		{
 			codeRange: StatusCodeRange{
-				Begin: dummyStatusCode - rand.Intn(10),
-				End:   dummyStatusCode + 1 + rand.Intn(10),
+				Begin: dummyStatusCode - rand.IntN(10),
+				End:   dummyStatusCode + 1 + rand.IntN(10),
 			},
 			dataTemplate: &dummyDataTemplate1,
 		},
 		{
 			codeRange: StatusCodeRange{
-				Begin: rand.Intn(100) + 100,
-				End:   rand.Intn(100) + 200,
+				Begin: rand.IntN(100) + 100,
+				End:   rand.IntN(100) + 200,
 			},
 			dataTemplate: &dummyDataTemplate2,
 		},
@@ -1336,21 +1336,21 @@ func TestGetDataTemplate_SingleMatch(t *testing.T) {
 func TestGetDataTemplate_OverlapMatch(t *testing.T) {
 	// arrange
 	var dummySession = &session{}
-	var dummyStatusCode = rand.Intn(100)
+	var dummyStatusCode = rand.IntN(100)
 	var dummyDataTemplate1 string
 	var dummyDataTemplate2 int
 	var dummyDataReceivers = []dataReceiver{
 		{
 			codeRange: StatusCodeRange{
-				Begin: dummyStatusCode - rand.Intn(10),
-				End:   dummyStatusCode + 1 + rand.Intn(10),
+				Begin: dummyStatusCode - rand.IntN(10),
+				End:   dummyStatusCode + 1 + rand.IntN(10),
 			},
 			dataTemplate: &dummyDataTemplate1,
 		},
 		{
 			codeRange: StatusCodeRange{
-				Begin: dummyStatusCode - rand.Intn(10),
-				End:   dummyStatusCode + 1 + rand.Intn(10),
+				Begin: dummyStatusCode - rand.IntN(10),
+				End:   dummyStatusCode + 1 + rand.IntN(10),
 			},
 			dataTemplate: &dummyDataTemplate2,
 		},

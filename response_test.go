@@ -2,7 +2,7 @@ package webserver
 
 import (
 	"errors"
-	"math/rand"
+	"math/rand/v2"
 	"net/http"
 	"strconv"
 	"testing"

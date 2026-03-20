@@ -3,7 +3,7 @@ package webserver
 import (
 	"errors"
 	"fmt"
-	"math/rand"
+	"math/rand/v2"
 	"net/http"
 	"reflect"
 	"testing"
@@ -86,7 +86,7 @@ func TestFinalizeSession(t *testing.T) {
 	var dummyPattern = "some pattern"
 	var dummyStartTime = getTimeNowUTC()
 	var dummyRecoverResult = "some recover result"
-	var dummyDuration = time.Duration(rand.Intn(100))
+	var dummyDuration = time.Duration(rand.IntN(100))
 
 	// mock
 	var m = gomocker.NewMocker(t)

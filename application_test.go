@@ -3,7 +3,7 @@ package webserver
 import (
 	"crypto/tls"
 	"errors"
-	"math/rand"
+	"math/rand/v2"
 	"net/http"
 	"os"
 	"testing"
@@ -139,7 +139,7 @@ func TestApplication_IsRunning(t *testing.T) {
 	// arrange
 	var dummyApplication = &application{
 		name:    "some name",
-		started: rand.Intn(100) > 50,
+		started: rand.IntN(100) > 50,
 	}
 
 	// SUT + act
@@ -311,9 +311,9 @@ func TestBootstrap_HappyPath(t *testing.T) {
 		session:       dummySession,
 		customization: dummyCustomization,
 	}
-	var dummyHttpClient = &http.Client{Timeout: time.Duration(rand.Intn(100))}
-	var dummyWebcallTimeout = time.Duration(rand.Intn(100))
-	var dummySkipCertVerification = rand.Intn(100) > 50
+	var dummyHttpClient = &http.Client{Timeout: time.Duration(rand.IntN(100))}
+	var dummyWebcallTimeout = time.Duration(rand.IntN(100))
+	var dummySkipCertVerification = rand.IntN(100) > 50
 	var dummyClientCertificate = &tls.Certificate{Certificate: [][]byte{{0}}}
 	var dummyMessageFormat = "Application bootstrapped successfully"
 
@@ -399,7 +399,7 @@ func TestBeginApplication_HostError(t *testing.T) {
 	var dummySession = &session{id: uuid.New()}
 	var dummyCustomization = &DefaultCustomization{}
 	var dummyShutdownSignal = make(chan os.Signal)
-	var dummyStarted = rand.Intn(100) > 50
+	var dummyStarted = rand.IntN(100) > 50
 	var dummyApplication = &application{
 		name:           dummyName,
 		version:        dummyVersion,
@@ -433,7 +433,7 @@ func TestBeginApplication_HostSuccess(t *testing.T) {
 	var dummySession = &session{id: uuid.New()}
 	var dummyCustomization = &DefaultCustomization{}
 	var dummyShutdownSignal = make(chan os.Signal)
-	var dummyStarted = rand.Intn(100) > 50
+	var dummyStarted = rand.IntN(100) > 50
 	var dummyApplication = &application{
 		name:           dummyName,
 		version:        dummyVersion,

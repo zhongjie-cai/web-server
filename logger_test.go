@@ -3,7 +3,7 @@ package webserver
 import (
 	"errors"
 	"fmt"
-	"math/rand"
+	"math/rand/v2"
 	"testing"
 
 	"github.com/google/uuid"
@@ -13,8 +13,8 @@ import (
 func TestPrepareLoggingFunc_NilSession(t *testing.T) {
 	// arrange
 	var dummySession *session
-	var dummyLogType = LogType(rand.Intn(100))
-	var dummyLogLevel = LogLevel(rand.Intn(100))
+	var dummyLogType = LogType(rand.IntN(100))
+	var dummyLogLevel = LogLevel(rand.IntN(100))
 	var dummyCategory = "some category"
 	var dummySubcategory = "some subcategory"
 	var dummyMessageFormat = "some message format"
@@ -42,8 +42,8 @@ func TestPrepareLoggingFunc_HappyPath(t *testing.T) {
 	var dummySession = &session{
 		customization: dummyCustomization,
 	}
-	var dummyLogType = LogType(rand.Intn(100))
-	var dummyLogLevel = LogLevel(rand.Intn(100))
+	var dummyLogType = LogType(rand.IntN(100))
+	var dummyLogLevel = LogLevel(rand.IntN(100))
 	var dummyCategory = "some category"
 	var dummySubcategory = "some subcategory"
 	var dummyMessageFormat = "%v %v %v"
@@ -238,7 +238,7 @@ func TestLogMethodLogic(t *testing.T) {
 	var dummySession = &session{
 		id: uuid.New(),
 	}
-	var dummyLogLevel = LogLevel(rand.Intn(100))
+	var dummyLogLevel = LogLevel(rand.IntN(100))
 	var dummyCategory = "some category"
 	var dummySubcategory = "some subcategory"
 	var dummyMessageFormat = "some message format"

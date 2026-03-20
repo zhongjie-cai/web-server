@@ -5,7 +5,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
-	"math/rand"
+	"math/rand/v2"
 	"net"
 	"net/http"
 	"os"
@@ -28,7 +28,7 @@ func TestHostServer_ErrorRegisterRoutes(t *testing.T) {
 	}
 	var dummySession = &session{id: uuid.New()}
 	var dummyShutdownSignal = make(chan os.Signal)
-	var dummyStarted = rand.Intn(100) > 50
+	var dummyStarted = rand.IntN(100) > 50
 	type router struct {
 		chi.Router
 	}
@@ -61,7 +61,7 @@ func TestHostServer_RunServerFailure(t *testing.T) {
 	}
 	var dummySession = &session{id: uuid.New()}
 	var dummyShutdownSignal = make(chan os.Signal)
-	var dummyStarted = rand.Intn(100) > 50
+	var dummyStarted = rand.IntN(100) > 50
 	type router struct {
 		chi.Router
 	}
@@ -98,7 +98,7 @@ func TestHostServer_RunServerSuccess(t *testing.T) {
 	}
 	var dummySession = &session{id: uuid.New()}
 	var dummyShutdownSignal = make(chan os.Signal)
-	var dummyStarted = rand.Intn(100) > 50
+	var dummyStarted = rand.IntN(100) > 50
 	type router struct {
 		chi.Router
 	}
@@ -466,14 +466,14 @@ func TestRunServer_HappyPath(t *testing.T) {
 	var dummyShutdownSignal = make(chan os.Signal)
 	var dummyStarted = false
 	var dummyServer = &http.Server{}
-	var dummyHTTPS = rand.Intn(100) > 50
+	var dummyHTTPS = rand.IntN(100) > 50
 	var dummyHostError = errors.New("some host error message")
 	var dummyBackgroundContext = context.Background()
 	var dummyRuntimeContext = context.TODO()
 	var dummyCallback = func() {}
-	var dummyGraceShutdownWaitTime = time.Duration(rand.Intn(100)) * time.Second
+	var dummyGraceShutdownWaitTime = time.Duration(rand.IntN(100)) * time.Second
 	var dummyShutDownError = errors.New("some shut down error message")
-	var dummyResult = rand.Intn(100) > 50
+	var dummyResult = rand.IntN(100) > 50
 
 	// mock
 	var m = gomocker.NewMocker(t)

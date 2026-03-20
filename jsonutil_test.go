@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"math/rand"
+	"math/rand/v2"
 	"strconv"
 	"testing"
 
@@ -100,7 +100,7 @@ func TestTryUnmarshalPrimitiveTypes_Bool_Error(t *testing.T) {
 
 func TestTryUnmarshalPrimitiveTypes_Bool_NoError(t *testing.T) {
 	// arrange
-	var dummyValue = rand.Intn(100) < 50
+	var dummyValue = rand.IntN(100) < 50
 	var dummyValueString = fmt.Sprintf("%v", dummyValue)
 	var dummyDataTemplate bool
 
@@ -133,7 +133,7 @@ func TestTryUnmarshalPrimitiveTypes_Integer_Error(t *testing.T) {
 
 func TestTryUnmarshalPrimitiveTypes_Integer_NoError(t *testing.T) {
 	// arrange
-	var dummyValue = rand.Intn(math.MaxInt32)
+	var dummyValue = rand.IntN(math.MaxInt32)
 	var dummyValueString = fmt.Sprintf("%v", dummyValue)
 	var dummyDataTemplate int
 
@@ -166,7 +166,7 @@ func TestTryUnmarshalPrimitiveTypes_Int64_Error(t *testing.T) {
 
 func TestTryUnmarshalPrimitiveTypes_Int64_NoError(t *testing.T) {
 	// arrange
-	var dummyValue = rand.Int63()
+	var dummyValue = rand.Int64()
 	var dummyValueString = fmt.Sprintf("%v", dummyValue)
 	var dummyDataTemplate int64
 
@@ -232,7 +232,7 @@ func TestTryUnmarshalPrimitiveTypes_Byte_Error(t *testing.T) {
 
 func TestTryUnmarshalPrimitiveTypes_Byte_NoError(t *testing.T) {
 	// arrange
-	var dummyValue = byte(rand.Intn(math.MaxUint8))
+	var dummyValue = byte(rand.IntN(math.MaxUint8))
 	var dummyValueString = fmt.Sprintf("%v", dummyValue)
 	var dummyDataTemplate byte
 

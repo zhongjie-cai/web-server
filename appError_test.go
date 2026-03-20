@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/rand"
+	"math/rand/v2"
 	"strings"
 	"testing"
 
@@ -261,7 +261,7 @@ func TestEqualsError_ErrorIs(t *testing.T) {
 	// arrange
 	var dummyError = errors.New("some error")
 	var dummyTarget = errors.New("some target")
-	var dummyResult = rand.Intn(100) > 50
+	var dummyResult = rand.IntN(100) > 50
 
 	// mock
 	var m = gomocker.NewMocker(t)
@@ -432,7 +432,7 @@ func TestAppError_Contains_InnerErrorEqual(t *testing.T) {
 		InnerErrors: dummyInnerErrors,
 	}
 	var dummyError = errors.New("some error")
-	var dummyResult = rand.Intn(100) > 50
+	var dummyResult = rand.IntN(100) > 50
 
 	// mock
 	var m = gomocker.NewMocker(t)
