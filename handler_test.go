@@ -144,6 +144,7 @@ func TestHandleAction_HappyPath(t *testing.T) {
 	}
 	var dummyResponseObject = rand.Int()
 	var dummyResponseError = errors.New("some response error")
+	var dummyResult = rand.Int()
 	var dummyError = errors.New("some error")
 
 	// mock
@@ -152,8 +153,8 @@ func TestHandleAction_HappyPath(t *testing.T) {
 	// expect
 	m.Mock((*DefaultCustomization).PreAction).Expects(dummyCustomization, dummySession).Returns(nil).Once()
 	m.Mock(dummyAction).Expects(dummySession).Returns(dummyResponseObject, dummyResponseError).Once()
-	m.Mock((*DefaultCustomization).PostAction).Expects(dummyCustomization, dummySession, dummyResponseObject, dummyResponseError).Returns(dummyError).Once()
-	m.Mock(writeResponse).Expects(dummySession, dummyResponseObject, dummyError).Returns().Once()
+	m.Mock((*DefaultCustomization).PostAction).Expects(dummyCustomization, dummySession, dummyResponseObject, dummyResponseError).Returns(dummyResult, dummyError).Once()
+	m.Mock(writeResponse).Expects(dummySession, dummyResult, dummyError).Returns().Once()
 
 	// SUT + act
 	handleAction(

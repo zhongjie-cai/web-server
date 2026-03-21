@@ -179,9 +179,10 @@ func TestDefaultCustomization_PostAction(t *testing.T) {
 	var dummyResponseError = errors.New("some error")
 
 	// SUT + act
-	var err = customizationDefault.PostAction(dummySession, dummyResponseObject, dummyResponseError)
+	var result, err = customizationDefault.PostAction(dummySession, dummyResponseObject, dummyResponseError)
 
 	// assert
+	assert.Equal(t, dummyResponseObject, result)
 	assert.Equal(t, dummyResponseError, err)
 }
 

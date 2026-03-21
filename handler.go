@@ -65,14 +65,14 @@ func handleAction(
 	var responseObject, responseError = action(
 		session,
 	)
-	var postActionError = session.customization.PostAction(
+	var postActionResponse, postActionError = session.customization.PostAction(
 		session,
 		responseObject,
 		responseError,
 	)
 	writeResponse(
 		session,
-		responseObject,
+		postActionResponse,
 		postActionError,
 	)
 }
