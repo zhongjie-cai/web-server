@@ -79,8 +79,8 @@ type HandlerCustomization interface {
 	// PreAction is to customize the pre-action used before each route action takes place, e.g. authorization, etc.
 	PreAction(session Session) error
 
-	// PostAction is to customize the post-action used after each route action takes place, e.g. finalization, etc.
-	PostAction(session Session) error
+	// PostAction is to customize the post-action used after each route action takes place, e.g. finalization, etc.; the response object and error are immutable
+	PostAction(session Session, responseObject any, responseError error) error
 
 	// InterpretSuccess is to customize how application interpret a response content into HTTP status code and corresponding response body
 	InterpretSuccess(responseContent any) (int, string)
@@ -206,9 +206,9 @@ func (customization *DefaultCustomization) PreAction(session Session) error {
 	return nil
 }
 
-// PostAction is to customize the post-action used after each route action takes place, e.g. finalization, etc.
-func (customization *DefaultCustomization) PostAction(session Session) error {
-	return nil
+// PostAction is to customize the post-action used after each route action takes place, e.g. finalization, etc.; the response object and error are immutable
+func (customization *DefaultCustomization) PostAction(session Session, responseObject any, responseError error) error {
+	return responseError
 }
 
 // InterpretSuccess is to customize how application interpret a response content into HTTP status code and corresponding response body

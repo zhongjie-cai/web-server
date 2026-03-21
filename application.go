@@ -46,6 +46,8 @@ func NewApplication(
 		&session{
 			uuid.New(),
 			name,
+			"none",
+			"root",
 			defaultRequest,
 			defaultResponseWriter,
 			map[string]any{},

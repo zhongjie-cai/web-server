@@ -94,10 +94,12 @@ func extractRouteMethodAndPattern(name string) (string, string) {
 }
 
 // getRouteInfo retrieves the registered name and action for the given route
-func getRouteInfo(httpRequest *http.Request, actionFuncMap map[string]ActionFunc) (string, ActionFunc, error) {
+func getRouteInfo(httpRequest *http.Request, actionFuncMap map[string]ActionFunc) (string, string, string, ActionFunc, error) {
 	var ctx = chi.RouteContext(httpRequest.Context())
 	if ctx == nil {
 		return "",
+			"",
+			"",
 			nil,
 			newAppError(
 				errorCodeDataCorruption,
@@ -111,10 +113,12 @@ func getRouteInfo(httpRequest *http.Request, actionFuncMap map[string]ActionFunc
 		)
 		var action, found = actionFuncMap[name]
 		if found {
-			return name, action, nil
+			return name, ctx.RouteMethod, routePattern, action, nil
 		}
 	}
 	return "",
+		"",
+		"",
 		nil,
 		newAppError(
 			errorCodeNotFound,

@@ -33,6 +33,9 @@ type SessionMeta interface {
 
 	// GetName returns the name registered to session object for given session ID
 	GetName() string
+
+	// GetCustomization returns the customization defined for the web application
+	GetCustomization() Customization
 }
 
 // SessionHTTP is a subset of Session interface, containing only HTTP request & response related methods
@@ -45,6 +48,12 @@ type SessionHTTP interface {
 type SessionHTTPRequest interface {
 	// GetRequest returns the HTTP request object from session object for given session ID
 	GetRequest() *http.Request
+
+	// GetHttpMethod returns the HTTP method bound to the current HTTP request
+	GetHttpMethod() string
+
+	// GetRoutePattern returns the defined route pattern matched for the current HTTP request
+	GetRoutePattern() string
 
 	// GetRequestBody loads HTTP request body associated to session and unmarshals the content JSON to given data template
 	GetRequestBody(dataTemplate any) error
@@ -113,6 +122,8 @@ type SessionWebcall interface {
 type session struct {
 	id             uuid.UUID
 	name           string
+	method         string
+	pattern        string
 	request        *http.Request
 	responseWriter http.ResponseWriter
 	attachment     map[string]any
@@ -135,6 +146,11 @@ func (session *session) GetName() string {
 	return session.name
 }
 
+// GetCustomization returns the customization defined for the web application
+func (session *session) GetCustomization() Customization {
+	return session.customization
+}
+
 // GetRequest returns the HTTP request object from session object for given session ID
 func (session *session) GetRequest() *http.Request {
 	if session == nil ||
@@ -151,6 +167,16 @@ func (session *session) GetResponseWriter() http.ResponseWriter {
 		return defaultResponseWriter
 	}
 	return session.responseWriter
+}
+
+// GetHttpMethod returns the HTTP method bound to the current HTTP request
+func (session *session) GetHttpMethod() string {
+	return session.method
+}
+
+// GetRoutePattern returns the defined route pattern matched for the current HTTP request
+func (session *session) GetRoutePattern() string {
+	return session.pattern
 }
 
 // GetRequestBodyFromSession is a sugar-function to retrieve request body as an object via generics

@@ -207,13 +207,15 @@ func TestGetRouteInfo_NilRoute(t *testing.T) {
 	m.Mock(newAppError).Expects(errorCodeDataCorruption, "No go-chi context found in HTTP request").Returns(dummyAppError).Once()
 
 	// SUT + act
-	var name, action, err = getRouteInfo(
+	var name, method, pattern, action, err = getRouteInfo(
 		dummyHTTPRequest,
 		dummyActionFuncMap,
 	)
 
 	// assert
 	assert.Zero(t, name)
+	assert.Zero(t, method)
+	assert.Zero(t, pattern)
 	assert.Nil(t, action)
 	assert.Equal(t, dummyAppError, err)
 }
@@ -246,13 +248,15 @@ func TestGetRouteInfo_RouteNotFound(t *testing.T) {
 	m.Mock(newAppError).Expects(errorCodeNotFound, "No corresponding route configured for path: http://localhost/").Returns(dummyAppError).Once()
 
 	// SUT + act
-	var endpoint, action, err = getRouteInfo(
+	var name, method, pattern, action, err = getRouteInfo(
 		dummyHTTPRequest,
 		dummyActionFuncMap,
 	)
 
 	// assert
-	assert.Equal(t, "", endpoint)
+	assert.Zero(t, name)
+	assert.Zero(t, method)
+	assert.Zero(t, pattern)
 	assert.Nil(t, action)
 	assert.Equal(t, dummyAppError, err)
 }
@@ -286,13 +290,15 @@ func TestGetRouteInfo_ValidRoute(t *testing.T) {
 	m.Mock(generateRouteName).Expects(dummyHTTPRequest.Method, dummyPattern2).Returns(dummyName2).Once()
 
 	// SUT + act
-	var endpoint, action, err = getRouteInfo(
+	var name, method, pattern, action, err = getRouteInfo(
 		dummyHTTPRequest,
 		dummyActionFuncMap,
 	)
 
 	// assert
-	assert.Equal(t, dummyName2, endpoint)
+	assert.Equal(t, dummyName2, name)
+	assert.Equal(t, dummyHTTPRequest.Method, method)
+	assert.Equal(t, dummyPattern2, pattern)
 	assertFunctionEquals(t, dummyAction, action)
 	assert.NoError(t, err)
 }

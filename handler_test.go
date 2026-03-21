@@ -41,7 +41,9 @@ func TestInitiateSession(t *testing.T) {
 		customization: dummyCustomization,
 		actionFuncMap: dummyActionFuncMap,
 	}
-	var dummyEndpoint = "some endpoint"
+	var dummyName = "some name"
+	var dummyMethod = "some method"
+	var dummyPattern = "some pattern"
 	var dummyRouteError = errors.New("some route error")
 	var dummySessionID = uuid.New()
 
@@ -51,7 +53,7 @@ func TestInitiateSession(t *testing.T) {
 	// expect
 	m.Mock(uuid.New).Expects().Returns(dummySessionID).Once()
 	m.Mock(getRouteInfo).Expects(dummyHTTPRequest, dummyActionFuncMap).
-		Returns(dummyEndpoint, dummyAction, dummyRouteError).Once()
+		Returns(dummyName, dummyMethod, dummyPattern, dummyAction, dummyRouteError).Once()
 
 	// SUT + act
 	var session, action, err = initiateSession(
@@ -63,7 +65,9 @@ func TestInitiateSession(t *testing.T) {
 	// assert
 	assert.NotNil(t, session)
 	assert.Equal(t, dummySessionID, session.id)
-	assert.Equal(t, dummyEndpoint, session.name)
+	assert.Equal(t, dummyName, session.name)
+	assert.Equal(t, dummyMethod, session.method)
+	assert.Equal(t, dummyPattern, session.pattern)
 	assert.Equal(t, dummyHTTPRequest, session.request)
 	assert.Equal(t, dummyResponseWriter, session.responseWriter)
 	assert.Empty(t, session.attachment)
@@ -132,30 +136,6 @@ func TestHandleAction_PreActionError(t *testing.T) {
 	)
 }
 
-func TestHandleAction_ResponseError(t *testing.T) {
-	// arrange
-	var dummyCustomization = &DefaultCustomization{}
-	var dummySession = &session{
-		customization: dummyCustomization,
-	}
-	var dummyResponseObject = rand.Int()
-	var dummyError = errors.New("some error")
-
-	// mock
-	var m = gomocker.NewMocker(t)
-
-	// expect
-	m.Mock((*DefaultCustomization).PreAction).Expects(dummyCustomization, dummySession).Returns(nil).Once()
-	m.Mock(dummyAction).Expects(dummySession).Returns(dummyResponseObject, dummyError).Once()
-	m.Mock(writeResponse).Expects(dummySession, dummyResponseObject, dummyError).Returns().Once()
-
-	// SUT + act
-	handleAction(
-		dummySession,
-		dummyAction,
-	)
-}
-
 func TestHandleAction_HappyPath(t *testing.T) {
 	// arrange
 	var dummyCustomization = &DefaultCustomization{}
@@ -163,6 +143,7 @@ func TestHandleAction_HappyPath(t *testing.T) {
 		customization: dummyCustomization,
 	}
 	var dummyResponseObject = rand.Int()
+	var dummyResponseError = errors.New("some response error")
 	var dummyError = errors.New("some error")
 
 	// mock
@@ -170,8 +151,8 @@ func TestHandleAction_HappyPath(t *testing.T) {
 
 	// expect
 	m.Mock((*DefaultCustomization).PreAction).Expects(dummyCustomization, dummySession).Returns(nil).Once()
-	m.Mock(dummyAction).Expects(dummySession).Returns(dummyResponseObject, nil).Once()
-	m.Mock((*DefaultCustomization).PostAction).Expects(dummyCustomization, dummySession).Returns(dummyError).Once()
+	m.Mock(dummyAction).Expects(dummySession).Returns(dummyResponseObject, dummyResponseError).Once()
+	m.Mock((*DefaultCustomization).PostAction).Expects(dummyCustomization, dummySession, dummyResponseObject, dummyResponseError).Returns(dummyError).Once()
 	m.Mock(writeResponse).Expects(dummySession, dummyResponseObject, dummyError).Returns().Once()
 
 	// SUT + act

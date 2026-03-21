@@ -69,6 +69,28 @@ func TestSessionGetName_ValidSessionObject(t *testing.T) {
 	assert.Equal(t, dummyName, result)
 }
 
+func TestSessionGetCustomization_ReturnObject(t *testing.T) {
+	// arrange
+	type customization struct {
+		Customization
+		value int
+	}
+	var dummyCustomization = &customization{
+		value: rand.Int(),
+	}
+
+	// SUT
+	var dummySession = &session{
+		customization: dummyCustomization,
+	}
+
+	// act
+	var result = dummySession.GetCustomization()
+
+	// assert
+	assert.Equal(t, dummyCustomization, result)
+}
+
 func TestSessionGetRequest_NilSessionObject(t *testing.T) {
 	// SUT
 	var dummySession *session
@@ -169,6 +191,38 @@ func TestSessionGetResponseWriter_ValidResponseWriter(t *testing.T) {
 
 	// assert
 	assert.Equal(t, dummyResponseWriterObject, result)
+}
+
+func TestSessionGetHttpMethod(t *testing.T) {
+	// arrange
+	var dummyHttpMethod = "some method"
+
+	// SUT
+	var dummySession = &session{
+		method: dummyHttpMethod,
+	}
+
+	// act
+	var result = dummySession.GetHttpMethod()
+
+	// assert
+	assert.Equal(t, dummyHttpMethod, result)
+}
+
+func TestSessionGetRoutePattern(t *testing.T) {
+	// arrange
+	var dummyRoutePattern = "some route pattern"
+
+	// SUT
+	var dummySession = &session{
+		pattern: dummyRoutePattern,
+	}
+
+	// act
+	var result = dummySession.GetRoutePattern()
+
+	// assert
+	assert.Equal(t, dummyRoutePattern, result)
 }
 
 func TestGetRequestBodyFromSession_HappyPath(t *testing.T) {

@@ -12,13 +12,15 @@ func initiateSession(
 	responseWriter http.ResponseWriter,
 	httpRequest *http.Request,
 ) (*session, ActionFunc, error) {
-	var name, action, routeError = getRouteInfo(
+	var name, method, pattern, action, routeError = getRouteInfo(
 		httpRequest,
 		app.actionFuncMap,
 	)
 	return &session{
 		uuid.New(),
 		name,
+		method,
+		pattern,
 		httpRequest,
 		responseWriter,
 		map[string]any{},
@@ -63,16 +65,10 @@ func handleAction(
 	var responseObject, responseError = action(
 		session,
 	)
-	if responseError != nil {
-		writeResponse(
-			session,
-			responseObject,
-			responseError,
-		)
-		return
-	}
 	var postActionError = session.customization.PostAction(
 		session,
+		responseObject,
+		responseError,
 	)
 	writeResponse(
 		session,

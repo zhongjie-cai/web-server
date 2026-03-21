@@ -175,12 +175,14 @@ func TestDefaultCustomization_PreAction(t *testing.T) {
 func TestDefaultCustomization_PostAction(t *testing.T) {
 	// arrange
 	var dummySession Session
+	var dummyResponseObject = "any object"
+	var dummyResponseError = errors.New("some error")
 
 	// SUT + act
-	var err = customizationDefault.PostAction(dummySession)
+	var err = customizationDefault.PostAction(dummySession, dummyResponseObject, dummyResponseError)
 
 	// assert
-	assert.NoError(t, err)
+	assert.Equal(t, dummyResponseError, err)
 }
 
 func TestDefaultCustomization_InterpretSuccess_NilResponseContent(t *testing.T) {
