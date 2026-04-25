@@ -104,6 +104,7 @@ func preBootstraping(app *application) bool {
 	if preBootstrapError != nil {
 		logAppRoot(
 			app.session,
+			LogLevelError,
 			"application",
 			"preBootstraping",
 			"Failed to execute customization.PreBootstrap. Error: %+v",
@@ -113,6 +114,7 @@ func preBootstraping(app *application) bool {
 	}
 	logAppRoot(
 		app.session,
+		LogLevelInfo,
 		"application",
 		"preBootstraping",
 		"customization.PreBootstrap executed successfully",
@@ -130,6 +132,7 @@ func bootstrap(app *application) {
 	)
 	logAppRoot(
 		app.session,
+		LogLevelInfo,
 		"application",
 		"bootstrap",
 		"Application bootstrapped successfully",
@@ -141,6 +144,7 @@ func postBootstraping(app *application) bool {
 	if postBootstrapError != nil {
 		logAppRoot(
 			app.session,
+			LogLevelError,
 			"application",
 			"postBootstraping",
 			"Failed to execute customization.PostBootstrap. Error: %+v",
@@ -150,6 +154,7 @@ func postBootstraping(app *application) bool {
 	}
 	logAppRoot(
 		app.session,
+		LogLevelInfo,
 		"application",
 		"postBootstraping",
 		"customization.PostBootstrap executed successfully",
@@ -160,6 +165,7 @@ func postBootstraping(app *application) bool {
 func beginApplication(app *application) {
 	logAppRoot(
 		app.session,
+		LogLevelInfo,
 		"application",
 		"beginApplication",
 		"Trying to start server [%v] (v-%v)",
@@ -175,6 +181,7 @@ func beginApplication(app *application) {
 	if serverHostError != nil {
 		logAppRoot(
 			app.session,
+			LogLevelError,
 			"application",
 			"beginApplication",
 			"Failed to host server. Error: %+v",
@@ -183,6 +190,7 @@ func beginApplication(app *application) {
 	} else {
 		logAppRoot(
 			app.session,
+			LogLevelInfo,
 			"application",
 			"beginApplication",
 			"Server hosting terminated",
@@ -195,6 +203,7 @@ func endApplication(app *application) {
 	if appClosingError != nil {
 		logAppRoot(
 			app.session,
+			LogLevelError,
 			"application",
 			"endApplication",
 			"Failed to execute customization.AppClosing. Error: %+v",
@@ -203,6 +212,7 @@ func endApplication(app *application) {
 	} else {
 		logAppRoot(
 			app.session,
+			LogLevelInfo,
 			"application",
 			"endApplication",
 			"customization.AppClosing executed successfully",

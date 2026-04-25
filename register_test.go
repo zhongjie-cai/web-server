@@ -22,7 +22,7 @@ func TestDoParameterReplacement_EmptyParameterType(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.Mock(logAppRoot).Expects(dummySession, "register", "doParameterReplacement",
+	m.Mock(logAppRoot).Expects(dummySession, LogLevelInfo, "register", "doParameterReplacement",
 		"Path parameter [%v] in path [%v] has no type specification; fallback to default.",
 		dummyParameterName, dummyOriginalPath).Returns().Once()
 
@@ -111,7 +111,7 @@ func TestRegisterRoutes_EmptyRoutes(t *testing.T) {
 
 	// expect
 	m.Mock((*DefaultCustomization).Routes).Expects(dummyCustomization).Returns(dummyRoutes).Once()
-	m.Mock(logAppRoot).Expects(dummySession, "register", "registerRoutes",
+	m.Mock(logAppRoot).Expects(dummySession, LogLevelInfo, "register", "registerRoutes",
 		"customization.Routes function empty: no routes returned!").Returns().Once()
 
 	// SUT + act
@@ -213,7 +213,7 @@ func TestRegisterStatics_EmptyStatics(t *testing.T) {
 
 	// expect
 	m.Mock((*DefaultCustomization).Statics).Expects(dummyCustomization).Returns(dummyStatics).Once()
-	m.Mock(logAppRoot).Expects(dummySession, "register", "registerStatics",
+	m.Mock(logAppRoot).Expects(dummySession, LogLevelInfo, "register", "registerStatics",
 		"customization.Statics function empty: no static content returned!").Returns().Once()
 
 	// SUT + act
@@ -288,7 +288,7 @@ func TestRegisterMiddlewares_EmptyMiddlewares(t *testing.T) {
 
 	// expect
 	m.Mock((*DefaultCustomization).Middlewares).Expects(dummyCustomization).Returns(dummyMiddlewares).Once()
-	m.Mock(logAppRoot).Expects(dummySession, "register", "registerMiddlewares",
+	m.Mock(logAppRoot).Expects(dummySession, LogLevelInfo, "register", "registerMiddlewares",
 		"customization.Middlewares function empty: no middleware returned!").Returns().Once()
 
 	// SUT + act
@@ -380,11 +380,12 @@ func TestInstantiateRouter_RouterError(t *testing.T) {
 
 	// expect
 	m.Mock(chi.NewRouter).Expects().Returns(dummyRouter).Once()
+	m.Mock((*DefaultCustomization).InstrumentRouter).Expects(dummyCustomization, dummyRouter).Returns(dummyRouter).Once()
 	m.Mock(registerMiddlewares).Expects(dummySession, dummyRouter).Returns().Once()
 	m.Mock(registerRoutes).Expects(dummyApplication, dummySession, dummyRouter).Returns().Once()
 	m.Mock(registerStatics).Expects(dummySession, dummyRouter).Returns().Once()
 	m.Mock(walkRegisteredRoutes).Expects(dummySession, dummyRouter).Returns(dummyError).Once()
-	m.Mock(logAppRoot).Expects(dummySession, "register", "instantiateRouter", "%+v", dummyError).Returns().Once()
+	m.Mock(logAppRoot).Expects(dummySession, LogLevelError, "register", "instantiateRouter", "%+v", dummyError).Returns().Once()
 	m.Mock(newAppError).Expects(errorCodeGeneralFailure, errorMessageRouteRegistration, dummyError).Returns(dummyAppError).Once()
 
 	// SUT + act
@@ -412,12 +413,12 @@ func TestInstantiateRouter_HappyPath(t *testing.T) {
 
 	// expect
 	m.Mock(chi.NewRouter).Expects().Returns(dummyRouter).Once()
+	m.Mock((*DefaultCustomization).InstrumentRouter).Expects(dummyCustomization, dummyRouter).Returns(dummyRouter).Once()
 	m.Mock(registerMiddlewares).Expects(dummySession, dummyRouter).Returns().Once()
 	m.Mock(registerRoutes).Expects(dummyApplication, dummySession, dummyRouter).Returns().Once()
 	m.Mock(registerStatics).Expects(dummySession, dummyRouter).Returns().Once()
 	m.Mock(walkRegisteredRoutes).Expects(dummySession, dummyRouter).Returns(nil).Once()
 	m.Mock(registerErrorHandlers).Expects(dummyCustomization, dummyRouter).Returns().Once()
-	m.Mock((*DefaultCustomization).InstrumentRouter).Expects(dummyCustomization, dummyRouter).Returns(dummyRouter).Once()
 
 	// SUT + act
 	var result, err = instantiateRouter(

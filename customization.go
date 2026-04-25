@@ -117,6 +117,9 @@ type WebRequestCustomization interface {
 
 	// WrapRequest is to customize the creation of the HTTP request for any webcall communications through HTTP/HTTPS by session; utilize this method if needed for new relic wrapping, etc.
 	WrapRequest(session Session, httpRequest *http.Request) *http.Request
+
+	// WrapResponse is to customize the post-processing of any webcall communications through HTTP/HTTPS by session; utilize this method if needed for additional response or error handling, etc.
+	WrapResponse(session Session, httpResponse *http.Response, httpError error) (*http.Response, error)
 }
 
 var (
@@ -298,4 +301,9 @@ func (customization *DefaultCustomization) RoundTripper(originalTransport http.R
 // WrapRequest is to customize the creation of the HTTP request for any webcall communications through HTTP/HTTPS by session; utilize this method if needed for new relic wrapping, etc.
 func (customization *DefaultCustomization) WrapRequest(session Session, httpRequest *http.Request) *http.Request {
 	return httpRequest
+}
+
+// WrapResponse is to customize the post-processing of any webcall communications through HTTP/HTTPS by session; utilize this method if needed for additional response or error handling, etc.
+func (customization *DefaultCustomization) WrapResponse(session Session, httpResponse *http.Response, httpError error) (*http.Response, error) {
+	return httpResponse, httpError
 }

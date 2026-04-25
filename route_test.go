@@ -101,7 +101,7 @@ func TestWalkRegisteredRoutes_Error(t *testing.T) {
 	m.Mock(chi.Walk).Expects(dummyRouter, gomocker.Matches(func(value any) bool {
 		return functionPointerEquals(evaluateRoute, value)
 	})).Returns(dummyError).Once()
-	m.Mock(logAppRoot).Expects(dummySession, "route", "walkRegisteredRoutes", "Failure: %+v", dummyError).Returns().Once()
+	m.Mock(logAppRoot).Expects(dummySession, LogLevelError, "route", "walkRegisteredRoutes", "Failure: %+v", dummyError).Returns().Once()
 	m.Mock(newAppError).Expects(errorCodeGeneralFailure, errorMessageRouteRegistration, dummyError).Returns(dummyAppError).Once()
 
 	// SUT + act

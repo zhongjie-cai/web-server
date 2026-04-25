@@ -60,6 +60,7 @@ func walkRegisteredRoutes(
 	if walkError != nil {
 		logAppRoot(
 			session,
+			LogLevelError,
 			"route",
 			"walkRegisteredRoutes",
 			"Failure: %+v",

@@ -1153,7 +1153,11 @@ func TestDoRequestProcessing_RequestError(t *testing.T) {
 
 func TestDoRequestProcessing_ResponseError(t *testing.T) {
 	// arrange
-	var dummySession = &session{id: uuid.New()}
+	var dummyCustomization = &DefaultCustomization{}
+	var dummySession = &session{
+		id:            uuid.New(),
+		customization: dummyCustomization,
+	}
 	var dummyConnRetry = rand.Int()
 	var dummyHTTPRetry = map[int]int{
 		rand.Int(): rand.Int(),
@@ -1183,6 +1187,7 @@ func TestDoRequestProcessing_ResponseError(t *testing.T) {
 	m.Mock(getTimeNowUTC).Expects().Returns(dummyStartTime).Once()
 	m.Mock(clientDoWithRetry).Expects(dummyHTTPClient, dummyRequestObject, dummyConnRetry, dummyHTTPRetry, dummyRetryDelay).Returns(dummyResponseObject, dummyResponseError).Once()
 	m.Mock(logErrorResponse).Expects(dummySession, dummyResponseError, dummyStartTime).Returns().Once()
+	m.Mock((*DefaultCustomization).WrapResponse).Expects(dummyCustomization, dummySession, dummyResponseObject, dummyResponseError).Returns(dummyResponseObject, dummyResponseError).Once()
 
 	// SUT + act
 	var result, err = doRequestProcessing(
@@ -1196,7 +1201,11 @@ func TestDoRequestProcessing_ResponseError(t *testing.T) {
 
 func TestDoRequestProcessing_ResponseSuccess(t *testing.T) {
 	// arrange
-	var dummySession = &session{id: uuid.New()}
+	var dummyCustomization = &DefaultCustomization{}
+	var dummySession = &session{
+		id:            uuid.New(),
+		customization: dummyCustomization,
+	}
 	var dummyConnRetry = rand.Int()
 	var dummyHTTPRetry = map[int]int{
 		rand.Int(): rand.Int(),
@@ -1225,6 +1234,7 @@ func TestDoRequestProcessing_ResponseSuccess(t *testing.T) {
 	m.Mock(getTimeNowUTC).Expects().Returns(dummyStartTime).Once()
 	m.Mock(clientDoWithRetry).Expects(dummyHTTPClient, dummyRequestObject, dummyConnRetry, dummyHTTPRetry, dummyRetryDelay).Returns(dummyResponseObject, nil).Once()
 	m.Mock(logSuccessResponse).Expects(dummySession, dummyResponseObject, dummyStartTime).Returns().Once()
+	m.Mock((*DefaultCustomization).WrapResponse).Expects(dummyCustomization, dummySession, dummyResponseObject, nil).Returns(dummyResponseObject, nil).Once()
 
 	// SUT + act
 	var result, err = doRequestProcessing(

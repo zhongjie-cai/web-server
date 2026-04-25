@@ -422,3 +422,17 @@ func TestDefaultCustomization_WrapRequest(t *testing.T) {
 	// assert
 	assert.Equal(t, dummyRequest, result)
 }
+
+func TestDefaultCustomization_WrapResponse(t *testing.T) {
+	// arrange
+	var dummySession Session
+	var dummyResponse = &http.Response{StatusCode: rand.IntN(1000)}
+	var dummyError = errors.New("some error")
+
+	// SUT + act
+	var result, err = customizationDefault.WrapResponse(dummySession, dummyResponse, dummyError)
+
+	// assert
+	assert.Equal(t, dummyResponse, result)
+	assert.Equal(t, dummyError, err)
+}

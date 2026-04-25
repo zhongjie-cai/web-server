@@ -78,6 +78,7 @@ func TestLogAppRoot(t *testing.T) {
 	var dummySession = &session{
 		id: uuid.New(),
 	}
+	var dummyLogLevel = LogLevel(rand.IntN(100))
 	var dummyCategory = "some category"
 	var dummySubcategory = "some subcategory"
 	var dummyMessageFormat = "some message format"
@@ -89,13 +90,14 @@ func TestLogAppRoot(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.Mock(prepareLogging).Expects(dummySession, LogTypeAppRoot, LogLevelInfo,
+	m.Mock(prepareLogging).Expects(dummySession, LogTypeAppRoot, dummyLogLevel,
 		dummyCategory, dummySubcategory, dummyMessageFormat,
 		dummyParameter1, dummyParameter2, dummyParameter3).Returns().Once()
 
 	// SUT + act
 	logAppRoot(
 		dummySession,
+		dummyLogLevel,
 		dummyCategory,
 		dummySubcategory,
 		dummyMessageFormat,

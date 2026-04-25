@@ -16,6 +16,7 @@ func doParameterReplacement(
 	if parameterType == "" {
 		logAppRoot(
 			session,
+			LogLevelInfo,
 			"register",
 			"doParameterReplacement",
 			"Path parameter [%v] in path [%v] has no type specification; fallback to default.",
@@ -67,6 +68,7 @@ func registerRoutes(
 	if len(configuredRoutes) == 0 {
 		logAppRoot(
 			session,
+			LogLevelInfo,
 			"register",
 			"registerRoutes",
 			"customization.Routes function empty: no routes returned!",
@@ -100,6 +102,7 @@ func registerStatics(
 	if len(statics) == 0 {
 		logAppRoot(
 			session,
+			LogLevelInfo,
 			"register",
 			"registerStatics",
 			"customization.Statics function empty: no static content returned!",
@@ -122,6 +125,7 @@ func registerMiddlewares(
 	if len(middlewares) == 0 {
 		logAppRoot(
 			session,
+			LogLevelInfo,
 			"register",
 			"registerMiddlewares",
 			"customization.Middlewares function empty: no middleware returned!",
@@ -152,8 +156,9 @@ func instantiateRouter(
 	app *application,
 	session *session,
 ) (chi.Router, error) {
-	var router chi.Router
-	router = chi.NewRouter()
+	var router = session.customization.InstrumentRouter(
+		chi.NewRouter(),
+	)
 	registerMiddlewares(
 		session,
 		router,
@@ -171,9 +176,6 @@ func instantiateRouter(
 		session.customization,
 		router,
 	)
-	router = session.customization.InstrumentRouter(
-		router,
-	)
 	var err = walkRegisteredRoutes(
 		session,
 		router,
@@ -181,6 +183,7 @@ func instantiateRouter(
 	if err != nil {
 		logAppRoot(
 			session,
+			LogLevelError,
 			"register",
 			"instantiateRouter",
 			"%+v",

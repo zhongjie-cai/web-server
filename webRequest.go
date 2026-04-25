@@ -462,7 +462,11 @@ func doRequestProcessing(webRequest *webRequest) (*http.Response, error) {
 			getTimeNowUTC(),
 		)
 	}
-	return responseObject, responseError
+	return webRequest.session.customization.WrapResponse(
+		webRequest.session,
+		responseObject,
+		responseError,
+	)
 }
 
 func getDataTemplate(session *session, statusCode int, dataReceivers []dataReceiver) any {

@@ -27,6 +27,7 @@ func hostServer(
 	}
 	logAppRoot(
 		session,
+		LogLevelInfo,
 		"server",
 		"hostServer",
 		"Targeting address [%v]",
@@ -41,6 +42,7 @@ func hostServer(
 	) {
 		logAppRoot(
 			session,
+			LogLevelInfo,
 			"server",
 			"hostServer",
 			"Server closed",
@@ -49,6 +51,7 @@ func hostServer(
 	}
 	logAppRoot(
 		session,
+		LogLevelWarn,
 		"server",
 		"hostServer",
 		"Server terminated",
@@ -130,6 +133,7 @@ func evaluateServerErrors(
 		hostError != http.ErrServerClosed {
 		logAppRoot(
 			session,
+			LogLevelError,
 			"server",
 			"runServer",
 			"Host error found: %+v",
@@ -141,6 +145,7 @@ func evaluateServerErrors(
 		shutdownError != http.ErrServerClosed {
 		logAppRoot(
 			session,
+			LogLevelError,
 			"server",
 			"runServer",
 			"Shutdown error found: %+v",
@@ -190,6 +195,7 @@ func runServer(
 
 	logAppRoot(
 		session,
+		LogLevelInfo,
 		"server",
 		"runServer",
 		"Interrupt signal received: Terminating server",

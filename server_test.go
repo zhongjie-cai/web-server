@@ -73,8 +73,8 @@ func TestHostServer_RunServerFailure(t *testing.T) {
 
 	// expect
 	m.Mock(instantiateRouter).Expects(dummyApplication, dummySession).Returns(dummyRouter, nil).Once()
-	m.Mock(logAppRoot).Expects(dummySession, "server", "hostServer", "Targeting address [%v]", dummyAddress).Returns().Once()
-	m.Mock(logAppRoot).Expects(dummySession, "server", "hostServer", "Server terminated").Returns().Once()
+	m.Mock(logAppRoot).Expects(dummySession, LogLevelInfo, "server", "hostServer", "Targeting address [%v]", dummyAddress).Returns().Once()
+	m.Mock(logAppRoot).Expects(dummySession, LogLevelWarn, "server", "hostServer", "Server terminated").Returns().Once()
 	m.Mock(runServer).Expects(dummyAddress, dummySession, dummyRouter, dummyShutdownSignal, &dummyStarted).Returns(false).Once()
 	m.Mock(newAppError).Expects(errorCodeGeneralFailure, errorMessageHostServer).Returns(dummyAppError).Once()
 
@@ -109,8 +109,8 @@ func TestHostServer_RunServerSuccess(t *testing.T) {
 
 	// expect
 	m.Mock(instantiateRouter).Expects(dummyApplication, dummySession).Returns(dummyRouter, nil).Once()
-	m.Mock(logAppRoot).Expects(dummySession, "server", "hostServer", "Targeting address [%v]", dummyAddress).Returns().Once()
-	m.Mock(logAppRoot).Expects(dummySession, "server", "hostServer", "Server closed").Returns().Once()
+	m.Mock(logAppRoot).Expects(dummySession, LogLevelInfo, "server", "hostServer", "Targeting address [%v]", dummyAddress).Returns().Once()
+	m.Mock(logAppRoot).Expects(dummySession, LogLevelInfo, "server", "hostServer", "Server closed").Returns().Once()
 	m.Mock(runServer).Expects(dummyAddress, dummySession, dummyRouter, dummyShutdownSignal, &dummyStarted).Returns(true).Once()
 
 	// SUT + act
@@ -437,8 +437,8 @@ func TestEvaluateServerErrors_OtherErrors(t *testing.T) {
 	var m = gomocker.NewMocker(t)
 
 	// expect
-	m.Mock(logAppRoot).Expects(dummySession, "server", "runServer", "Host error found: %+v", dummyHostError).Returns().Once()
-	m.Mock(logAppRoot).Expects(dummySession, "server", "runServer", "Shutdown error found: %+v", dummyShutDownError).Returns().Once()
+	m.Mock(logAppRoot).Expects(dummySession, LogLevelError, "server", "runServer", "Host error found: %+v", dummyHostError).Returns().Once()
+	m.Mock(logAppRoot).Expects(dummySession, LogLevelError, "server", "runServer", "Shutdown error found: %+v", dummyShutDownError).Returns().Once()
 
 	// SUT + act
 	var result = evaluateServerErrors(
@@ -484,7 +484,7 @@ func TestRunServer_HappyPath(t *testing.T) {
 	m.Mock(listenAndServe).Expects(dummySession, dummyServer, dummyHTTPS).Returns(dummyHostError).Once()
 	m.Mock(haltServer).Expects(gomocker.Anything()).Returns().SideEffects(gomocker.GeneralSideEffect(
 		0, func() { dummyShutdownSignal <- os.Interrupt })).Once()
-	m.Mock(logAppRoot).Expects(dummySession, "server", "runServer", "Interrupt signal received: Terminating server").Returns().Once()
+	m.Mock(logAppRoot).Expects(dummySession, LogLevelInfo, "server", "runServer", "Interrupt signal received: Terminating server").Returns().Once()
 	m.Mock(context.Background).Expects().Returns(dummyBackgroundContext).Once()
 	m.Mock((*DefaultCustomization).GraceShutdownWaitTime).Expects(dummyCustomization).Returns(dummyGraceShutdownWaitTime).Once()
 	m.Mock(context.WithTimeout).Expects(dummyBackgroundContext, dummyGraceShutdownWaitTime).Returns(dummyRuntimeContext, dummyCallback).Once()

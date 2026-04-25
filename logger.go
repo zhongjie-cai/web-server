@@ -28,11 +28,11 @@ func prepareLogging(
 }
 
 // logAppRoot logs the given message as AppRoot category
-func logAppRoot(session *session, category string, subcategory string, messageFormat string, parameters ...any) {
+func logAppRoot(session *session, logLevel LogLevel, category string, subcategory string, messageFormat string, parameters ...any) {
 	prepareLogging(
 		session,
 		LogTypeAppRoot,
-		LogLevelInfo,
+		logLevel,
 		category,
 		subcategory,
 		messageFormat,
